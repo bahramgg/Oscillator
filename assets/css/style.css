@@ -1426,3 +1426,19 @@ body { font-size: 16px; }
 @media (max-width: 560px) { .roster { grid-auto-columns: 84%; } }
 @media (hover: none) { .reel-btn { display: none; } .reel-hint { display: inline; } .roster { cursor: auto; } }
 @media (prefers-reduced-motion: reduce) { .stage { transition: none; } .stage__disc img, .deck__disc img { animation: none; } }
+
+/* ░░ mobile spacing pass: no dead space ░░ */
+@media (max-width: 860px) {
+  .sec { padding-top: 64px; padding-bottom: 24px; }
+  .carrier .facts { margin-top: 36px; }
+  /* hero: bigger ring a little lower, the signal button sits at the bottom edge */
+  .halo, .boot__icon { top: 40%; }
+  .halo { width: min(84vw, 46vh); }
+  .wearetitle { top: calc(40% + min(42vw, 23vh) + 18px); }
+  .hero__cta { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); gap: 14px; }
+}
+/* artist posters: portrait 4:5 like the Instagram posts, and larger */
+.pc__link { aspect-ratio: 1 / 1; }
+.roster { grid-auto-columns: calc((100% - 2 * var(--rg)) / 2.7); }
+@media (max-width: 1100px) { .roster { grid-auto-columns: calc((100% - var(--rg)) / 1.8); } .pc__link { aspect-ratio: 4 / 5; } }
+@media (max-width: 560px) { .roster { grid-auto-columns: 88%; } .pc__link { aspect-ratio: 4 / 5; } }
