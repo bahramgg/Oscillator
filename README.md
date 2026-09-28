@@ -7,7 +7,7 @@ The site is built as an instrument. Every section is a waveform:
 | # | Section | Wave | What it is |
 |---|---------|------|------------|
 | 00 | Power | — | Intro and hero after the "Oscillator Rises" reel: neon logo in a rotating OSCILLATOR/ ring, hard yellow strobe cuts, faint live oscilloscope |
-| 01 | Carrier | sine | The label manifesto on a yellow panel (the reel's inverted cuts) |
+| 01 | Carrier | sine | The label manifesto |
 | 02 | Voices | square | The roster as the label's poster series: photo in yellow brackets + yellow panel with the vertical name; glitch cuts; each opens a profile (`#/artist/<slug>`) |
 | 03 | Transmissions | saw | Mixes & releases with a custom SoundCloud player (click the waveform to seek) |
 | 04 | Feedback | noise | Scroll-scrubbed panorama that shears with scroll speed, plus a photo/video sheet |

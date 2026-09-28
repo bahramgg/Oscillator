@@ -1199,18 +1199,6 @@ body { font-size: 16px; }
 .pc__link:hover .pc__no, .pc__link:focus-visible .pc__no { border-color: var(--acid); }
 .pc__link:hover .pc__mark, .pc__link:focus-visible .pc__mark { background-color: var(--acid); }
 
-/* ░░ 01 carrier = a yellow panel, like the reel's inverted cuts ░░ */
-.carrier { background: var(--acid); color: var(--ink); }
-.carrier .sec__head::after { background: rgba(7, 7, 7, .35); }
-.carrier .sec__num, .carrier .sec__head .glyph { color: var(--ink); }
-.carrier .sec__title { --b: var(--ink); color: var(--ink); }
-.carrier .sec__sub, .carrier .sec__meta { color: rgba(7, 7, 7, .6); }
-.carrier__text em { color: var(--ink); background: none; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .18em; }
-.carrier .facts { border-color: rgba(7, 7, 7, .3); }
-.carrier .facts div { border-color: rgba(7, 7, 7, .3); }
-.carrier .facts dt { color: rgba(7, 7, 7, .6); }
-.carrier .facts dd { color: var(--ink); }
-
 /* ░░ 03 covers & profile portrait carry brackets too ░░ */
 .tx__cover::before { display: none; }
 .pf__portrait .brk { --l: clamp(16px, 2vw, 28px); }
