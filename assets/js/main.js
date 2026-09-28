@@ -711,7 +711,7 @@
             '<span class="tx__state mono">Standby</span>' +
           '</div>' +
           '<div class="tx__bar" role="slider" tabindex="0" aria-label="Seek ' + esc(t.title) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>' +
-          '<div class="tx__player"></div>' +
+          '<div class="tx__player" inert></div>' +
           (tl.length ? '<details class="tx__tracks"><summary class="mono"><span>Tracklist · ' + pad(tl.length) + '</span></summary><ol>' +
             tl.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol></details>' : '') +
           (t.soundcloud ? '<a class="tx__ext mono" href="' + esc(t.soundcloud) + '" target="_blank" rel="noopener">Open on SoundCloud ↗︎</a>' : '') +
@@ -721,7 +721,7 @@
     txs = $$('.tx', list).map(function (el, i) {
       var o = {
         el: el, t: T[i], platter: $('.tx__platter', el), cvs: $('.tx__ring', el), tip: $('.tx__tip', el),
-        bar: $('.tx__bar', el), now: $('.tx__now', el), state: $('.tx__state', el),
+        bar: $('.tx__bar', el), now: $('.tx__now', el), state: $('.tx__state', el), playBtn: $('.tx__play', el),
         hover: -1, progress: 0, sec: 0, dirty: true
       };
       var data = o.t.waveform;
@@ -865,8 +865,12 @@
     pauseAll: function (except) {
       txs.forEach(function (x) { if (x !== except && x.widget && x.playing) x.widget.pause(); });
     },
+    // the mix the visitor asked for last; a mix that finishes loading after
+    // the visitor has moved on must not start on its own
+    want: null,
     toggle: function (o, frac) {
       if (!o.t.soundcloud) return;
+      Player.want = o;
       if (E && E.on) setSignal(false);
       this.pauseAll(o);
       if (frac != null) { o.progress = frac; o.sec = frac * o.t.duration; updateTx(o); drawTx(o); }
@@ -877,10 +881,14 @@
       }
       if (o.loading) { if (frac != null) o.pendingSeek = frac; return; }
       o.loading = true; o.pendingSeek = frac;
+      // each attempt gets a token; handlers of an abandoned attempt ignore their events
+      var gen = o.gen = (o.gen || 0) + 1;
+      var err = $('.tx__error', o.el); if (err) err.remove();
       o.el.classList.add('is-loading');
       setState(o, 'Tuning in');
       var self = this;
       this.loadApi().then(function () {
+        if (o.gen !== gen) return;
         var box = $('.tx__player', o.el), ifr = document.createElement('iframe');
         ifr.allow = 'autoplay; encrypted-media';
         ifr.title = 'SoundCloud player: ' + o.t.title;
@@ -888,28 +896,38 @@
           '&color=%23e4e418&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true';
         box.appendChild(ifr);
         var w = o.widget = window.SC.Widget(ifr), EV = window.SC.Widget.Events;
-        var fail = setTimeout(function () { if (!o.ready) self.fail(o); }, 12000);
+        var fail = setTimeout(function () { if (o.gen === gen && !o.ready) self.fail(o); }, 12000);
         w.bind(EV.READY, function () {
+          if (o.gen !== gen) return;
           o.ready = true; clearTimeout(fail);
           if (o.pendingSeek != null) w.seekTo(o.pendingSeek * o.t.duration * 1000);
+          if (Player.want !== o) {            // visitor moved on while this was loading
+            o.loading = false;
+            o.el.classList.remove('is-loading');
+            setState(o, 'Standby');
+            return;
+          }
           w.play();
           // some mobile browsers block playback started from outside the widget:
-          // only then show SoundCloud's own player so it can be tapped directly
+          // only then (playback never started) show SoundCloud's own player to tap
           setTimeout(function () {
-            if (o.playing) return;
+            if (o.gen !== gen || o.started) return;
             w.isPaused(function (paused) {
-              if (!paused || o.playing) return;
+              if (o.gen !== gen || !paused || o.started || Player.want !== o) return;
               o.loading = false;
               o.el.classList.remove('is-loading');
-              box.classList.add('is-visible');
+              box.classList.add('is-visible'); box.inert = false;
               setState(o, 'Tap play below');
             });
           }, 5000);
         });
         w.bind(EV.PLAY, function () {
-          o.playing = true; o.loading = false;
+          if (o.gen !== gen) return;
+          Player.want = o;                     // also counts a tap inside SoundCloud's own player
+          o.playing = true; o.started = true; o.loading = false;
           o.el.classList.remove('is-loading'); o.el.classList.add('is-playing');
-          box.classList.remove('is-visible');
+          o.playBtn.setAttribute('aria-label', 'Pause ' + o.t.title);
+          box.classList.remove('is-visible'); box.inert = true;
           setState(o, 'On air');
           if (E && E.on) setSignal(false);
           self.pauseAll(o);
@@ -917,28 +935,36 @@
           o.dirty = true;
         });
         var stop = function () {
+          if (o.gen !== gen) return;
           o.playing = false;
           o.el.classList.remove('is-playing');
+          o.playBtn.setAttribute('aria-label', 'Play ' + o.t.title);
           setState(o, o.progress > 0.999 ? 'Ended' : 'Paused');
           deck.update(o); o.dirty = true;
         };
         w.bind(EV.PAUSE, stop);
         w.bind(EV.FINISH, stop);
         w.bind(EV.PLAY_PROGRESS, function (e) {
+          if (o.gen !== gen) return;
           o.progress = e.relativePosition; o.sec = e.currentPosition / 1000;
           updateTx(o); deck.update(o);
         });
-      }).catch(function () { self.fail(o); });
+      }).catch(function () { if (o.gen === gen) self.fail(o); });
     },
+    // tear the attempt down completely so a retry starts clean and a late
+    // READY from the dead widget can't start a second, unreachable copy
     fail: function (o) {
-      o.loading = false;
-      o.el.classList.remove('is-loading');
+      o.gen = (o.gen || 0) + 1;
+      var box = $('.tx__player', o.el);
+      box.innerHTML = ''; box.classList.remove('is-visible'); box.inert = true;
+      o.widget = null; o.ready = false; o.loading = false; o.playing = false;
+      o.el.classList.remove('is-loading', 'is-playing');
       setState(o, 'Offline');
       if ($('.tx__error', o.el)) return;
       var p = document.createElement('p');
       p.className = 'tx__error mono';
       p.innerHTML = 'SoundCloud couldn\'t be reached from here. <a href="' + esc(o.t.soundcloud) + '" target="_blank" rel="noopener">Listen on SoundCloud ↗︎</a>';
-      $('.tx__player', o.el).after(p);
+      box.after(p);
     }
   };
   deck.btn.addEventListener('click', function () { if (deck.cur && deck.cur.widget) Player.toggle(deck.cur); });
@@ -1154,6 +1180,7 @@
   function setSignal(on) {
     if (!E || !E.supported()) return;
     if (on) {
+      Player.want = null;
       Player.pauseAll();
       E.start().then(function (ok) {
         if (!ok) return;

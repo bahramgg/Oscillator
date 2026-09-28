@@ -1178,7 +1178,7 @@ body { font-size: 16px; }
 .tx__ring { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 .tx__disc {
-  position: absolute; left: 50%; top: 50%; width: 56%; aspect-ratio: 1;
+  position: absolute; left: 50%; top: 50%; width: 50%; aspect-ratio: 1;
   transform: translate(-50%, -50%); border-radius: 50%; overflow: hidden;
   background: var(--ink-2);
   box-shadow: 0 0 0 1px var(--line-2), 0 0 0 7px var(--ink), 0 0 0 8px var(--line);
@@ -1308,3 +1308,8 @@ body { font-size: 16px; }
 }
 .boot__sound[aria-pressed="true"] { background: var(--acid); color: #000; }
 .boot__skip { margin-left: auto; }
+
+/* review fixes: hidden widget stays out of reach; deck never covers the menu or the last link */
+.tx__player:not(.is-visible) { visibility: hidden; }
+.menu:not([hidden]) ~ .deck { display: none; }
+@media (max-width: 860px) { .has-deck .pf__next { padding-bottom: calc(48px + 84px + env(safe-area-inset-bottom, 0px)); } }
