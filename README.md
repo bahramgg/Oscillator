@@ -10,7 +10,7 @@ The site is built as an instrument. Every section is a waveform:
 | 01 | Carrier | sine | The label manifesto |
 | 02 | Voices | square | The roster as a swipeable reel of the label's poster series (photo in yellow brackets + yellow panel with the vertical name; glitch cuts; arrows/drag on desktop); each opens a profile (`#/artist/<slug>`) |
 | 03 | Transmissions | saw | Mixes & releases. Play opens the stage: a full-screen now-playing page (blurred cover, spinning disc inside the waveform ring, time readout, ±30 s, tracklist). Minimise to the bottom bar. Audio via hidden SoundCloud widgets |
-| 04 | Feedback | noise | Scroll-scrubbed panorama that shears with scroll speed, plus a photo/video sheet |
+| 04 | Feedback | noise | Scroll-scrubbed panorama that shears with scroll speed; photo frames with glitch cuts; Keyv's emblem as a centrepiece that oscillates (a travelling wave that settles as it reaches the centre of the screen, and pulses with the signal) |
 | 05 | Next signal | triangle | Events (shows a "no signal" state when empty) |
 | 06 | Output | pulse | Contact / demos, centred footer with the logo |
 

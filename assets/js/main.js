@@ -495,8 +495,11 @@
       var w = R.scrollWidth ? R.clientWidth / R.scrollWidth : 1;
       bar.style.width = (Math.min(1, w) * 100).toFixed(2) + '%';
       bar.style.left = (max > 0 ? (R.scrollLeft / max) * (1 - w) * 100 : 0).toFixed(2) + '%';
-      prev.disabled = R.scrollLeft <= 2;
-      next.disabled = R.scrollLeft >= max - 2;
+      var atS = R.scrollLeft <= 2, atE = R.scrollLeft >= max - 2;
+      if (atE && !atS && document.activeElement === next) prev.focus({ preventScroll: true });
+      if (atS && !atE && document.activeElement === prev) next.focus({ preventScroll: true });
+      prev.disabled = atS;
+      next.disabled = atE;
     };
     var ticking = false;
     R.addEventListener('scroll', function () {
@@ -509,7 +512,7 @@
     next.addEventListener('click', function () { go(1); });
 
     // mouse drag (touch already scrolls natively)
-    var drag = null, dragged = false;
+    var drag = null, dragged = false, relTok = 0;
     R.addEventListener('pointerdown', function (e) {
       if (e.pointerType !== 'mouse' || e.button !== 0) return;
       drag = { x: e.clientX, left: R.scrollLeft, moved: false };
@@ -527,13 +530,28 @@
       if (!moved) return;
       dragged = true;
       setTimeout(function () { dragged = false; }, 250);
-      R.classList.remove('is-drag');
-      var st = step();
+      // ease to the nearest poster while snapping is still off, then turn it back on
+      var st = step(), my = ++relTok;
       R.scrollTo({ left: Math.round(R.scrollLeft / st) * st, behavior: reduced ? 'auto' : 'smooth' });
+      var done = function () {
+        R.removeEventListener('scrollend', done);
+        if (my === relTok && !(drag && drag.moved)) R.classList.remove('is-drag');
+      };
+      R.addEventListener('scrollend', done);
+      setTimeout(done, 700);
     });
     // a drag must not also open the artist it started on
     R.addEventListener('click', function (e) { if (dragged) { e.preventDefault(); e.stopPropagation(); dragged = false; } }, true);
     R.addEventListener('dragstart', function (e) { e.preventDefault(); });
+    // keyboard focus on a half-visible poster brings the whole poster into view
+    R.addEventListener('focusin', function (e) {
+      var li = e.target.closest('.pc');
+      if (!li || !e.target.matches(':focus-visible')) return;
+      var r = li.getBoundingClientRect(), b = R.getBoundingClientRect(),
+          p = parseFloat(getComputedStyle(R).scrollPaddingLeft) || 0;
+      if (r.left < b.left + p - 1 || r.right > b.right - p + 1)
+        li.scrollIntoView({ block: 'nearest', inline: 'start', behavior: reduced ? 'auto' : 'smooth' });
+    });
     roster.syncReel = sync;
     sync();
   }
@@ -698,6 +716,7 @@
       if (pf.open) return;
       pf.el.hidden = true;
       pf.body.innerHTML = '';
+      if (stage.isOpen) return;
       document.documentElement.classList.remove('is-locked');
       if (pf.lastFocus && pf.lastFocus.focus) pf.lastFocus.focus({ preventScroll: true });
     }, 900);
@@ -720,10 +739,10 @@
     pf.el.addEventListener('click', function (e) {
       var swap = e.target.closest('[data-swap]');
       if (swap) { e.preventDefault(); location.replace('#/artist/' + swap.dataset.swap); return; }
-      var listen = e.target.closest('[data-listen]');
-      if (listen) {
+      var lnk = e.target.closest('[data-listen]');
+      if (lnk) {
         e.preventDefault();
-        var id = listen.dataset.listen;
+        var id = lnk.dataset.listen;
         requestClose();
         setTimeout(function () {
           var el = document.getElementById('tx-' + id);
@@ -925,15 +944,19 @@
       }
     });
     S_.close.addEventListener('click', function () { S_.hide(); });
-    el.addEventListener('keydown', function (e) {
+    document.addEventListener('keydown', function (e) {
       if (!S_.isOpen) return;
       if (e.key === 'Escape') { e.preventDefault(); S_.hide(); }
       else if (e.key === 'Tab') {
         var f = $$('a[href], button, [tabindex]:not([tabindex="-1"]), summary', el).filter(function (x) { return x.offsetParent !== null; });
+        var ifr = scHost.classList.contains('is-visible') && $('.sc-slot.is-cur iframe', scHost);
+        if (ifr) f.push(ifr);
         if (!f.length) return;
-        var first = f[0], last = f[f.length - 1];
-        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        var first = f[0], last = f[f.length - 1], a = document.activeElement;
+        var inside = el.contains(a) || (ifr && a === ifr);
+        if (!inside) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
+        else if (e.shiftKey && a === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && a === last) { e.preventDefault(); first.focus(); }
       }
     });
     el.addEventListener('click', function (e) {
@@ -989,6 +1012,7 @@
   };
   stage.show = function (o, fromEl) {
     stage.fill(o);
+    if (o.blocked && o.ready && !o.started) scReveal(o, true);   // reopened a blocked mix
     if (stage.isOpen) return;
     // open as a circle growing from whatever was pressed
     var r = fromEl && fromEl.getBoundingClientRect ? fromEl.getBoundingClientRect() : null;
@@ -1008,6 +1032,7 @@
   stage.hide = function () {
     if (!stage.isOpen) return;
     stage.isOpen = false;
+    scReveal(null, false);
     stage.el.classList.remove('is-open');
     document.documentElement.classList.remove('stage-open');
     if (deck.cur && deck.cur.started) deck.show(deck.cur);
@@ -1081,6 +1106,8 @@
   function scReveal(o, on) {
     scHost.classList.toggle('is-visible', on);
     scHost.inert = !on;
+    // the fallback sits outside the dialog: let assistive tech reach it while shown
+    if (on) stage.el.removeAttribute('aria-modal'); else stage.el.setAttribute('aria-modal', 'true');
     txs.forEach(function (x) { if (x.slot) x.slot.classList.toggle('is-cur', on && x === o); });
   }
 
@@ -1125,6 +1152,7 @@
       }
       if (o.loading) { if (frac != null) o.pendingSeek = frac; return; }
       o.loading = true; o.pendingSeek = frac;
+      scReveal(null, false);
       // each attempt gets a token; handlers of an abandoned attempt ignore their events
       var gen = o.gen = (o.gen || 0) + 1;
       var err = $('.tx__error', o.el); if (err) err.remove();
@@ -1160,11 +1188,11 @@
             if (o.gen !== gen || o.started) return;
             w.isPaused(function (paused) {
               if (o.gen !== gen || !paused || o.started || Player.want !== o) return;
-              o.loading = false;
+              o.loading = false; o.blocked = true;
               o.el.classList.remove('is-loading');
               setState(o, 'Tap play in the player below');
               if (stage.cur === o) stage.update();
-              scReveal(o, true);
+              if (stage.isOpen && stage.cur === o) scReveal(o, true);
             });
           }, 5000);
         });
@@ -1227,14 +1255,31 @@
     } else {
       fb.track.style.height = 'auto';
     }
-    var media = F.media || [];
-    $('.sheet').innerHTML = media.map(function (m, i) {
+    var media = F.media || [], n = 0;
+    $('.sheet').innerHTML = media.map(function (m) {
+      var no = 'FR ' + pad(++n);
+      var cap = '<figcaption class="frame__cap mono"><b>' + no + '</b><i aria-hidden="true"></i><span>' + esc(m.caption || '') + '</span></figcaption>';
+      if (m.type === 'emblem') {
+        return '<figure class="mark">' +
+          '<div class="mark__stage"><canvas class="mark__cvs" role="img" aria-label="' + esc(m.caption || 'Mark') + '" data-src="' + esc(m.src) + '"></canvas><i class="brk" aria-hidden="true"></i></div>' +
+          (m.word ? '<p class="mark__word" aria-hidden="true">. ' + esc(m.word).toUpperCase().split('').join(' ') + ' .</p>' : '') +
+          cap + '</figure>';
+      }
       var inner = m.type === 'video'
         ? '<video src="' + esc(m.src) + '"' + (m.poster ? ' poster="' + esc(m.poster) + '"' : '') + ' muted loop playsinline preload="metadata"></video>'
         : '<img src="' + esc(m.src) + '" alt="' + esc(m.caption || '') + '" loading="lazy">';
-      return '<figure class="frame" data-reveal><div class="frame__media">' + inner + '</div>' +
-        '<figcaption class="frame__cap mono"><b>FR ' + pad(i + 1) + '</b><span>' + esc(m.caption || '') + '</span></figcaption></figure>';
+      return '<figure class="frame"><div class="frame__media"' + (m.type !== 'video' ? ' style="--img:url(\'' + esc(absUrl(m.src)) + '\')"' : '') + '>' + inner + '<i class="brk" aria-hidden="true"></i></div>' + cap + '</figure>';
     }).join('');
+    // photos glitch-cut once as they come in, and on hover
+    var frames = $$('.sheet .frame__media');
+    frames.forEach(function (f) { f.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') glitch(f); }); });
+    if (io) {
+      var gio = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { setTimeout(function () { glitch(e.target); }, 200); gio.unobserve(e.target); } });
+      }, { threshold: 0.45 });
+      frames.forEach(function (f) { gio.observe(f); });
+    }
+    initMark();
     // videos play only while visible
     if (io) {
       var vio = new IntersectionObserver(function (es) {
@@ -1269,6 +1314,51 @@
     }
     var frames = Math.floor(p * 3 * 60 * 25);
     fb.tc.textContent = '00:' + pad(Math.floor(frames / 1500)) + ':' + pad(Math.floor(frames / 25) % 60) + ':' + pad(frames % 25);
+  }
+
+  /* ─── the mark: a logo that oscillates ─────────────────────────────────
+     the emblem is redrawn in thin horizontal strips, each pushed sideways by
+     a travelling sine wave. Far from the centre of the screen the wave is
+     wide (out of tune); as it reaches the centre it settles to a slow drift.
+     Kicks from the signal push it. */
+  var mark = { amp: 30 };
+  function initMark() {
+    var cvs = $('.mark__cvs');
+    if (!cvs) return;
+    mark.cvs = cvs; mark.el = cvs.closest('.mark');
+    mark.img = new Image();
+    mark.img.onload = function () { resizeMark(); drawMark(true); };
+    mark.img.src = cvs.getAttribute('data-src');
+    watch(mark.el, 'mark');
+  }
+  function resizeMark() {
+    if (!mark.cvs) return;
+    var s = sizeCanvas(mark.cvs, 2);
+    mark.ctx = s.ctx; mark.w = s.w; mark.h = s.h; mark.d = s.d;
+    if (reduced) drawMark(true);
+  }
+  function drawMark(force) {
+    var c = mark.ctx, img = mark.img;
+    if (!c || !img || !img.naturalWidth) return;
+    if (reduced && !force) return;
+    var w = mark.w, h = mark.h, d = mark.d;
+    // contain-fit with room for the wave
+    var sc = Math.min(w * 0.84 / img.naturalWidth, h * 0.94 / img.naturalHeight);
+    var dw = img.naturalWidth * sc, dh = img.naturalHeight * sc, ox = (w - dw) / 2, oy = (h - dh) / 2;
+    var target = 3;
+    if (!reduced && mark.el) {
+      var r = mark.el.getBoundingClientRect();
+      var off = Math.abs(r.top + r.height / 2 - S.vh / 2) / S.vh;       // 0 at the centre
+      target = 3 + Math.min(1, Math.max(0, off - 0.08) * 2.2) * 34 + S.beat * 14;
+    }
+    mark.amp = reduced ? 0 : lerp(mark.amp, target, 0.08);
+    c.clearRect(0, 0, w, h);
+    var strip = 2 * d, rows = Math.ceil(dh / strip), srcStrip = img.naturalHeight / rows, t = S.t;
+    for (var i = 0; i < rows; i++) {
+      var y = i / rows;
+      var off2 = mark.amp * d * (Math.sin(y * TAU * 1.6 - t * 1.4) * 0.8 + Math.sin(y * TAU * 5.3 + t * 2.3) * 0.2);
+      c.drawImage(img, 0, i * srcStrip, img.naturalWidth, srcStrip + 0.5, ox + off2, oy + i * strip, dw, strip + 0.5);
+    }
   }
 
   /* ─── 05 next signal ───────────────────────────────────────────────── */
@@ -1469,7 +1559,7 @@
   function resizeAll() {
     S.vw = innerWidth; S.vh = innerHeight; S.sy = scrollY;
     fitTitles(); resizeScope(); resizeRail(); measureCarrier(); resizeRoster();
-    resizeTx(); resizeFeedback(); resizeEvents(); measureOutput();
+    resizeTx(); resizeFeedback(); resizeMark(); resizeEvents(); measureOutput();
     if (pf.open) { sizeProfileCanvases(); fitProfileName(); }
   }
 
@@ -1525,6 +1615,7 @@
     drawRail();
     if (vis.roster) drawRoster();
     if (vis.feedback) drawFeedback();
+    if (vis.mark) drawMark();
     if (vis.events) drawEvents();
   }
 
