@@ -237,10 +237,11 @@
 
 
   <!-- now-playing deck -->
-  <div class="deck mono" hidden>
-    <button class="deck__toggle" type="button" aria-label="Pause">❚❚</button>
-    <span class="deck__title"></span>
-    <span class="deck__time">0:00</span>
+  <div class="deck" hidden>
+    <span class="deck__disc" aria-hidden="true"><img alt=""></span>
+    <span class="deck__info"><span class="deck__title"></span><span class="deck__time mono">0:00</span></span>
+    <button class="deck__toggle" type="button" aria-label="Pause"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg></button>
+    <i class="deck__bar" aria-hidden="true"></i>
   </div>
 
   <noscript>
