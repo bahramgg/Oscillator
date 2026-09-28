@@ -17,7 +17,9 @@
 
   <link rel="icon" href="assets/img/favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
-  <link rel="preload" href="assets/fonts/anybody-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/anton.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/jost-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/orbitron-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/martian-mono-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/style.css">
 
@@ -38,11 +40,18 @@
 
   <!-- ░░ Boot ░░ -->
   <div class="boot" aria-hidden="true">
-    <span class="logo boot__logo"></span>
-    <svg class="boot__line" viewBox="0 0 1000 200" preserveAspectRatio="none"><path d="M0 100 H1000"/></svg>
+    <span class="logo logo--icon boot__icon"></span>
+    <div class="halo boot__halo">
+      <svg class="halo__ring" viewBox="0 0 400 400" aria-hidden="true">
+            <defs><path id="boot-ring" d="M200,200 m-172,0 a172,172 0 1,1 344,0 a172,172 0 1,1 -344,0"/></defs>
+            <text><textPath href="#boot-ring" textLength="1080" lengthAdjust="spacing">OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/</textPath></text>
+          </svg>
+      <span class="logo logo--outline"></span>
+    </div>
+    <p class="wearetitle boot__title">We are Oscillator</p>
     <div class="boot__meta mono">
       <span>Oscillator</span>
-      <span>Calibrating signal <b class="boot__pct">000</b></span>
+      <span>Tap to skip · <b class="boot__pct">000</b></span>
     </div>
   </div>
 
@@ -94,7 +103,6 @@
     <section class="hero" id="top" data-wave="sine" data-label="00 — Power">
       <canvas class="scope" aria-hidden="true"></canvas>
       <div class="graticule" aria-hidden="true"></div>
-      <span class="logo hero__logo" role="img" aria-label="Oscillator logo"></span>
 
       <div class="hero__read hero__read--tl mono">
         <span>OSC—01</span>
@@ -118,7 +126,15 @@
         <p class="hero__hint mono" aria-hidden="true">Move to modulate — <span class="hero__hintmode">x: ratio · y: phase</span></p>
       </div>
 
-      <h1 class="wordmark" aria-label="Oscillator"></h1>
+      <div class="halo hero__halo" aria-hidden="true">
+        <svg class="halo__ring" viewBox="0 0 400 400" aria-hidden="true">
+            <defs><path id="hero-ring" d="M200,200 m-172,0 a172,172 0 1,1 344,0 a172,172 0 1,1 -344,0"/></defs>
+            <text><textPath href="#hero-ring" textLength="1080" lengthAdjust="spacing">OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/</textPath></text>
+          </svg>
+        <span class="logo logo--outline"></span>
+        <span class="logo logo--fill"></span>
+      </div>
+      <h1 class="wearetitle hero__title">We are Oscillator</h1>
     </section>
 
     <!-- ░░ 01 — Carrier / about ░░ -->

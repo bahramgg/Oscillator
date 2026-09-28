@@ -6,13 +6,13 @@ The site is built as an instrument. Every section is a waveform:
 
 | # | Section | Wave | What it is |
 |---|---------|------|------------|
-| 00 | Power | — | Live oscilloscope + the wordmark, whose letters oscillate in width and weight |
+| 00 | Power | — | Intro and hero after the "Oscillator Rises" reel: neon logo in a rotating OSCILLATOR/ ring, hard yellow strobe cuts, faint live oscilloscope |
 | 01 | Carrier | sine | The label manifesto — words drift in and out of tune as you scroll |
 | 02 | Voices | square | The artist roster; each artist opens a full profile (`#/artist/<slug>`) |
 | 03 | Transmissions | saw | Mixes & releases with a custom SoundCloud player (click the waveform to seek) |
 | 04 | Feedback | noise | Scroll-scrubbed panorama that shears with scroll speed, plus a photo/video sheet |
 | 05 | Next signal | triangle | Events (shows a "no signal" state when empty) |
-| 06 | Output | pulse | Contact / demos — the headline reacts to the cursor like a theremin |
+| 06 | Output | pulse | Contact / demos — headline letters rise toward the cursor like an equalizer |
 
 Press **Turn on the signal** and the site generates a techno loop live in the browser
 with the Web Audio API (kick, hats, clap, acid bassline — no samples). The scope then
@@ -58,7 +58,8 @@ Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a 
   SoundCloud (the DEMONSTRATOR mixes, artwork, portrait, crowd panorama and real
   waveforms). Bio copy is a starting draft — please review it.
 - Colours: ink `#070707`, bone `#e9e7df`, yellow `#e4e418` (from the label logo).
-- Fonts: Anybody (variable width 50–150 %), Instrument Serif, Martian Mono — all SIL OFL,
+- Fonts (matched to the label's posters and the "Oscillator Rises" reel): Anton, Jost,
+  Orbitron, Martian Mono — all SIL OFL,
   see [`assets/fonts/LICENSE.md`](assets/fonts/LICENSE.md).
 - Respects `prefers-reduced-motion`; works on touch devices (no custom cursor, tap to open).
 

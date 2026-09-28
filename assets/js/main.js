@@ -128,7 +128,7 @@
     mx: innerWidth / 2, my: innerHeight / 2, nx: 0.5, ny: 0.5, mvx: 0, mvy: 0,
     hasMouse: false, speed: 0,
     sy: scrollY, lastSy: scrollY, sv: 0,
-    beat: 0, level: 0
+    beat: 0, level: 0, beatCount: 0
   };
   var vis = {};
   var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (entries) {
@@ -152,7 +152,9 @@
     });
   }
 
-  /* ─── boot ─────────────────────────────────────────────────────────── */
+  /* ─── boot: the "Oscillator Rises" intro ─────────────────────────────
+     black → centre mark → rotates & grows → yellow strobe cuts → neon logo
+     in the OSCILLATOR/ ring → WE ARE OSCILLATOR → hands over to the hero */
   function boot() {
     return new Promise(function (resolve) {
       var el = $('.boot'), skip = reduced;
@@ -160,27 +162,53 @@
       var done = function () { document.body.classList.remove('is-booting'); resolve(); };
       if (skip || !el) { if (el) el.remove(); done(); return; }
 
-      var path = $('.boot__line path'), pct = $('.boot__pct'), t0 = performance.now(), DUR = 1500, fontsReady = false;
+      var pct = $('.boot__pct'), t0 = performance.now(), timers = [], finished = false, fontsReady = false;
       (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () { fontsReady = true; });
-      (function step(now) {
-        var k = Math.min(1, (now - t0) / DUR);
-        var e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
-        var d = '';
-        for (var i = 0; i <= 200; i++) {
-          var env = Math.sin(Math.PI * i / 200);
-          var y = 100 + Math.sin(i * 0.2 - now * 0.012) * 78 * e * env + (Math.random() - 0.5) * 10 * (1 - e) * env;
-          d += (i ? 'L' : 'M') + i * 5 + ' ' + y.toFixed(1);
-        }
-        path.setAttribute('d', d);
-        pct.textContent = pad(Math.floor(e * 100), 3);
-        if (k < 1 || (!fontsReady && now - t0 < 3500)) requestAnimationFrame(step);
-        else {
-          el.classList.add('is-out');
-          setTimeout(done, 300);
-          setTimeout(function () { el.remove(); }, 1100);
-        }
+      var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
+      var cls = function (c, on) { el.classList.toggle(c, on !== false); };
+      var flash = function (ms) { at(ms, function () { cls('is-flash'); }); at(ms + 110, function () { cls('is-flash', false); }); };
+      var finish = function () {
+        if (finished) return;
+        finished = true;
+        timers.forEach(clearTimeout);
+        el.classList.remove('is-flash');
+        el.classList.add('is-out');
+        done();
+        setTimeout(function () { el.remove(); }, 900);
+      };
+
+      at(250, function () { cls('st-1'); });
+      at(900, function () { cls('st-2'); });
+      flash(1700); flash(2050); flash(2400);          // ≤ 3 flashes per second
+      at(2700, function () { cls('st-3'); });
+      flash(2750);
+      at(3250, function () { cls('st-4'); });
+      at(4300, function () {
+        if (fontsReady) finish();
+        else (document.fonts ? document.fonts.ready : Promise.resolve()).then(finish);
+      });
+      el.addEventListener('click', finish);
+      document.addEventListener('keydown', function onKey() { document.removeEventListener('keydown', onKey); finish(); });
+      (function tick(now) {
+        if (finished) return;
+        pct.textContent = pad(Math.min(100, Math.floor((now - t0) / 43)), 3);
+        requestAnimationFrame(tick);
       })(t0);
     });
+  }
+
+  /* ─── strobe: the reel's hard yellow cuts, on the hero only ───────────
+     never more than two flashes a second; off for reduced motion */
+  var strobe = { busy: false, next: 0 };
+  function fireStrobe(pattern) {
+    if (reduced || strobe.busy || !vis.hero || document.body.classList.contains('is-booting')) return;
+    strobe.busy = true;
+    var t = 0;
+    (pattern || [90, 380, 90]).forEach(function (ms, i) {
+      setTimeout(function () { hero.el.classList.toggle('is-strobe', i % 2 === 0); }, t);
+      t += ms;
+    });
+    setTimeout(function () { hero.el.classList.remove('is-strobe'); strobe.busy = false; }, t);
   }
 
   /* ─── clock ────────────────────────────────────────────────────────── */
@@ -196,59 +224,35 @@
     tick(); setInterval(tick, 1000);
   }
 
-  /* ─── 00 hero: wordmark + oscilloscope ─────────────────────────────── */
-  var hero = { el: $('.hero'), wm: $('.wordmark'), letters: [], amp: 26, phase: 0, fx: 2.5, fy: 2, ph: 0, frame: 0 };
+  /* ─── 00 hero: logo halo + oscilloscope ───────────────────────────── */
+  var hero = { el: $('.hero'), halo: $('.hero__halo'), fx: 2.5, fy: 2, ph: 0, frame: 0 };
 
   function initHero() {
     $('.hero__tag').innerHTML = rich(D.label.tagline);
-    hero.wm.innerHTML = D.label.name.toUpperCase().split('').map(function (c) {
-      return '<span aria-hidden="true">' + esc(c) + '</span>';
-    }).join('');
-    hero.letters = $$('span', hero.wm);
     hero.cvs = $('.scope');
     hero.readX = $('.hero__x'); hero.readY = $('.hero__y'); hero.readP = $('.hero__phi'); hero.mode = $('.hero__hintmode');
     watch(hero.el, 'hero');
-  }
-
-  function fitWordmark() {
-    var wm = hero.wm;
-    wm.style.fontSize = '100px';
-    hero.letters.forEach(function (l) { l.style.fontStretch = '100%'; l.style.fontWeight = '700'; });
-    var w = hero.letters.reduce(function (s, l) { return s + l.getBoundingClientRect().width; }, 0) || 1;
-    var target = hero.el.clientWidth * 0.93;
-    wm.style.fontSize = (100 * target / w).toFixed(2) + 'px';
   }
 
   function resizeScope() {
     var s = sizeCanvas(hero.cvs, 1.6);
     hero.ctx = s.ctx; hero.w = s.w; hero.h = s.h; hero.d = s.d;
     hero.ctx.fillStyle = '#070707'; hero.ctx.fillRect(0, 0, s.w, s.h);
+    // the trace orbits the logo halo
+    var hr = hero.halo.getBoundingClientRect(), cr = hero.cvs.getBoundingClientRect();
+    hero.cx = (hr.left + hr.width / 2 - cr.left) * s.d;
+    hero.cy = (hr.top + hr.height / 2 - cr.top) * s.d;
+    hero.R = hr.width * 0.62 * s.d;
   }
 
   function drawHero() {
-    var n = hero.letters.length;
-    // wordmark: a travelling wave through font-stretch & weight (the sum of widths stays ~constant)
-    if (!reduced) {
-      var prox = 0.5;
-      if (S.hasMouse) prox = clamp(S.my / S.vh, 0, 1);
-      hero.amp = lerp(hero.amp, Math.min(44, 20 + prox * 22 + S.beat * 12), 0.06);
-      hero.phase += S.dt * (1.1 + S.nx * 2.4 + S.level * 3);
-      for (var i = 0; i < n; i++) {
-        var ph = hero.phase - (i * TAU) / n;
-        var st = clamp(100 + hero.amp * Math.sin(ph), 50, 150);
-        var wg = clamp(560 + 250 * Math.sin(ph + 1.3) + S.beat * 170, 100, 900);
-        hero.letters[i].style.fontStretch = st.toFixed(1) + '%';
-        hero.letters[i].style.fontWeight = wg.toFixed(0);
-      }
-    }
-
     // scope
     var c = hero.ctx, w = hero.w, h = hero.h, d = hero.d;
     if (!c) return;
     c.globalCompositeOperation = 'source-over';
     c.fillStyle = reduced ? '#070707' : 'rgba(7,7,7,0.17)';
     c.fillRect(0, 0, w, h);
-    var cx = w / 2, cy = h * 0.4, R = Math.min(w * 0.3, h * 0.27);
+    var cx = hero.cx, cy = hero.cy, R = hero.R;
     c.beginPath();
     var buf = E && E.on ? E.wave() : null;
     if (buf) {
@@ -576,8 +580,9 @@
     var el = $('.pf__name', pf.body);
     if (!el) return;
     el.style.fontSize = '';
+    if (!el.parentNode.clientWidth) return;   // not laid out yet (dialog still hidden)
     var longest = Math.max.apply(null, el.textContent.split(/\s+/).map(function (w) { return w.length; }));
-    var max = el.parentNode.clientWidth / (longest * 0.92);
+    var max = el.parentNode.clientWidth / (longest * 0.56);
     if (parseFloat(getComputedStyle(el).fontSize) > max) el.style.fontSize = max.toFixed(1) + 'px';
   }
   function sizeProfileCanvases() {
@@ -610,7 +615,7 @@
         pf.body.classList.remove('is-swapping');
         // replay the name stretch
         var name = $('.pf__name', pf.body);
-        if (name) { name.style.transition = 'none'; name.style.fontStretch = '50%'; void name.offsetWidth; name.style.transition = ''; name.style.fontStretch = ''; }
+        if (name) { name.style.transition = 'none'; name.style.letterSpacing = '-.02em'; void name.offsetWidth; name.style.transition = ''; name.style.letterSpacing = ''; }
       }, 320);
       return;
     }
@@ -620,6 +625,7 @@
     bandFor(slug);
     pf.el.hidden = false;
     pf.el.scrollTop = 0;
+    fitProfileName();
     document.documentElement.classList.add('is-locked');
     pv.on = false; pv.el.classList.remove('is-on');
     roster.rows.forEach(function (r) { r.hover = false; r.link.classList.remove('is-hover'); });
@@ -1012,7 +1018,7 @@
   }
   function drawOutput() {
     if (reduced) return;
-    var sig = S.vw * 0.13, sig2 = 2 * sig * sig, range = S.vw < 860 ? 40 : 95;
+    var sig = S.vw * 0.13, sig2 = 2 * sig * sig, range = S.vw < 860 ? 35 : 60;
     for (var i = 0; i < th.letters.length; i++) {
       var l = th.letters[i], k;
       if (S.hasMouse) {
@@ -1022,11 +1028,10 @@
         k = 0.5 + 0.5 * Math.sin(S.t * 1.6 - l.i * 0.45);
       }
       k = Math.min(1, k + S.beat * 0.15);
-      var st = Math.round(55 + range * k), wg = Math.round(250 + 600 * k);
-      if (st !== l.st || wg !== l.wg) {
-        l.el.style.fontStretch = st + '%';
-        l.el.style.fontWeight = wg;
-        l.st = st; l.wg = wg;
+      var sc = Math.round((1 + k * range / 160) * 100) / 100;
+      if (sc !== l.st) {
+        l.el.style.transform = sc === 1 ? '' : 'scaleY(' + sc + ')';
+        l.st = sc;
       }
     }
   }
@@ -1127,7 +1132,7 @@
 
   function resizeAll() {
     S.vw = innerWidth; S.vh = innerHeight; S.sy = scrollY;
-    fitTitles(); fitWordmark(); resizeScope(); resizeRail(); measureCarrier(); resizeRoster();
+    fitTitles(); resizeScope(); resizeRail(); measureCarrier(); resizeRoster();
     resizeTx(); resizeFeedback(); resizeEvents(); measureOutput();
     if (pf.open) { sizeProfileCanvases(); fitProfileName(); }
   }
@@ -1152,7 +1157,10 @@
     S.beat *= Math.exp(-dt * 7);
     if (E && E.on) {
       var at = E.now();
-      while (E.beats.length && E.beats[0] <= at) { E.beats.shift(); S.beat = 1; }
+      while (E.beats.length && E.beats[0] <= at) {
+        E.beats.shift(); S.beat = 1;
+        if (++S.beatCount % 32 === 0) fireStrobe([80]);   // one cut every 8 bars
+      }
       S.level = lerp(S.level, E.level(), 0.35);
       E.setCutoff(S.hasMouse ? 1 - S.ny : 0.38 + 0.3 * Math.sin(S.t * 0.35) + Math.min(Math.abs(S.sv) * 0.0005, 0.3));
     } else {
@@ -1163,6 +1171,11 @@
       S.lastBeat = b;
       hero.el.style.setProperty('--beat', b);
       for (var pi = 0; pi < pwrs.length; pi++) pwrs[pi].style.setProperty('--beat', b);
+    }
+
+    if (!E || !E.on) {
+      if (!strobe.next) strobe.next = S.t + 7;
+      if (S.t > strobe.next) { fireStrobe(); strobe.next = S.t + 10 + Math.random() * 6; }
     }
 
     if (pf.open) { drawProfile(); drawCursor(); return; }
