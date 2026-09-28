@@ -55,8 +55,7 @@ Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a 
 - Instagram requires a login, so the initial content was taken from Keyv's public
   SoundCloud (the DEMONSTRATOR mixes, artwork, portrait, crowd panorama and real
   waveforms). Bio copy is a starting draft — please review it.
-- Colours: ink `#070707`, bone `#e9e7df`, acid `#cfff3e` (taken from the laser in the
-  DEMONSTRATOR #2 artwork).
+- Colours: ink `#070707`, bone `#e9e7df`, yellow `#fcf800` (the label's Instagram yellow).
 - Fonts: Anybody (variable width 50–150 %), Instrument Serif, Martian Mono — all SIL OFL,
   see [`assets/fonts/LICENSE.md`](assets/fonts/LICENSE.md).
 - Respects `prefers-reduced-motion`; works on touch devices (no custom cursor, tap to open).

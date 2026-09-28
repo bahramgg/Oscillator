@@ -43,8 +43,8 @@
   --bone-3: rgba(233, 231, 223, .36);
   --line: rgba(233, 231, 223, .13);
   --line-2: rgba(233, 231, 223, .24);
-  --acid: #cfff3e;
-  --acid-2: rgba(207, 255, 62, .22);
+  --acid: #fcf800;
+  --acid-2: rgba(252, 248, 0, .22);
 
   --f-display: 'Anybody', 'Arial Narrow', 'Helvetica Neue', sans-serif;
   --f-serif: 'Instrument Serif', 'Times New Roman', serif;
@@ -367,7 +367,7 @@ main { padding-left: var(--rail); }
 }
 .wordmark span { display: inline-block; will-change: font-stretch; }
 .wordmark span:nth-child(odd) { color: var(--bone); }
-.signal-on .wordmark span { text-shadow: 0 0 calc(var(--beat) * 40px) rgba(207, 255, 62, .35); }
+.signal-on .wordmark span { text-shadow: 0 0 calc(var(--beat) * 40px) rgba(252, 248, 0, .35); }
 
 /* ==========================================================================
    01 — Carrier
