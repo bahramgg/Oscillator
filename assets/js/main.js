@@ -787,7 +787,6 @@
       return '<article class="tx" id="tx-' + esc(t.id) + '">' +
         '<button class="tx__cover" type="button" aria-label="Play ' + esc(t.title) + '">' +
           '<img src="' + esc(t.cover) + '" alt="" loading="lazy"><i class="brk" aria-hidden="true"></i>' +
-          '<span class="tx__coverplay" aria-hidden="true">' + ICON_PLAY + '</span>' +
         '</button>' +
         '<div class="tx__body">' +
           '<p class="tx__meta mono">' + metaline(t, i) + '</p>' +

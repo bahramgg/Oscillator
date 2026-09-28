@@ -1453,3 +1453,11 @@ body { font-size: 16px; }
 }
 .boot.is-video.is-flash { background: var(--acid); }
 .boot.is-video.is-flash .boot__video { filter: none; }
+
+/* covers carry no play icon (the button below is enough) */
+.tx__coverplay { display: none !important; }
+/* phones: one artist fills the whole width, neighbours fully off-screen */
+@media (max-width: 560px) {
+  .roster { grid-auto-columns: 100%; --rg: calc(2 * var(--gutter)); }
+  .pc__link { aspect-ratio: 4 / 5.2; }
+}
