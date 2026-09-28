@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Oscillator — Techno Label &amp; Artist Collective</title>
+  <meta name="description" content="Oscillator is a techno label and artist collective curated by Keyv. Artists, mixes and transmissions from the low end.">
+  <meta name="theme-color" content="#070707">
+  <meta name="color-scheme" content="dark">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Oscillator">
+  <meta property="og:title" content="Oscillator — Techno Label &amp; Artist Collective">
+  <meta property="og:description" content="A techno label and artist collective curated by Keyv. Tune in.">
+  <meta property="og:image" content="assets/img/og-image.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/anybody-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/martian-mono-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Oscillator",
+    "description": "Techno label and artist collective curated by Keyv.",
+    "genre": "Techno",
+    "sameAs": ["https://www.instagram.com/oscillator__/"]
+  }
+  </script>
+</head>
+<body class="is-booting">
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- ░░ Boot ░░ -->
+  <div class="boot" aria-hidden="true">
+    <svg class="boot__line" viewBox="0 0 1000 200" preserveAspectRatio="none"><path d="M0 100 H1000"/></svg>
+    <div class="boot__meta mono">
+      <span>Oscillator</span>
+      <span>Calibrating signal <b class="boot__pct">000</b></span>
+    </div>
+  </div>
+
+  <!-- ░░ Chrome ░░ -->
+  <header class="nav">
+    <a class="nav__brand" href="#top" aria-label="Oscillator — back to top">
+      <svg class="glyph" data-wave="sine" viewBox="0 0 120 24" aria-hidden="true"></svg>
+      <span>Oscillator</span>
+    </a>
+    <nav class="nav__links mono" aria-label="Sections">
+      <a href="#carrier"><i>01</i>Carrier</a>
+      <a href="#voices"><i>02</i>Voices</a>
+      <a href="#transmissions"><i>03</i>Transmissions</a>
+      <a href="#feedback"><i>04</i>Feedback</a>
+      <a href="#next"><i>05</i>Next signal</a>
+      <a href="#output"><i>06</i>Output</a>
+    </nav>
+    <div class="nav__right">
+      <span class="nav__clock mono" aria-label="Local time in Tehran">TEH --:--:--</span>
+      <button class="pwr mono" type="button" aria-pressed="false" data-cursor="Power">
+        <span class="pwr__led" aria-hidden="true"></span><span class="pwr__label">Signal off</span>
+      </button>
+      <button class="nav__menu mono" type="button" aria-expanded="false" aria-controls="menu">Menu</button>
+    </div>
+  </header>
+
+  <div class="menu" id="menu" hidden>
+    <nav aria-label="Menu">
+      <a href="#carrier"><i class="mono">01</i>Carrier</a>
+      <a href="#voices"><i class="mono">02</i>Voices</a>
+      <a href="#transmissions"><i class="mono">03</i>Transmissions</a>
+      <a href="#feedback"><i class="mono">04</i>Feedback</a>
+      <a href="#next"><i class="mono">05</i>Next signal</a>
+      <a href="#output"><i class="mono">06</i>Output</a>
+    </nav>
+  </div>
+
+  <aside class="rail" aria-hidden="true">
+    <canvas class="rail__canvas"></canvas>
+    <span class="rail__label mono">00 — Power</span>
+  </aside>
+
+  <div class="crosshair" aria-hidden="true"><i class="crosshair__x"></i><i class="crosshair__y"></i><span class="crosshair__read mono"></span></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <main id="main">
+
+    <!-- ░░ 00 — Hero / the oscilloscope ░░ -->
+    <section class="hero" id="top" data-wave="sine" data-label="00 — Power">
+      <canvas class="scope" aria-hidden="true"></canvas>
+      <div class="graticule" aria-hidden="true"></div>
+
+      <div class="hero__read hero__read--tl mono">
+        <span>OSC—01</span>
+        <span>Techno label / artist collective</span>
+      </div>
+      <div class="hero__read hero__read--tr mono" aria-hidden="true">
+        <span class="hero__x">X 1.000</span>
+        <span class="hero__y">Y 2.000</span>
+        <span class="hero__phi">φ 0.00π</span>
+      </div>
+
+      <div class="hero__cta">
+        <p class="hero__tag"></p>
+        <button class="hero__pwr pwr" type="button" aria-pressed="false" data-cursor="Power">
+          <span class="pwr__led" aria-hidden="true"></span>
+          <span class="hero__pwrtxt">
+            <span class="pwr__label">Turn on the signal</span>
+            <small class="mono">Techno, generated live in your browser · 132 BPM</small>
+          </span>
+        </button>
+        <p class="hero__hint mono" aria-hidden="true">Move to modulate — <span class="hero__hintmode">x: ratio · y: phase</span></p>
+      </div>
+
+      <h1 class="wordmark" aria-label="Oscillator"></h1>
+    </section>
+
+    <!-- ░░ 01 — Carrier / about ░░ -->
+    <section class="sec carrier" id="carrier" data-wave="sine" data-label="01 — Carrier">
+      <header class="sec__head" data-reveal>
+        <span class="sec__num mono">01</span>
+        <svg class="glyph" data-wave="sine" viewBox="0 0 120 24" aria-hidden="true"></svg>
+        <h2 class="sec__title">Carrier</h2>
+        <span class="sec__sub">the label</span>
+        <span class="sec__meta mono">Sine — the pure tone</span>
+      </header>
+      <div class="carrier__text"></div>
+      <dl class="facts mono" data-reveal></dl>
+    </section>
+
+    <!-- ░░ 02 — Voices / artists ░░ -->
+    <section class="sec voices" id="voices" data-wave="square" data-label="02 — Voices">
+      <header class="sec__head" data-reveal>
+        <span class="sec__num mono">02</span>
+        <svg class="glyph" data-wave="square" viewBox="0 0 120 24" aria-hidden="true"></svg>
+        <h2 class="sec__title">Voices</h2>
+        <span class="sec__sub">the roster</span>
+        <span class="sec__meta mono voices__count">— channels</span>
+      </header>
+      <ol class="roster" aria-label="Artists"></ol>
+    </section>
+
+    <!-- ░░ 03 — Transmissions / mixes & releases ░░ -->
+    <section class="sec transmissions" id="transmissions" data-wave="saw" data-label="03 — Transmissions">
+      <header class="sec__head" data-reveal>
+        <span class="sec__num mono">03</span>
+        <svg class="glyph" data-wave="saw" viewBox="0 0 120 24" aria-hidden="true"></svg>
+        <h2 class="sec__title">Transmissions</h2>
+        <span class="sec__sub">mixes &amp; releases</span>
+        <span class="sec__meta mono">Saw — all harmonics</span>
+      </header>
+      <div class="tx-list"></div>
+    </section>
+
+    <!-- ░░ 04 — Feedback / visual archive ░░ -->
+    <section class="feedback" id="feedback" data-wave="noise" data-label="04 — Feedback">
+      <div class="feedback__track">
+        <div class="feedback__pin">
+          <header class="sec__head sec__head--float" data-reveal>
+            <span class="sec__num mono">04</span>
+            <svg class="glyph" data-wave="noise" viewBox="0 0 120 24" aria-hidden="true"></svg>
+            <h2 class="sec__title">Feedback</h2>
+            <span class="sec__sub">the room</span>
+          </header>
+          <div class="pano" aria-hidden="true"></div>
+          <p class="feedback__cap"></p>
+          <div class="feedback__rec mono" aria-hidden="true"><i></i>REC <span class="feedback__tc">00:00:00:00</span></div>
+        </div>
+      </div>
+      <div class="sheet"></div>
+    </section>
+
+    <!-- ░░ 05 — Next signal / events ░░ -->
+    <section class="sec next" id="next" data-wave="triangle" data-label="05 — Next signal">
+      <header class="sec__head" data-reveal>
+        <span class="sec__num mono">05</span>
+        <svg class="glyph" data-wave="triangle" viewBox="0 0 120 24" aria-hidden="true"></svg>
+        <h2 class="sec__title">Next signal</h2>
+        <span class="sec__sub">dates</span>
+        <span class="sec__meta mono">Triangle — soft edges</span>
+      </header>
+      <div class="events"></div>
+    </section>
+
+    <!-- ░░ 06 — Output / contact ░░ -->
+    <footer class="sec output" id="output" data-wave="pulse" data-label="06 — Output">
+      <header class="sec__head" data-reveal>
+        <span class="sec__num mono">06</span>
+        <svg class="glyph" data-wave="pulse" viewBox="0 0 120 24" aria-hidden="true"></svg>
+        <h2 class="sec__title">Output</h2>
+        <span class="sec__sub">contact</span>
+        <span class="sec__meta mono">Pulse — on / off</span>
+      </header>
+      <p class="theremin" aria-label="Send us your signal"></p>
+      <div class="output__grid"></div>
+      <div class="output__base mono">
+        <span>© <span class="year"></span> Oscillator — all frequencies reserved</span>
+        <span>Every sound on this site is synthesized live in your browser</span>
+        <a href="#top">Back to top ↑</a>
+      </div>
+    </footer>
+  </main>
+
+  <!-- ░░ Artist profile ░░ -->
+  <div class="profile" id="profile" role="dialog" aria-modal="true" aria-labelledby="pf-name" hidden>
+    <div class="profile__bar mono">
+      <span class="profile__ch"></span>
+      <div class="profile__nav">
+        <a class="profile__prev" href="#" data-cursor="Previous">← Prev</a>
+        <a class="profile__next" href="#" data-cursor="Next">Next →</a>
+      </div>
+      <button class="profile__close" type="button" data-cursor="Close">Close <span aria-hidden="true">✕</span></button>
+    </div>
+    <div class="profile__body"></div>
+  </div>
+
+  <!-- roster hover preview -->
+  <div class="preview" aria-hidden="true"><canvas></canvas><i class="preview__tint"></i></div>
+
+  <!-- now-playing deck -->
+  <div class="deck mono" hidden>
+    <button class="deck__toggle" type="button" aria-label="Pause">❚❚</button>
+    <span class="deck__title"></span>
+    <span class="deck__time">0:00</span>
+  </div>
+
+  <noscript>
+    <div class="noscript">
+      <p>Oscillator — techno label &amp; artist collective, curated by Keyv.</p>
+      <p><a href="https://www.instagram.com/oscillator__/">Instagram @oscillator__</a> · <a href="https://soundcloud.com/keyvdj">SoundCloud</a></p>
+      <p>This site is an instrument — switch on JavaScript to play it.</p>
+    </div>
+  </noscript>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/audio.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
