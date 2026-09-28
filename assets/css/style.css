@@ -348,7 +348,7 @@ main { padding-left: var(--rail); }
     linear-gradient(to bottom, var(--line) 1px, transparent 1px);
   background-size: 10% 12.5%;
   background-position: -1px -1px;
-  opacity: calc(.45 + var(--beat) * .5);
+  opacity: calc(.16 + var(--beat) * .3);
   -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 78%);
   mask-image: radial-gradient(ellipse at center, #000 30%, transparent 78%);
 }
@@ -974,8 +974,8 @@ main { padding-left: var(--rail); }
 .hero.is-strobe .wearetitle, .hero.is-strobe .hero__tag, .hero.is-strobe .hero__tag em, .hero.is-strobe .hero__read { color: #000; text-shadow: none; }
 .hero.is-strobe .hero__pwr { background: #000; }
 
-.scope { opacity: .2; transition: opacity .6s; }
-.signal-on .scope { opacity: .75; }
+.scope { opacity: .13; transition: opacity .6s; }
+.signal-on .scope { opacity: .45; }
 .hero__tag, .hero__read { text-shadow: 0 0 12px var(--ink), 0 0 24px var(--ink); }
 .hero__cta { bottom: 8%; }
 .nav__brand { font-family: var(--f-wide); font-weight: 800; font-size: 15px; letter-spacing: .22em; }
@@ -1025,4 +1025,43 @@ main { padding-left: var(--rail); }
   .output__base { flex-direction: column; align-items: center; text-align: center; gap: 10px; }
   .theremin .ln { white-space: nowrap; }
   .theremin { font-size: clamp(52px, 17vw, 120px); }
+}
+
+/* ░░ calmer type scale ░░ */
+body { font-size: 16px; }
+.sec__title { font-size: clamp(40px, 6.4vw, 112px); }
+.sec__sub { font-size: clamp(16px, 1.6vw, 24px); }
+.sec__head { margin-bottom: clamp(32px, 4.5vw, 72px); }
+.carrier__text { font-size: clamp(19px, 2.2vw, 34px); line-height: 1.35; max-width: 32em; }
+.facts dd { font-size: clamp(20px, 1.8vw, 28px); }
+.row__name { font-size: clamp(34px, 5vw, 92px); }
+.tx__title { font-size: clamp(40px, 6vw, 104px); }
+.tx__by { font-size: 20px; }
+.feedback__cap { font-size: clamp(26px, 3.4vw, 56px); }
+.nosignal__big { font-size: min(11vw, 190px); }
+.nosignal__row p { font-size: clamp(17px, 1.6vw, 24px); }
+.event__date { font-size: clamp(40px, 5vw, 84px); }
+.event__title { font-size: clamp(20px, 1.8vw, 28px); }
+.event__lineup { font-size: 18px; }
+.theremin { font-size: clamp(44px, 8vw, 150px); }
+.output__grid p { font-size: 18px; }
+.output__grid ul a, .output__mail { font-size: clamp(18px, 1.6vw, 24px); }
+.hero__tag { font-size: clamp(18px, 1.8vw, 26px); }
+.hero__pwrtxt .pwr__label { font-size: 16px; }
+.pf__name { font-size: clamp(48px, 7vw, 132px); }
+.pf__bio p { font-size: 16px; }
+.pf__bio p:first-child { font-size: clamp(20px, 1.9vw, 28px); line-height: 1.3; }
+.pf__tx strong { font-size: clamp(22px, 2.2vw, 32px); }
+.pf__nextname { font-size: clamp(44px, 8vw, 150px); }
+.menu a { font-size: clamp(28px, 8vw, 48px); padding: 10px 0; }
+@media (max-width: 860px) {
+  .sec__title { font-size: clamp(36px, 11vw, 64px); }
+  .carrier__text { font-size: 19px; }
+  .row__name { font-size: clamp(28px, 9vw, 56px); }
+  .tx__title { font-size: clamp(34px, 10vw, 60px); }
+  .theremin { font-size: clamp(38px, 12vw, 72px); }
+  .hero__tag { font-size: 17px; }
+  .pf__name { font-size: clamp(40px, 12vw, 72px); }
+  .pf__nextname { font-size: clamp(36px, 11vw, 64px); }
+  .nosignal__big { font-size: 13vw; }
 }

@@ -290,8 +290,8 @@
     }
     c.globalCompositeOperation = 'lighter';
     c.lineJoin = 'round';
-    c.strokeStyle = 'rgba(228, 228, 24,0.09)'; c.lineWidth = 7 * d; c.stroke();
-    c.strokeStyle = 'rgba(228, 228, 24,0.85)'; c.lineWidth = 1.15 * d; c.stroke();
+    c.strokeStyle = 'rgba(228, 228, 24,0.05)'; c.lineWidth = 3.5 * d; c.stroke();
+    c.strokeStyle = 'rgba(228, 228, 24,0.7)'; c.lineWidth = 0.7 * d; c.stroke();
   }
 
   /* ─── rail: the one line that runs down the page ────────────────────── */
@@ -528,9 +528,9 @@
         '</div>' +
       '</aside>' +
       '<div class="pf__content">' +
-        '<p class="pf__role mono">' + ['<b>CH.' + pad(i + 1) + '</b>'].concat([a.role, a.city].filter(Boolean).map(esc)).join(' — ') + '</p>' +
+        '<p class="pf__role mono">' + ['<b>CH.' + pad(i + 1) + '</b>'].concat([a.role, a.city].filter(Boolean).map(esc)).join(' · ') + '</p>' +
         '<h2 class="pf__name" id="pf-name">' + esc(a.name) + '</h2>' +
-        (a.placeholder ? '<p class="pf__note mono">Placeholder channel — replace in assets/js/data.js</p>' : '') +
+        (a.placeholder ? '<p class="pf__note mono">Placeholder channel: replace in assets/js/data.js</p>' : '') +
         '<div class="pf__bio">' + (a.bio || []).map(function (p) { return '<p>' + rich(p) + '</p>'; }).join('') + '</div>' +
         (links ? '<div class="pf__links">' + links + '</div>' : '') +
         (tx.length ? '<section class="pf__block"><h3 class="mono"><span>Transmissions</span><span>' + pad(tx.length) + '</span></h3>' +
@@ -541,11 +541,11 @@
           }).join('') + '</section>' : '') +
         (videos ? '<section class="pf__block"><h3 class="mono"><span>Video</span><span>' + pad((a.videos || []).length) + '</span></h3><div class="pf__videos">' + videos + '</div></section>' : '') +
         (gallery ? '<section class="pf__block"><h3 class="mono"><span>Frames</span><span>' + pad(a.photos.length) + '</span></h3><div class="pf__gallery">' + gallery + '</div></section>' : '') +
-        '<a class="cta pf__book" href="' + esc(bookingHref()) + '" target="_blank" rel="noopener">Booking &amp; inquiries — ' + esc(D.label.email || D.label.handle) + ' ↗︎</a>' +
+        '<a class="cta pf__book" href="' + esc(bookingHref()) + '" target="_blank" rel="noopener">Booking &amp; inquiries · ' + esc(D.label.email || D.label.handle) + ' ↗︎</a>' +
       '</div>' +
     '</div>' +
     '<a class="pf__next" href="#/artist/' + esc(next.slug) + '" data-swap="' + esc(next.slug) + '" data-cursor="Next channel">' +
-      '<span class="mono">Next channel — CH.' + pad(((i + 1) % n) + 1) + '</span><span class="pf__nextname">' + esc(next.name) + '</span></a>';
+      '<span class="mono">Next channel · CH.' + pad(((i + 1) % n) + 1) + '</span><span class="pf__nextname">' + esc(next.name) + '</span></a>';
   }
 
   function renderProfile(slug) {
@@ -705,9 +705,9 @@
         ? '<a href="#/artist/' + esc(t.artist) + '">' + esc(artistName(t.artist)) + '</a>'
         : esc(t.artist || '');
       return '<article class="tx" id="tx-' + esc(t.id) + '" data-reveal>' +
-        '<div class="tx__cover"><img src="' + esc(t.cover) + '" alt="' + esc(t.title) + ' — cover" loading="lazy"></div>' +
+        '<div class="tx__cover"><img src="' + esc(t.cover) + '" alt="' + esc(t.title) + ' cover" loading="lazy"></div>' +
         '<div class="tx__body">' +
-          '<p class="tx__meta mono"><span>TX—' + pad(i + 1) + '</span><span>' + esc(t.type) + '</span><span>' + fmtDate(t.date) + '</span><span>' + fmtDur(t.duration) + '</span>' +
+          '<p class="tx__meta mono"><span>TX-' + pad(i + 1) + '</span><span>' + esc(t.type) + '</span><span>' + fmtDate(t.date) + '</span><span>' + fmtDur(t.duration) + '</span>' +
             (tl.length ? '<span>' + tl.length + ' tracks</span>' : '') + '</p>' +
           '<h3 class="tx__title">' + esc(t.title) + '</h3>' +
           '<p class="tx__by">by ' + by + '</p>' +
@@ -717,7 +717,7 @@
           '</div>' +
           '<div class="tx__dur mono" style="--len:' + ((t.duration || maxDur) / maxDur).toFixed(3) + '"><span class="tx__pos">0:00</span><span>' + fmtDur(t.duration) + '</span></div>' +
           '<div class="tx__player"></div>' +
-          (tl.length ? '<details class="tx__tracks"><summary class="mono"><span>Tracklist — ' + pad(tl.length) + '</span></summary><ol>' +
+          (tl.length ? '<details class="tx__tracks"><summary class="mono"><span>Tracklist · ' + pad(tl.length) + '</span></summary><ol>' +
             tl.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol></details>' : '') +
           (t.soundcloud ? '<a class="tx__ext mono" href="' + esc(t.soundcloud) + '" target="_blank" rel="noopener">Open on SoundCloud ↗︎</a>' : '') +
         '</div></article>';
@@ -779,7 +779,7 @@
   deck.show = function (o) {
     deck.cur = o; deck.el.hidden = false;
     document.documentElement.classList.add('has-deck');
-    deck.title.textContent = o.t.title + ' — ' + artistName(o.t.artist);
+    deck.title.textContent = o.t.title + ' · ' + artistName(o.t.artist);
     deck.update(o);
   };
   deck.update = function (o) {
@@ -823,7 +823,7 @@
       this.loadApi().then(function () {
         var box = $('.tx__player', o.el), ifr = document.createElement('iframe');
         ifr.allow = 'autoplay; encrypted-media';
-        ifr.title = 'SoundCloud player — ' + o.t.title;
+        ifr.title = 'SoundCloud player: ' + o.t.title;
         ifr.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(o.t.soundcloud) +
           '&color=%23e4e418&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false';
         box.appendChild(ifr);
@@ -860,7 +860,7 @@
       if ($('.tx__error', o.el)) return;
       var p = document.createElement('p');
       p.className = 'tx__error mono';
-      p.innerHTML = 'SoundCloud couldn\'t be reached from here — <a href="' + esc(o.t.soundcloud) + '" target="_blank" rel="noopener">listen on SoundCloud ↗︎</a>';
+      p.innerHTML = 'SoundCloud couldn\'t be reached from here. <a href="' + esc(o.t.soundcloud) + '" target="_blank" rel="noopener">listen on SoundCloud ↗︎</a>';
       $('.tx__player', o.el).after(p);
     }
   };
@@ -931,7 +931,7 @@
       box.innerHTML = '<div class="nosignal">' +
         '<canvas class="nosignal__line" aria-hidden="true"></canvas>' +
         '<p class="nosignal__big">No signal</p>' +
-        '<div class="nosignal__row"><p>Nothing scheduled — yet. New dates are announced first on Instagram.</p>' +
+        '<div class="nosignal__row"><p>Nothing scheduled yet. New dates are announced first on Instagram.</p>' +
         '<a class="cta" href="' + esc(D.label.instagram) + '" target="_blank" rel="noopener">Follow ' + esc(D.label.handle) + ' ↗︎</a></div></div>';
       ns.cvs = $('.nosignal__line', box);
       watch(ns.cvs, 'events');
@@ -944,9 +944,9 @@
         return artistIndex(x) >= 0 ? '<a href="#/artist/' + esc(x) + '">' + esc(artistName(x)) + '</a>' : esc(x);
       }).join(', ');
       return '<article class="event' + (ev.date < today ? ' is-past' : '') + '" data-reveal>' +
-        '<p class="event__date">' + parts[2] + '.' + parts[1] + '<small class="mono">' + parts[0] + (ev.date < today ? ' — past' : '') + '</small></p>' +
+        '<p class="event__date">' + parts[2] + '.' + parts[1] + '<small class="mono">' + parts[0] + (ev.date < today ? ' · past' : '') + '</small></p>' +
         '<div><h3 class="event__title">' + esc(ev.title) + '</h3>' +
-        '<p class="event__where mono">' + esc([ev.venue, ev.city].filter(Boolean).join(' — ')) + '</p>' +
+        '<p class="event__where mono">' + esc([ev.venue, ev.city].filter(Boolean).join(' · ')) + '</p>' +
         (lineup ? '<p class="event__lineup">' + lineup + '</p>' : '') + '</div>' +
         (ev.link ? '<a class="cta" href="' + esc(ev.link) + '" target="_blank" rel="noopener">Info ↗︎</a>' : '<span></span>') +
         '</article>';
@@ -988,7 +988,7 @@
     var L = D.label, keyv = D.artists[0];
     var follow = ['<li><a href="' + esc(L.instagram) + '" target="_blank" rel="noopener">Instagram ↗︎</a></li>'];
     if (L.soundcloud) follow.push('<li><a href="' + esc(L.soundcloud) + '" target="_blank" rel="noopener">SoundCloud ↗︎</a></li>');
-    if (keyv && keyv.links && keyv.links.soundcloud) follow.push('<li><a href="' + esc(keyv.links.soundcloud) + '" target="_blank" rel="noopener">' + esc(keyv.name) + ' — SoundCloud ↗︎</a></li>');
+    if (keyv && keyv.links && keyv.links.soundcloud) follow.push('<li><a href="' + esc(keyv.links.soundcloud) + '" target="_blank" rel="noopener">' + esc(keyv.name) + ' on SoundCloud ↗︎</a></li>');
     $('.output__grid').innerHTML =
       '<div><h3 class="mono">Demos &amp; bookings</h3><p>' + rich(L.demos) + '</p>' +
         '<a class="cta" href="' + esc(bookingHref()) + '" target="_blank" rel="noopener">' + (L.email ? 'Email ' + esc(L.email) : 'DM ' + esc(L.handle)) + ' ↗︎</a></div>' +

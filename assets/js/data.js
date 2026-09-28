@@ -20,11 +20,11 @@ window.OSCILLATOR = {
     email: '',                 // e.g. 'demos@oscillator.xyz' — hidden when empty
     curator: 'Keyv',
     origin: 'Tehran',
-    tagline: 'a techno label & artist collective — curated by *Keyv*',
+    tagline: 'a techno label & artist collective, curated by *Keyv*',
 
     // "01 — Carrier" manifesto. One string per paragraph.
     about: [
-      'Oscillator is a techno label and artist collective curated by Keyv. We don\'t sign sounds — we *tune into them*.',
+      'Oscillator is a techno label and artist collective curated by Keyv. We don\'t sign sounds. We *tune into them*.',
       'A home for the artists who live in the low end, in the dark, in the repetition. Each one a different frequency; together, *one signal*.'
     ],
 
@@ -35,7 +35,7 @@ window.OSCILLATOR = {
       ['Transmits on', 'Instagram · SoundCloud']
     ],
 
-    demos: 'Demos & bookings — send a private link via Instagram DM. Every signal gets heard.'
+    demos: 'Send a private link via Instagram DM. Every signal gets heard.'
   },
 
   /* ------------------------------------------------------------------------
@@ -58,7 +58,7 @@ window.OSCILLATOR = {
       photo: 'assets/img/keyv-portrait.jpg',
       photos: ['assets/img/keyv-live.jpg', 'assets/img/keyv-mark.jpg'],
       bio: [
-        '*Keyv* is the Tehran-based DJ behind Oscillator — the ear that decides which frequencies make it onto the label.',
+        '*Keyv* is the Tehran-based DJ behind Oscillator. The ear that decides which frequencies make it onto the label.',
         'The DEMONSTRATOR series documents that sound in long form: driving, hypnotic, peak-time techno with no room to breathe.'
       ],
       links: {
@@ -102,28 +102,28 @@ window.OSCILLATOR = {
       cover: 'assets/img/demonstrator-2.jpg',
       soundcloud: 'https://soundcloud.com/keyvdj/demonstrator-2',
       tracklist: [
-        'Parapher — Pasiphae\'s Curse (Hatelove Remix)',
-        'Strange Arrival — Draw Distance',
-        'Brais — Artes Oscuras',
-        'Face — CrackLand',
-        'EDUVEK — Metalic Discussion',
-        'Deep Secrets — Techno Girl',
-        'Axel Picodot — Heating',
-        'Hardtrax — Schabernack',
-        'HRD.303 — Legionnaires',
-        'Neagles — Ride Soundless',
-        'raneo — night, shift',
-        'Back2school — Without Thinking',
-        'Morison — Vision',
-        'Niereich — The Power',
-        'Onelas — Real Life',
-        'Yuhas — Inside You',
-        'Back2school — I Don\'t Like Speeches',
-        'Datcher — Payback',
-        'Giovanni Carozza — S2000',
-        '0.B.I. — Gib Mir Alles (feat. Timo Revna)',
-        'Keyv — Unreleased',
-        'Baumeister — Endless Lonely Universe'
+        'Parapher - Pasiphae\'s Curse (Hatelove Remix)',
+        'Strange Arrival - Draw Distance',
+        'Brais - Artes Oscuras',
+        'Face - CrackLand',
+        'EDUVEK - Metalic Discussion',
+        'Deep Secrets - Techno Girl',
+        'Axel Picodot - Heating',
+        'Hardtrax - Schabernack',
+        'HRD.303 - Legionnaires',
+        'Neagles - Ride Soundless',
+        'raneo - night, shift',
+        'Back2school - Without Thinking',
+        'Morison - Vision',
+        'Niereich - The Power',
+        'Onelas - Real Life',
+        'Yuhas - Inside You',
+        'Back2school - I Don\'t Like Speeches',
+        'Datcher - Payback',
+        'Giovanni Carozza - S2000',
+        '0.B.I. - Gib Mir Alles (feat. Timo Revna)',
+        'Keyv - Unreleased',
+        'Baumeister - Endless Lonely Universe'
       ],
       waveform: [0.65,0.87,0.92,0.96,0.93,0.85,0.66,0.5,0.76,0.85,0.84,0.84,0.4,0.9,0.81,0.79,0.86,0.89,0.91,0.97,0.99,0.63,0.93,0.96,0.98,1.0,0.61,0.88,0.79,0.83,0.82,0.39,0.46,0.77,0.68,0.78,0.55,0.82,0.85,0.21,0.38,0.86,0.75,0.33,0.66,0.68,0.76,0.72,0.73,0.29,0.15,0.64,0.76,0.81,0.82,0.88,0.9,0.84,0.31,0.86,0.85,0.72,0.93,0.94,0.95,0.8,0.98,0.55,0.4,0.89,0.87,0.83,0.87,0.87,0.86,0.35,0.32,0.84,0.72,0.65,0.78,0.35,0.85,0.76,0.77,0.6,0.8,0.66,0.45,0.29,0.81,0.74,0.69,0.73,0.27,0.57,0.78,0.83,0.81,0.6,0.62,0.88,0.91,0.82,0.65,0.72,0.76,0.61,0.55,0.52,0.77,0.7,0.76,0.84,0.86,0.42,0.36,0.88,0.71,0.17,0.54,0.88,0.89,0.89,0.86,0.86,0.82,0.6,0.5,0.3,0.85,0.89,0.79,0.9,0.77,0.87,0.69,0.4,0.45,0.97,0.7,0.71,0.71,0.78,0.77,0.17,0.15,0.59,0.84,0.73,0.92,0.91,0.41,0.64,0.9,0.86,0.64,0.83,0.66,0.86,0.17,0.16,0.54,0.8,0.82,0.54,0.87,0.91,0.85,0.22,0.21,0.75,0.57,0.82,0.51,0.99,0.92,0.77,0.43,0.17,0.4,0.84,0.82,0.85,0.63,0.52,0.74,0.87,0.76,0.52,0.35,0.25,0.64,0.43,0.88,0.86,0.59,0.86,0.41,0.31]
     },
@@ -160,9 +160,9 @@ window.OSCILLATOR = {
     panorama: 'assets/img/crowd-panorama.jpg',
     caption: 'the room is *the instrument*',
     media: [
-      { type: 'image', src: 'assets/img/keyv-live.jpg', caption: 'Keyv — live' },
+      { type: 'image', src: 'assets/img/keyv-live.jpg', caption: 'Keyv live' },
       { type: 'image', src: 'assets/img/keyv-portrait.jpg', caption: 'Keyv' },
-      { type: 'image', src: 'assets/img/keyv-mark.jpg', caption: 'Keyv — mark' }
+      { type: 'image', src: 'assets/img/keyv-mark.jpg', caption: 'Keyv logo' }
     ]
   }
 };
