@@ -11,17 +11,10 @@
   font-display: swap;
 }
 @font-face {
-  font-family: 'Jost';
-  src: url('../fonts/jost-var.woff2') format('woff2');
-  font-weight: 100 900;
+  font-family: 'Tenor Sans';
+  src: url('../fonts/tenor-sans.woff2') format('woff2');
+  font-weight: 400;
   font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Jost';
-  src: url('../fonts/jost-italic-var.woff2') format('woff2');
-  font-weight: 100 900;
-  font-style: italic;
   font-display: swap;
 }
 @font-face {
@@ -53,7 +46,7 @@
   --acid-2: rgba(228, 228, 24, .22);
 
   --f-display: 'Anton', 'Impact', 'Arial Narrow', sans-serif;
-  --f-text: 'Jost', 'Futura', 'Helvetica Neue', sans-serif;
+  --f-text: 'Tenor Sans', 'Futura', 'Helvetica Neue', sans-serif;
   --f-wide: 'Orbitron', 'Eurostile', 'Arial Black', sans-serif;
   --f-serif: var(--f-text);
   --f-mono: 'Martian Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
@@ -101,7 +94,7 @@ body.is-booting { overflow: hidden; }
 img, canvas, svg, video { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
-em { font-family: var(--f-text); font-style: italic; font-weight: 300; letter-spacing: 0; }
+em { font-family: var(--f-text); font-style: normal; font-weight: 400; letter-spacing: 0; color: var(--acid); }
 h1, h2, h3, p, ol, ul, dl, dd { margin: 0; padding: 0; }
 ol, ul { list-style: none; }
 
@@ -899,7 +892,7 @@ main { padding-left: var(--rail); }
 }
 
 /* ==========================================================================
-   Poster typography — Anton (condensed headlines) + Jost (text)
+   Poster typography — Anton (condensed headlines) + Tenor Sans (text, like the KIARASH poster)
    ========================================================================== */
 .nav__brand, .menu a, .sec__title, .hero__pwrtxt .pwr__label, .facts dd, .row__name,
 .tx__title, .nosignal__big, .event__date, .event__title, .theremin, .output__grid ul a,
@@ -912,9 +905,9 @@ main { padding-left: var(--rail); }
 .nav__brand { font-size: 20px; letter-spacing: .06em; }
 .sec__title { font-size: clamp(56px, 11vw, 200px); line-height: .86; letter-spacing: 0; }
 .sec__sub, .tx__by, .nosignal__row p, .event__lineup, .output__grid p, .hero__tag,
-.feedback__cap, .pf__bio p:first-child { font-family: var(--f-text); font-style: normal; font-weight: 300; }
+.feedback__cap, .pf__bio p:first-child { font-family: var(--f-text); font-style: normal; font-weight: 400; }
 .sec__sub { letter-spacing: .02em; }
-.carrier__text { font-family: var(--f-text); font-weight: 300; font-stretch: normal; line-height: 1.08; letter-spacing: -.01em; }
+.carrier__text { font-family: var(--f-text); font-weight: 400; font-stretch: normal; font-size: clamp(26px, 3.6vw, 60px); line-height: 1.18; letter-spacing: 0; max-width: 22em; }
 .carrier__text em { font-size: 1em; font-weight: 400; }
 .row__name { font-size: clamp(44px, 7.2vw, 136px); line-height: .9; transition: letter-spacing .7s var(--ease-out), color .3s; }
 .row__link.is-hover .row__name { font-stretch: normal; font-weight: 400; letter-spacing: .08em; color: var(--acid); }
@@ -998,3 +991,38 @@ main { padding-left: var(--rail); }
   .nav__brand { font-size: 13px; letter-spacing: .16em; }
 }
 @media (prefers-reduced-motion: reduce) { .halo__ring, .halo .logo--outline { animation: none; } }
+
+/* ░░ menu — tidy grid: number · word · arrow ░░ */
+.menu { flex-direction: column; justify-content: space-between; align-items: stretch; padding: calc(var(--nav-h) + 28px) var(--gutter) 28px; }
+.menu nav { gap: 0; margin: auto 0; border-top: 1px solid var(--line); }
+.menu a {
+  display: grid; grid-template-columns: 3.2rem 1fr auto; align-items: center; gap: 0;
+  padding: 12px 0; font-size: clamp(34px, 10.5vw, 64px); line-height: 1;
+  border-bottom: 1px solid var(--line);
+}
+.menu a .mono { color: var(--acid); font-size: 12px; }
+.menu a b { font-weight: 400; }
+.menu a i { font-family: var(--f-mono); font-style: normal; font-size: 18px; color: var(--bone-3); transition: transform .4s var(--ease-out), color .3s; }
+.menu a:active i, .menu a:hover i { color: var(--acid); transform: translateX(4px); }
+.menu__foot { display: flex; justify-content: space-between; gap: 12px; color: var(--bone-3); padding-top: 20px; }
+.menu__foot a { display: inline; padding: 0; border: 0; font: inherit; color: var(--bone-2); }
+.menu__foot .js-clock { color: var(--acid); }
+
+/* ░░ footer — centred composition ░░ */
+.output { text-align: center; }
+.output .sec__head { text-align: left; }
+.theremin { text-align: center; }
+.theremin .ln:nth-child(2) { padding-left: 0; }
+.output__grid { text-align: center; }
+.output__grid > div { padding: 24px 18px; display: flex; flex-direction: column; align-items: center; }
+.output__grid > div + div { padding-left: 18px; }
+.output__grid p { max-width: 24ch; margin: 0 auto; }
+.output__grid ul { align-items: center; }
+.output__logo { margin: clamp(72px, 9vw, 140px) auto 0; width: clamp(180px, 20vw, 300px); filter: drop-shadow(0 0 10px rgba(228, 228, 24, .35)); }
+.output__base { justify-content: space-between; text-align: left; }
+@media (max-width: 860px) {
+  .output__grid > div, .output__grid > div + div { padding: 28px 0; }
+  .output__base { flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+  .theremin .ln { white-space: nowrap; }
+  .theremin { font-size: clamp(52px, 17vw, 120px); }
+}

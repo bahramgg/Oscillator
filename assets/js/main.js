@@ -335,7 +335,7 @@
   function cursorLabel(el) {
     if (el.dataset.cursor) return el.dataset.cursor;
     if (el.classList.contains('tx__wave')) return 'Seek';
-    if (el.tagName === 'A') return el.target === '_blank' ? 'Open ↗' : 'Go';
+    if (el.tagName === 'A') return el.target === '_blank' ? 'Open ↗︎' : 'Go';
     if (el.tagName === 'SUMMARY') return 'Expand';
     return 'Press';
   }
@@ -361,20 +361,7 @@
   var carrier = { box: $('.carrier__text'), words: [] };
   function initCarrier() {
     carrier.box.innerHTML = D.label.about.map(function (p) { return '<p>' + rich(p) + '</p>'; }).join('');
-    // wrap every word so it can be "tuned" individually
-    var walker = document.createTreeWalker(carrier.box, NodeFilter.SHOW_TEXT, null), nodes = [], n;
-    while ((n = walker.nextNode())) nodes.push(n);
-    nodes.forEach(function (node) {
-      var frag = document.createDocumentFragment();
-      node.nodeValue.split(/(\s+)/).forEach(function (tok) {
-        if (!tok) return;
-        if (/^\s+$/.test(tok)) { frag.appendChild(document.createTextNode(tok)); return; }
-        var sp = document.createElement('span'); sp.className = 'w'; sp.textContent = tok;
-        frag.appendChild(sp);
-      });
-      node.parentNode.replaceChild(frag, node);
-    });
-    carrier.words = $$('.w', carrier.box).map(function (el, i) { return { el: el, i: i, y: 0, h: 0, tx: -1, op: -1 }; });
+    carrier.words = [];
     $('.facts').innerHTML = D.label.facts.map(function (f) {
       return '<div><dt>' + esc(f[0]) + '</dt><dd>' + esc(f[1]) + '</dd></div>';
     }).join('');
@@ -522,7 +509,7 @@
     var n = D.artists.length, next = D.artists[(i + 1) % n], sig = signature(a.slug);
     var tx = (a.transmissions || []).map(function (id) { return D.transmissions.filter(function (t) { return t.id === id; })[0]; }).filter(Boolean);
     var links = Object.keys(a.links || {}).filter(function (k) { return a.links[k]; }).map(function (k) {
-      return '<a class="mono" href="' + esc(a.links[k]) + '" target="_blank" rel="noopener">' + esc(LINK_NAMES[k] || k) + ' ↗</a>';
+      return '<a class="mono" href="' + esc(a.links[k]) + '" target="_blank" rel="noopener">' + esc(LINK_NAMES[k] || k) + ' ↗︎</a>';
     }).join('');
     var videos = (a.videos || []).map(function (v) {
       if (v.youtube) return '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(v.youtube) + '" title="' + esc(v.caption || a.name + ' video') + '" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
@@ -554,7 +541,7 @@
           }).join('') + '</section>' : '') +
         (videos ? '<section class="pf__block"><h3 class="mono"><span>Video</span><span>' + pad((a.videos || []).length) + '</span></h3><div class="pf__videos">' + videos + '</div></section>' : '') +
         (gallery ? '<section class="pf__block"><h3 class="mono"><span>Frames</span><span>' + pad(a.photos.length) + '</span></h3><div class="pf__gallery">' + gallery + '</div></section>' : '') +
-        '<a class="cta pf__book" href="' + esc(bookingHref()) + '" target="_blank" rel="noopener">Booking &amp; inquiries — ' + esc(D.label.email || D.label.handle) + ' ↗</a>' +
+        '<a class="cta pf__book" href="' + esc(bookingHref()) + '" target="_blank" rel="noopener">Booking &amp; inquiries — ' + esc(D.label.email || D.label.handle) + ' ↗︎</a>' +
       '</div>' +
     '</div>' +
     '<a class="pf__next" href="#/artist/' + esc(next.slug) + '" data-swap="' + esc(next.slug) + '" data-cursor="Next channel">' +
@@ -732,7 +719,7 @@
           '<div class="tx__player"></div>' +
           (tl.length ? '<details class="tx__tracks"><summary class="mono"><span>Tracklist — ' + pad(tl.length) + '</span></summary><ol>' +
             tl.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol></details>' : '') +
-          (t.soundcloud ? '<a class="tx__ext mono" href="' + esc(t.soundcloud) + '" target="_blank" rel="noopener">Open on SoundCloud ↗</a>' : '') +
+          (t.soundcloud ? '<a class="tx__ext mono" href="' + esc(t.soundcloud) + '" target="_blank" rel="noopener">Open on SoundCloud ↗︎</a>' : '') +
         '</div></article>';
     }).join('');
 
@@ -873,7 +860,7 @@
       if ($('.tx__error', o.el)) return;
       var p = document.createElement('p');
       p.className = 'tx__error mono';
-      p.innerHTML = 'SoundCloud couldn\'t be reached from here — <a href="' + esc(o.t.soundcloud) + '" target="_blank" rel="noopener">listen on SoundCloud ↗</a>';
+      p.innerHTML = 'SoundCloud couldn\'t be reached from here — <a href="' + esc(o.t.soundcloud) + '" target="_blank" rel="noopener">listen on SoundCloud ↗︎</a>';
       $('.tx__player', o.el).after(p);
     }
   };
@@ -945,7 +932,7 @@
         '<canvas class="nosignal__line" aria-hidden="true"></canvas>' +
         '<p class="nosignal__big">No signal</p>' +
         '<div class="nosignal__row"><p>Nothing scheduled — yet. New dates are announced first on Instagram.</p>' +
-        '<a class="cta" href="' + esc(D.label.instagram) + '" target="_blank" rel="noopener">Follow ' + esc(D.label.handle) + ' ↗</a></div></div>';
+        '<a class="cta" href="' + esc(D.label.instagram) + '" target="_blank" rel="noopener">Follow ' + esc(D.label.handle) + ' ↗︎</a></div></div>';
       ns.cvs = $('.nosignal__line', box);
       watch(ns.cvs, 'events');
       return;
@@ -961,7 +948,7 @@
         '<div><h3 class="event__title">' + esc(ev.title) + '</h3>' +
         '<p class="event__where mono">' + esc([ev.venue, ev.city].filter(Boolean).join(' — ')) + '</p>' +
         (lineup ? '<p class="event__lineup">' + lineup + '</p>' : '') + '</div>' +
-        (ev.link ? '<a class="cta" href="' + esc(ev.link) + '" target="_blank" rel="noopener">Info ↗</a>' : '<span></span>') +
+        (ev.link ? '<a class="cta" href="' + esc(ev.link) + '" target="_blank" rel="noopener">Info ↗︎</a>' : '<span></span>') +
         '</article>';
     }).join('');
   }
@@ -999,12 +986,12 @@
     th.letters = $$('.l', th.el).map(function (el, i) { return { el: el, i: i, x: 0, y: 0, st: -1, wg: -1 }; });
 
     var L = D.label, keyv = D.artists[0];
-    var follow = ['<li><a href="' + esc(L.instagram) + '" target="_blank" rel="noopener">Instagram ↗</a></li>'];
-    if (L.soundcloud) follow.push('<li><a href="' + esc(L.soundcloud) + '" target="_blank" rel="noopener">SoundCloud ↗</a></li>');
-    if (keyv && keyv.links && keyv.links.soundcloud) follow.push('<li><a href="' + esc(keyv.links.soundcloud) + '" target="_blank" rel="noopener">' + esc(keyv.name) + ' — SoundCloud ↗</a></li>');
+    var follow = ['<li><a href="' + esc(L.instagram) + '" target="_blank" rel="noopener">Instagram ↗︎</a></li>'];
+    if (L.soundcloud) follow.push('<li><a href="' + esc(L.soundcloud) + '" target="_blank" rel="noopener">SoundCloud ↗︎</a></li>');
+    if (keyv && keyv.links && keyv.links.soundcloud) follow.push('<li><a href="' + esc(keyv.links.soundcloud) + '" target="_blank" rel="noopener">' + esc(keyv.name) + ' — SoundCloud ↗︎</a></li>');
     $('.output__grid').innerHTML =
       '<div><h3 class="mono">Demos &amp; bookings</h3><p>' + rich(L.demos) + '</p>' +
-        '<a class="cta" href="' + esc(bookingHref()) + '" target="_blank" rel="noopener">' + (L.email ? 'Email ' + esc(L.email) : 'DM ' + esc(L.handle)) + ' ↗</a></div>' +
+        '<a class="cta" href="' + esc(bookingHref()) + '" target="_blank" rel="noopener">' + (L.email ? 'Email ' + esc(L.email) : 'DM ' + esc(L.handle)) + ' ↗︎</a></div>' +
       '<div><h3 class="mono">Follow the signal</h3><ul>' + follow.join('') + '</ul></div>' +
       '<div><h3 class="mono">Transmitting from</h3><p class="output__city">' + esc(L.origin) + '</p><p class="mono js-clock" style="margin-top:10px;color:var(--acid)">--:--:--</p></div>';
     $('.year').textContent = new Date().getFullYear();
@@ -1183,17 +1170,14 @@
     // layout reads first, then writes — no forced reflow mid-frame
     updateSection();
     S.docH = document.documentElement.scrollHeight;
-    if (vis.carrier) carrier.top = carrier.box.getBoundingClientRect().top;
     if (vis.feedback) fb.rect = fb.track.getBoundingClientRect();
     if (vis.hero !== false) drawHero();
     drawRail();
     drawCursor();
-    if (vis.carrier) drawCarrier();
     if (vis.roster) drawRoster();
     drawPreview();
     if (vis.feedback) drawFeedback();
     if (vis.events) drawEvents();
-    if (vis.output) drawOutput();
   }
 
   /* ─── go ───────────────────────────────────────────────────────────── */
