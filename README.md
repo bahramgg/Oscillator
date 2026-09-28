@@ -6,7 +6,7 @@ The site is built as an instrument. Every section is a waveform:
 
 | # | Section | Wave | What it is |
 |---|---------|------|------------|
-| 00 | Power | — | Intro and hero after the "Oscillator Rises" reel: neon logo in a rotating OSCILLATOR/ ring, hard yellow strobe cuts, faint live oscilloscope |
+| 00 | Power | — | Intro plays the label's "Oscillator Rises" reel (muted, Sound on button, tap to skip, once per session; a drawn version runs if autoplay is blocked; skipped for reduced motion). Hero: neon logo in a rotating OSCILLATOR/ ring, yellow strobe cuts, faint live oscilloscope |
 | 01 | Carrier | sine | The label manifesto |
 | 02 | Voices | square | The roster as the label's poster series: photo in yellow brackets + yellow panel with the vertical name; glitch cuts; each opens a profile (`#/artist/<slug>`) |
 | 03 | Transmissions | saw | Mixes & releases with a custom SoundCloud player (click the waveform to seek) |
@@ -57,6 +57,9 @@ Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a 
 - Instagram requires a login, so the initial content was taken from Keyv's public
   SoundCloud (the DEMONSTRATOR mixes, artwork, portrait, crowd panorama and real
   waveforms). Bio copy is a starting draft — please review it.
+- Intro video: `assets/video/oscillator-rises.mp4` (H.264, 720px, ~370 KB) with a VP9 `.webm` fallback,
+  both cut from the original reel (first 1.2 s of black trimmed, blacks crushed to true black).
+- Logo files (`assets/img/logo-*.png`, favicon, touch icon) are generated from the 2000px originals.
 - Colours: ink `#070707`, bone `#e9e7df`, yellow `#e4e418` (from the label logo).
 - Fonts (matched to the label's posters and the "Oscillator Rises" reel): Anton, Tenor Sans
   (the KIARASH poster type), Orbitron — all SIL OFL,

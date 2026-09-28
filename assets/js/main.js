@@ -153,8 +153,11 @@
   }
 
   /* ─── boot: the "Oscillator Rises" intro ─────────────────────────────
-     black → centre mark → rotates & grows → yellow strobe cuts → neon logo
-     in the OSCILLATOR/ ring → WE ARE OSCILLATOR → hands over to the hero */
+     plays the label's own reel (muted: browsers only autoplay silently,
+     with a Sound on button). If a phone refuses to autoplay, or the video
+     is slow to start, a drawn version of the same sequence runs instead:
+     black → centre mark → rotates & grows → yellow cuts → neon logo in the
+     OSCILLATOR/ ring → WE ARE OSCILLATOR → hands over to the hero */
   function boot() {
     return new Promise(function (resolve) {
       var el = $('.boot'), skip = reduced;
@@ -162,36 +165,81 @@
       var done = function () { document.body.classList.remove('is-booting'); resolve(); };
       if (skip || !el) { if (el) el.remove(); done(); return; }
 
-      var pct = $('.boot__pct'), t0 = performance.now(), timers = [], finished = false, fontsReady = false;
-      (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () { fontsReady = true; });
+      var pct = $('.boot__pct'), vid = $('.boot__video'), snd = $('.boot__sound');
+      var t0 = performance.now(), timers = [], finished = false, mode = null;
       var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
       var cls = function (c, on) { el.classList.toggle(c, on !== false); };
       var flash = function (ms) { at(ms, function () { cls('is-flash'); }); at(ms + 110, function () { cls('is-flash', false); }); };
+      var whenFonts = function (fn) { (document.fonts ? document.fonts.ready : Promise.resolve()).then(fn); };
       var finish = function () {
         if (finished) return;
         finished = true;
         timers.forEach(clearTimeout);
+        if (vid) { try { vid.pause(); } catch (e) { /* already gone */ } }
         el.classList.remove('is-flash');
         el.classList.add('is-out');
         done();
         setTimeout(function () { el.remove(); }, 900);
       };
 
-      at(250, function () { cls('st-1'); });
-      at(900, function () { cls('st-2'); });
-      flash(1700); flash(2050); flash(2400);          // ≤ 3 flashes per second
-      at(2700, function () { cls('st-3'); });
-      flash(2750);
-      at(3250, function () { cls('st-4'); });
-      at(4300, function () {
-        if (fontsReady) finish();
-        else (document.fonts ? document.fonts.ready : Promise.resolve()).then(finish);
+      function cssIntro() {
+        if (mode || finished) return;
+        mode = 'css';
+        if (vid) { try { vid.pause(); } catch (e) { /* noop */ } vid.remove(); vid = null; }
+        if (snd) snd.hidden = true;
+        t0 = performance.now();
+        at(250, function () { cls('st-1'); });
+        at(900, function () { cls('st-2'); });
+        flash(1700); flash(2050); flash(2400);          // ≤ 3 flashes per second
+        at(2700, function () { cls('st-3'); });
+        flash(2750);
+        at(3250, function () { cls('st-4'); });
+        at(4300, function () { whenFonts(finish); });
+      }
+      function videoIntro() {
+        if (mode || finished) return;
+        mode = 'video';
+        el.classList.add('is-video');
+        if (snd) snd.hidden = false;
+        vid.addEventListener('ended', function () { whenFonts(finish); });
+        at(((isFinite(vid.duration) && vid.duration ? vid.duration : 7) + 1.5) * 1000, finish);  // if 'ended' never comes
+      }
+
+      // H.264 where supported (smallest), VP9 WebM otherwise
+      var src = null;
+      if (vid && vid.canPlayType) {
+        if (vid.canPlayType('video/mp4; codecs="avc1.64001F, mp4a.40.2"')) src = vid.getAttribute('data-mp4');
+        else if (vid.canPlayType('video/webm; codecs="vp9, opus"')) src = vid.getAttribute('data-webm');
+      }
+      if (src) {
+        vid.addEventListener('playing', videoIntro, { once: true });
+        vid.addEventListener('error', cssIntro, { once: true });
+        vid.src = src;
+        var p = vid.play();
+        if (p && p.catch) p.catch(cssIntro);
+        at(2500, function () { if (!mode) cssIntro(); });   // slow network: don't sit on a black screen
+      } else {
+        cssIntro();
+      }
+
+      if (snd) snd.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!vid) return;
+        vid.muted = !vid.muted;
+        if (!vid.muted) { vid.volume = 1; var pp = vid.play(); if (pp && pp.catch) pp.catch(function () {}); }
+        snd.textContent = vid.muted ? 'Sound on' : 'Sound off';
+        snd.setAttribute('aria-pressed', String(!vid.muted));
       });
       el.addEventListener('click', finish);
-      document.addEventListener('keydown', function onKey() { document.removeEventListener('keydown', onKey); finish(); });
+      document.addEventListener('keydown', function onKey(e) {
+        if (e.target === snd && (e.key === 'Enter' || e.key === ' ')) return;
+        document.removeEventListener('keydown', onKey);
+        finish();
+      });
       (function tick(now) {
         if (finished) return;
-        pct.textContent = pad(Math.min(100, Math.floor((now - t0) / 43)), 3);
+        var k = mode === 'video' && vid && vid.duration ? vid.currentTime / vid.duration : (now - t0) / 4300;
+        pct.textContent = pad(Math.min(100, Math.floor(k * 100)), 3);
         requestAnimationFrame(tick);
       })(t0);
     });

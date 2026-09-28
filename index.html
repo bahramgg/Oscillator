@@ -38,19 +38,20 @@
   <a class="skip" href="#main">Skip to content</a>
 
   <!-- ░░ Boot ░░ -->
-  <div class="boot" aria-hidden="true">
-    <span class="logo logo--icon boot__icon"></span>
-    <div class="halo boot__halo">
+  <div class="boot">
+    <video class="boot__video" data-mp4="assets/video/oscillator-rises.mp4" data-webm="assets/video/oscillator-rises.webm" muted playsinline preload="auto" aria-hidden="true"></video>
+    <span class="logo logo--icon boot__icon" aria-hidden="true"></span>
+    <div class="halo boot__halo" aria-hidden="true">
       <svg class="halo__ring" viewBox="0 0 400 400" aria-hidden="true">
             <defs><path id="boot-ring" d="M200,200 m-172,0 a172,172 0 1,1 344,0 a172,172 0 1,1 -344,0"/></defs>
             <text><textPath href="#boot-ring" textLength="1080" lengthAdjust="spacing">OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/</textPath></text>
           </svg>
       <span class="logo logo--outline"></span>
     </div>
-    <p class="wearetitle boot__title">We are Oscillator</p>
+    <p class="wearetitle boot__title" aria-hidden="true">We are Oscillator</p>
     <div class="boot__meta mono">
-      <span>Oscillator</span>
-      <span>Tap to skip · <b class="boot__pct">000</b></span>
+      <button class="boot__sound mono" type="button" aria-pressed="false" hidden>Sound on</button>
+      <span class="boot__skip">Tap to skip · <b class="boot__pct">000</b></span>
     </div>
   </div>
 

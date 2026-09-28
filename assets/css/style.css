@@ -112,7 +112,7 @@ ol, ul { list-style: none; }
 
 /* ░░ logo — the mark is used as a mask so it can take any colour ░░ */
 .logo {
-  display: block; aspect-ratio: 760 / 581;
+  display: block; aspect-ratio: 1333 / 1005;
   background-color: var(--acid);
   -webkit-mask: url('../img/logo-mark.png') center / contain no-repeat;
   mask: url('../img/logo-mark.png') center / contain no-repeat;
@@ -151,7 +151,7 @@ ol, ul { list-style: none; }
 .boot__pct { color: var(--acid); font-weight: 500; }
 .boot__icon {
   position: fixed; left: 50%; top: 42%;
-  width: clamp(140px, 24vmin, 260px); aspect-ratio: 748 / 327;
+  width: clamp(140px, 24vmin, 260px); aspect-ratio: 1317 / 569;
   transform: translate(-50%, -50%) scale(.28); opacity: 0;
   filter: drop-shadow(0 0 6px rgba(228, 228, 24, .9)) drop-shadow(0 0 22px rgba(228, 228, 24, .5));
   transition: transform 1s var(--ease), opacity .4s;
@@ -865,7 +865,7 @@ main { padding-left: var(--rail); }
 
 /* ░░ hero: neon logo inside a rotating OSCILLATOR/ ring — after the "Oscillator Rises" reel ░░ */
 .logo--outline { -webkit-mask-image: url('../img/logo-outline.png'); mask-image: url('../img/logo-outline.png'); }
-.logo--icon { aspect-ratio: 748 / 327; -webkit-mask-image: url('../img/logo-icon.png'); mask-image: url('../img/logo-icon.png'); }
+.logo--icon { aspect-ratio: 1317 / 569; -webkit-mask-image: url('../img/logo-icon.png'); mask-image: url('../img/logo-icon.png'); }
 .halo {
   position: absolute; left: 50%; top: 42%; z-index: 0;
   width: clamp(250px, 44vmin, 480px); aspect-ratio: 1;
@@ -1290,3 +1290,21 @@ body { font-size: 16px; }
   .deck { left: var(--gutter); right: var(--gutter); width: auto; bottom: calc(var(--gutter) + env(safe-area-inset-bottom, 0px)); }
 }
 @media (prefers-reduced-motion: reduce) { .tx__disc img, .deck__disc img { animation: none; } }
+
+/* ░░ intro: the label's own reel ░░ */
+.boot__video {
+  position: fixed; left: 50%; top: 50%;
+  width: min(100vw, 100vh, 900px); width: min(100vw, 100svh, 900px); aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  object-fit: contain; background: #000;
+  opacity: 0; transition: opacity .25s; pointer-events: none;
+}
+.boot.is-video .boot__video { opacity: 1; }
+.boot.is-video .boot__icon, .boot.is-video .boot__halo, .boot.is-video .boot__title { display: none; }
+.boot__meta { z-index: 2; align-items: center; }
+.boot__sound {
+  padding: 10px 16px; border: 1px solid rgba(228, 228, 24, .55); border-radius: 999px;
+  color: var(--acid); background: rgba(0, 0, 0, .6); letter-spacing: .12em;
+}
+.boot__sound[aria-pressed="true"] { background: var(--acid); color: #000; }
+.boot__skip { margin-left: auto; }
