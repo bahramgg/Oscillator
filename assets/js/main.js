@@ -286,8 +286,8 @@
     }
     c.globalCompositeOperation = 'lighter';
     c.lineJoin = 'round';
-    c.strokeStyle = 'rgba(252, 248, 0,0.09)'; c.lineWidth = 7 * d; c.stroke();
-    c.strokeStyle = 'rgba(252, 248, 0,0.85)'; c.lineWidth = 1.15 * d; c.stroke();
+    c.strokeStyle = 'rgba(228, 228, 24,0.09)'; c.lineWidth = 7 * d; c.stroke();
+    c.strokeStyle = 'rgba(228, 228, 24,0.85)'; c.lineWidth = 1.15 * d; c.stroke();
   }
 
   /* ─── rail: the one line that runs down the page ────────────────────── */
@@ -322,7 +322,7 @@
     c.strokeStyle = 'rgba(233,231,223,.62)'; c.lineWidth = 1.1 * d; c.stroke();
     // position marker
     var max = Math.max(1, S.docH - S.vh);
-    c.fillStyle = '#fcf800';
+    c.fillStyle = '#e4e418';
     c.fillRect(w - 18 * d, (S.sy / max) * (h - 3 * d), 18 * d, 3 * d);
   }
 
@@ -471,7 +471,7 @@
         var yy = r.h / 2 - y * r.amp * edge * r.h * 0.4 * (1 + S.beat * 0.25);
         if (x) c.lineTo(x, yy); else c.moveTo(x, yy);
       }
-      c.strokeStyle = r.hover ? '#fcf800' : 'rgba(233,231,223,.42)';
+      c.strokeStyle = r.hover ? '#e4e418' : 'rgba(233,231,223,.42)';
       c.lineWidth = 1.3 * r.d;
       c.stroke();
     }
@@ -537,7 +537,7 @@
         '</div>' +
       '</aside>' +
       '<div class="pf__content">' +
-        '<p class="pf__role mono"><b>CH.' + pad(i + 1) + '</b> — ' + esc(a.role || '') + (a.city ? ' — ' + esc(a.city) : '') + '</p>' +
+        '<p class="pf__role mono">' + ['<b>CH.' + pad(i + 1) + '</b>'].concat([a.role, a.city].filter(Boolean).map(esc)).join(' — ') + '</p>' +
         '<h2 class="pf__name" id="pf-name">' + esc(a.name) + '</h2>' +
         (a.placeholder ? '<p class="pf__note mono">Placeholder channel — replace in assets/js/data.js</p>' : '') +
         '<div class="pf__bio">' + (a.bio || []).map(function (p) { return '<p>' + rich(p) + '</p>'; }).join('') + '</div>' +
@@ -577,7 +577,7 @@
     if (!pf.open) return;
     for (var i = 0; i < pf.canvases.length; i++) {
       var p = pf.canvases[i];
-      if (p.ctx) drawSigil(p.ctx, p.sig, reduced ? 0 : S.t, p.w, p.h, '#fcf800');
+      if (p.ctx) drawSigil(p.ctx, p.sig, reduced ? 0 : S.t, p.w, p.h, '#e4e418');
     }
   }
 
@@ -767,7 +767,7 @@
     for (var i = 0; i < n; i++) {
       var f = i / n, v = o.data[Math.floor(f * o.data.length)] || 0;
       var bh = Math.max(2 * d, v * h * 0.94);
-      c.fillStyle = f < o.progress ? '#fcf800' : (o.hover >= 0 && f < o.hover ? 'rgba(233,231,223,.78)' : 'rgba(233,231,223,.26)');
+      c.fillStyle = f < o.progress ? '#e4e418' : (o.hover >= 0 && f < o.hover ? 'rgba(233,231,223,.78)' : 'rgba(233,231,223,.26)');
       c.fillRect(i * (bw + gap), (h - bh) / 2, bw, bh);
     }
   }
@@ -822,7 +822,7 @@
         ifr.allow = 'autoplay; encrypted-media';
         ifr.title = 'SoundCloud player — ' + o.t.title;
         ifr.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(o.t.soundcloud) +
-          '&color=%23fcf800&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false';
+          '&color=%23e4e418&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false';
         box.appendChild(ifr);
         var w = o.widget = window.SC.Widget(ifr), EV = window.SC.Widget.Events;
         var fail = setTimeout(function () { if (!o.ready) self.fail(o); }, 12000);
@@ -964,7 +964,7 @@
       if (x) c.lineTo(x, y); else c.moveTo(x, y);
     }
     c.strokeStyle = 'rgba(233,231,223,.55)'; c.lineWidth = 1.2 * d; c.stroke();
-    c.fillStyle = '#fcf800';
+    c.fillStyle = '#e4e418';
     c.beginPath(); c.arc(head, cy, 3 * d, 0, TAU); c.fill();
   }
 

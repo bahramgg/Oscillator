@@ -7,8 +7,7 @@
    • Images go in assets/img/ and are referenced by relative path.
    • Text in *asterisks* is rendered in the italic serif accent face.
    • Any link left as '' (empty) is simply hidden.
-   • Entries marked  placeholder: true  are layout stand-ins — replace them
-     with real roster artists from Instagram (or delete them).
+   • An artist without a photo gets a generated contour "sigil" instead.
    ========================================================================== */
 
 window.OSCILLATOR = {
@@ -17,7 +16,7 @@ window.OSCILLATOR = {
     name: 'Oscillator',
     handle: '@oscillator__',
     instagram: 'https://www.instagram.com/oscillator__/',
-    soundcloud: '',            // label SoundCloud, if any
+    soundcloud: 'https://on.soundcloud.com/1oNQcz1onDKpvNzims',
     email: '',                 // e.g. 'demos@oscillator.xyz' — hidden when empty
     curator: 'Keyv',
     origin: 'Tehran',
@@ -75,17 +74,15 @@ window.OSCILLATOR = {
       videos: []
     },
 
-    // ↓ layout placeholders — replace with the real roster
-    { slug: 'artist-02', name: 'Artist 02', role: 'DJ · Producer', city: 'TBA', placeholder: true,
-      bio: ['Replace with this artist\'s bio. One or two short paragraphs is plenty — let the music talk.'], links: {}, transmissions: [], videos: [] },
-    { slug: 'artist-03', name: 'Artist 03', role: 'Live act', city: 'TBA', placeholder: true,
-      bio: ['Replace with this artist\'s bio.'], links: {}, transmissions: [], videos: [] },
-    { slug: 'artist-04', name: 'Artist 04', role: 'DJ', city: 'TBA', placeholder: true,
-      bio: ['Replace with this artist\'s bio.'], links: {}, transmissions: [], videos: [] },
-    { slug: 'artist-05', name: 'Artist 05', role: 'Producer', city: 'TBA', placeholder: true,
-      bio: ['Replace with this artist\'s bio.'], links: {}, transmissions: [], videos: [] },
-    { slug: 'artist-06', name: 'Artist 06', role: 'DJ · Producer', city: 'TBA', placeholder: true,
-      bio: ['Replace with this artist\'s bio.'], links: {}, transmissions: [], videos: [] }
+    // Roster from the label's Instagram — bios, photos & links to come
+    { slug: 'enzo', name: 'Enzo', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'mahyar-arabiyan', name: 'Mahyar Arabiyan', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'pouyan', name: 'Pouyan', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'barbad', name: 'Barbad', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'el4raa', name: 'El4raa', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'kiarash', name: 'Kiarash', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'traumatic', name: 'Traumatic', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'xaxwave', name: 'Xaxwave', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] }
   ],
 
   /* ------------------------------------------------------------------------

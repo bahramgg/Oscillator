@@ -43,8 +43,8 @@
   --bone-3: rgba(233, 231, 223, .36);
   --line: rgba(233, 231, 223, .13);
   --line-2: rgba(233, 231, 223, .24);
-  --acid: #fcf800;
-  --acid-2: rgba(252, 248, 0, .22);
+  --acid: #e4e418;
+  --acid-2: rgba(228, 228, 24, .22);
 
   --f-display: 'Anybody', 'Arial Narrow', 'Helvetica Neue', sans-serif;
   --f-serif: 'Instrument Serif', 'Times New Roman', serif;
@@ -117,6 +117,23 @@ ol, ul { list-style: none; }
 }
 .skip:focus { transform: none; }
 
+/* ░░ logo — the mark is used as a mask so it can take any colour ░░ */
+.logo {
+  display: block; aspect-ratio: 760 / 581;
+  background-color: var(--acid);
+  -webkit-mask: url('../img/logo-mark.png') center / contain no-repeat;
+  mask: url('../img/logo-mark.png') center / contain no-repeat;
+}
+.nav__logo { width: 34px; }
+.boot__logo { position: absolute; left: 50%; top: 24%; width: clamp(120px, 16vw, 220px); transform: translate(-50%, -50%); z-index: 1; }
+.hero__logo {
+  position: absolute; left: 50%; top: 40%; z-index: -1;
+  width: clamp(110px, 12vw, 200px);
+  transform: translate(-50%, -50%) scale(calc(1 + var(--beat) * .08));
+  filter: drop-shadow(0 0 calc(var(--beat) * 24px) rgba(228, 228, 24, .6));
+}
+.output__logo { width: clamp(160px, 22vw, 340px); margin-top: clamp(64px, 8vw, 128px); }
+
 /* ░░ glyphs — tiny animated waveforms ░░ */
 .glyph { width: 60px; height: 12px; overflow: hidden; flex: none; }
 .glyph path { fill: none; stroke: currentColor; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
@@ -156,7 +173,6 @@ ol, ul { list-style: none; }
   display: flex; align-items: center; gap: 10px;
   font-stretch: 140%; font-weight: 700; font-size: 15px; letter-spacing: .02em; text-transform: uppercase;
 }
-.nav__brand .glyph { color: var(--acid); width: 40px; }
 .nav__links { display: flex; gap: clamp(12px, 1.6vw, 28px); margin-left: auto; }
 .nav__links a { position: relative; color: var(--bone-2); transition: color .3s; }
 .nav__links a i { font-style: normal; color: var(--bone-3); margin-right: 6px; }
@@ -367,7 +383,7 @@ main { padding-left: var(--rail); }
 }
 .wordmark span { display: inline-block; will-change: font-stretch; }
 .wordmark span:nth-child(odd) { color: var(--bone); }
-.signal-on .wordmark span { text-shadow: 0 0 calc(var(--beat) * 40px) rgba(252, 248, 0, .35); }
+.signal-on .wordmark span { text-shadow: 0 0 calc(var(--beat) * 40px) rgba(228, 228, 24, .35); }
 
 /* ==========================================================================
    01 — Carrier

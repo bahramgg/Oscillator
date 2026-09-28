@@ -36,8 +36,7 @@ to touch the HTML, CSS or other scripts to update the site.
 
 - **Artists** — add an object to `artists`. Put photos in `assets/img/` (black & white
   works best). An artist without a photo automatically gets a generated contour "sigil".
-  The five `Artist 02 … 06` entries marked `placeholder: true` are layout stand-ins —
-  replace them with the real roster.
+  Roster artists currently have names only — add bios, photos and links as they come.
 - **Transmissions** — mixes/releases. `soundcloud` is the public track URL; `duration`
   is in seconds; `waveform` is optional.
 - **Events** — leave `events: []` for the "no signal" state, or add dates.
@@ -55,7 +54,7 @@ Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a 
 - Instagram requires a login, so the initial content was taken from Keyv's public
   SoundCloud (the DEMONSTRATOR mixes, artwork, portrait, crowd panorama and real
   waveforms). Bio copy is a starting draft — please review it.
-- Colours: ink `#070707`, bone `#e9e7df`, yellow `#fcf800` (the label's Instagram yellow).
+- Colours: ink `#070707`, bone `#e9e7df`, yellow `#e4e418` (from the label logo).
 - Fonts: Anybody (variable width 50–150 %), Instrument Serif, Martian Mono — all SIL OFL,
   see [`assets/fonts/LICENSE.md`](assets/fonts/LICENSE.md).
 - Respects `prefers-reduced-motion`; works on touch devices (no custom cursor, tap to open).
@@ -68,6 +67,6 @@ Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a 
 `assets/js/data.js`
 
 - برای اضافه کردن آرتیست، یک آیتم به لیست `artists` اضافه کنید و عکسش را در پوشه‌ی `assets/img/` بگذارید.
-- پنج آرتیست `Artist 02` تا `Artist 06` موقتی هستند و باید با آرتیست‌های واقعی از اینستاگرام جایگزین شوند.
+- آرتیست‌ها فعلاً فقط اسم دارند؛ بیو، عکس و لینک‌ها را هر وقت آماده شد در همین فایل اضافه کنید.
 - اگر آرتیستی عکس نداشته باشد، سایت به‌طور خودکار یک طرح گرافیکی مخصوص او می‌سازد.
 - برای اجرا روی کامپیوتر: `npx serve .`
