@@ -1098,3 +1098,11 @@ body { font-size: 16px; }
   .tx { grid-template-columns: 1fr; }
   .tx__cover { max-width: 100%; }
 }
+
+/* menu footer links: small labels, never the big menu type */
+.menu .menu__foot { align-items: center; }
+.menu .menu__foot a {
+  display: inline; padding: 0; border: 0; grid-template-columns: none;
+  font-family: var(--f-mono); font-size: 11px; line-height: 1.4; letter-spacing: .04em;
+  color: var(--bone-2); white-space: nowrap;
+}
