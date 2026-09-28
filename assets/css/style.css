@@ -1442,3 +1442,14 @@ body { font-size: 16px; }
 .roster { grid-auto-columns: calc((100% - 2 * var(--rg)) / 2.7); }
 @media (max-width: 1100px) { .roster { grid-auto-columns: calc((100% - var(--rg)) / 1.8); } .pc__link { aspect-ratio: 4 / 5; } }
 @media (max-width: 560px) { .roster { grid-auto-columns: 88%; } .pc__link { aspect-ratio: 4 / 5; } }
+
+/* the reel melts into the page: near-blacks pushed to pure black (iOS lifts
+   video blacks slightly) and the square frame feathered away with a round mask */
+.boot, .boot.is-video { background: #000; }
+.boot__video {
+  filter: contrast(1.15);
+  -webkit-mask-image: radial-gradient(closest-side, #000 78%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 78%, transparent 100%);
+}
+.boot.is-video.is-flash { background: var(--acid); }
+.boot.is-video.is-flash .boot__video { filter: none; }

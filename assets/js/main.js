@@ -202,6 +202,28 @@
         el.classList.add('is-video');
         if (snd) snd.hidden = false;
         vid.addEventListener('ended', function () { whenFonts(finish); });
+        // the reel's yellow cuts fill the whole screen, not just the video square:
+        // sample the frame and switch the page background with it
+        var probe = document.createElement('canvas'); probe.width = probe.height = 8;
+        var pc = probe.getContext('2d', { willReadFrequently: true });
+        (function sync() {
+          if (finished || !vid) return;
+          try {
+            pc.drawImage(vid, 0, 0, 8, 8);
+            // average the frame's outer ring and paint the page with it, so the
+            // video edge and the page are always the same colour
+            var d = pc.getImageData(0, 0, 8, 8).data, r = 0, g = 0, bl = 0, n = 0;
+            for (var y = 0; y < 8; y++) for (var x = 0; x < 8; x++) {
+              if (x > 0 && x < 7 && y > 0 && y < 7) continue;
+              var k = (y * 8 + x) * 4; r += d[k]; g += d[k + 1]; bl += d[k + 2]; n++;
+            }
+            r /= n; g /= n; bl /= n;
+            var lit = (r + g) / 2 > 100;
+            el.classList.toggle('is-flash', lit);
+            el.style.backgroundColor = lit ? 'rgb(' + (r | 0) + ',' + (g | 0) + ',' + (bl | 0) + ')' : '';
+          } catch (e) { return; }
+          requestAnimationFrame(sync);
+        })();
         at(((isFinite(vid.duration) && vid.duration ? vid.duration : 7) + 1.5) * 1000, finish);  // if 'ended' never comes
       }
 

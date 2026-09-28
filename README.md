@@ -57,7 +57,7 @@ Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a 
 - Instagram requires a login, so the initial content was taken from Keyv's public
   SoundCloud (the DEMONSTRATOR mixes, artwork, portrait, crowd panorama and real
   waveforms). Bio copy is a starting draft — please review it.
-- Intro video: `assets/video/oscillator-rises.mp4` (H.264, 720px, ~370 KB) with a VP9 `.webm` fallback,
+- Intro video: `assets/video/oscillator-rises.mp4` (H.264, 720px, ~500 KB, denoised) with a VP9 `.webm` fallback,
   both cut from the original reel (first 1.2 s of black trimmed, blacks crushed to true black).
 - Logo files (`assets/img/logo-*.png`, favicon, touch icon) are generated from the 2000px originals.
 - Colours: ink `#070707`, bone `#e9e7df`, yellow `#e4e418` (from the label logo).
