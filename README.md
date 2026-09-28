@@ -36,7 +36,7 @@ to touch the HTML, CSS or other scripts to update the site.
 
 - **Artists** — add an object to `artists`. Put photos in `assets/img/` (black & white
   works best). An artist without a photo automatically gets a generated contour "sigil".
-  Roster artists currently have names only — add bios, photos and links as they come.
+  Roster photos are cropped from the label's Instagram posters (low resolution) — swap in originals when available.
 - **Transmissions** — mixes/releases. `soundcloud` is the public track URL; `duration`
   is in seconds; `waveform` is optional.
 - **Events** — leave `events: []` for the "no signal" state, or add dates.
@@ -67,6 +67,6 @@ Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a 
 `assets/js/data.js`
 
 - برای اضافه کردن آرتیست، یک آیتم به لیست `artists` اضافه کنید و عکسش را در پوشه‌ی `assets/img/` بگذارید.
-- آرتیست‌ها فعلاً فقط اسم دارند؛ بیو، عکس و لینک‌ها را هر وقت آماده شد در همین فایل اضافه کنید.
+- عکس آرتیست‌ها از پوسترهای اینستاگرام لیبل برش خورده و کیفیت پایینی دارد؛ هر وقت عکس اصلی رسید جایگزین کنید.
 - اگر آرتیستی عکس نداشته باشد، سایت به‌طور خودکار یک طرح گرافیکی مخصوص او می‌سازد.
 - برای اجرا روی کامپیوتر: `npx serve .`

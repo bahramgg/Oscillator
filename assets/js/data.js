@@ -74,15 +74,15 @@ window.OSCILLATOR = {
       videos: []
     },
 
-    // Roster from the label's Instagram — bios, photos & links to come
-    { slug: 'enzo', name: 'Enzo', role: '', city: '', bio: [], links: { instagram: 'https://www.instagram.com/shayan.kenzo/', soundcloud: '' }, transmissions: [], videos: [] },
-    { slug: 'mahyar-arabiyan', name: 'Mahyar Arabiyan', role: '', city: '', bio: [], links: { instagram: 'https://www.instagram.com/mah7arr/', soundcloud: '' }, transmissions: [], videos: [] },
-    { slug: 'pooyan', name: 'Pooyan', role: '', city: '', bio: [], links: { instagram: 'https://www.instagram.com/pooyansaadati/', soundcloud: '' }, transmissions: [], videos: [] },
-    { slug: 'barbad', name: 'Barbad', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
-    { slug: 'el4raa', name: 'El4raa', role: '', city: '', bio: [], links: { instagram: 'https://www.instagram.com/delara.toyuri/', soundcloud: '' }, transmissions: [], videos: [] },
-    { slug: 'kiarash', name: 'Kiarash', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
-    { slug: 'traumatic', name: 'Traumatic', role: '', city: '', bio: [], links: { instagram: 'https://www.instagram.com/trmc.live/', soundcloud: '' }, transmissions: [], videos: [] },
-    { slug: 'xaxwave', name: 'Xaxwave', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    // Roster from the label's Instagram — photos cropped from the label's artist posters
+    { slug: 'enzo', name: 'Enzo', role: '', city: '', photo: 'assets/img/artist-enzo.jpg', bio: [], links: { instagram: 'https://www.instagram.com/shayan.kenzo/', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'mahyar-arabiyan', name: 'Mahyar Arabiyan', role: '', city: '', photo: 'assets/img/artist-mahyar-arabiyan.jpg', bio: [], links: { instagram: 'https://www.instagram.com/mah7arr/', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'pooyan', name: 'Pooyan', role: '', city: '', photo: 'assets/img/artist-pooyan.jpg', bio: [], links: { instagram: 'https://www.instagram.com/pooyansaadati/', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'barbad', name: 'Barbad', role: '', city: '', photo: 'assets/img/artist-barbad.jpg', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'el4raa', name: 'El4raa', role: '', city: '', photo: 'assets/img/artist-el4raa.jpg', bio: [], links: { instagram: 'https://www.instagram.com/delara.toyuri/', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'kiarash', name: 'Kiarash', role: '', city: '', photo: 'assets/img/artist-kiarash.jpg', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'traumatic', name: 'Traumatic', role: '', city: '', photo: 'assets/img/artist-traumatic.jpg', bio: [], links: { instagram: 'https://www.instagram.com/trmc.live/', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'xaxwave', name: 'Xaxwave', role: '', city: '', photo: 'assets/img/artist-xaxwave.jpg', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
     { slug: 'dynno', name: 'Dynno', role: 'Resident artist', city: 'Tehran', photo: 'assets/img/dynno.jpg', bio: [], links: { instagram: 'https://www.instagram.com/dynno.music/', soundcloud: '' }, transmissions: [], videos: [] }
   ],
 

@@ -745,7 +745,6 @@ main { padding-left: var(--rail); }
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: -.02em;
-  overflow-wrap: anywhere;
   transition: font-stretch 1.4s var(--ease-out) .2s;
 }
 .profile.is-open .pf__name { font-stretch: 118%; }

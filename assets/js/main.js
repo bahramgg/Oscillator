@@ -568,7 +568,17 @@
     $('.profile__next').dataset.swap = D.artists[(i + 1) % n].slug;
     pf.canvases = $$('.pf__sigil, .pf__sigmini', pf.body).map(function (cv) { return { cv: cv, sig: signature(slug) }; });
     requestAnimationFrame(sizeProfileCanvases);
+    fitProfileName();
     if (E && E.on) E.setPattern(signature(slug).seed);
+  }
+  // keep the longest word of the name on one line (at its final, widest stretch)
+  function fitProfileName() {
+    var el = $('.pf__name', pf.body);
+    if (!el) return;
+    el.style.fontSize = '';
+    var longest = Math.max.apply(null, el.textContent.split(/\s+/).map(function (w) { return w.length; }));
+    var max = el.parentNode.clientWidth / (longest * 0.92);
+    if (parseFloat(getComputedStyle(el).fontSize) > max) el.style.fontSize = max.toFixed(1) + 'px';
   }
   function sizeProfileCanvases() {
     pf.canvases.forEach(function (p) { var s = sizeCanvas(p.cv, 2); p.ctx = s.ctx; p.w = s.w; p.h = s.h; });
@@ -1119,7 +1129,7 @@
     S.vw = innerWidth; S.vh = innerHeight; S.sy = scrollY;
     fitTitles(); fitWordmark(); resizeScope(); resizeRail(); measureCarrier(); resizeRoster();
     resizeTx(); resizeFeedback(); resizeEvents(); measureOutput();
-    if (pf.open) sizeProfileCanvases();
+    if (pf.open) { sizeProfileCanvases(); fitProfileName(); }
   }
 
   /* ─── the loop ─────────────────────────────────────────────────────── */
