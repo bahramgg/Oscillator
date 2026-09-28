@@ -75,13 +75,13 @@ window.OSCILLATOR = {
     },
 
     // Roster from the label's Instagram — bios, photos & links to come
-    { slug: 'enzo', name: 'Enzo', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
-    { slug: 'mahyar-arabiyan', name: 'Mahyar Arabiyan', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
-    { slug: 'pouyan', name: 'Pouyan', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'enzo', name: 'Enzo', role: '', city: '', bio: [], links: { instagram: 'https://www.instagram.com/shayan.kenzo/', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'mahyar-arabiyan', name: 'Mahyar Arabiyan', role: '', city: '', bio: [], links: { instagram: 'https://www.instagram.com/mah7arr/', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'pooyan', name: 'Pooyan', role: '', city: '', bio: [], links: { instagram: 'https://www.instagram.com/pooyansaadati/', soundcloud: '' }, transmissions: [], videos: [] },
     { slug: 'barbad', name: 'Barbad', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
-    { slug: 'el4raa', name: 'El4raa', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'el4raa', name: 'El4raa', role: '', city: '', bio: [], links: { instagram: 'https://www.instagram.com/delara.toyuri/', soundcloud: '' }, transmissions: [], videos: [] },
     { slug: 'kiarash', name: 'Kiarash', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
-    { slug: 'traumatic', name: 'Traumatic', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'traumatic', name: 'Traumatic', role: '', city: '', bio: [], links: { instagram: 'https://www.instagram.com/trmc.live/', soundcloud: '' }, transmissions: [], videos: [] },
     { slug: 'xaxwave', name: 'Xaxwave', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] }
   ],
 
