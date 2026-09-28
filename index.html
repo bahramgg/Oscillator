@@ -159,6 +159,13 @@
         <span class="sec__meta mono voices__count">channels</span>
       </header>
       <ol class="roster" aria-label="Artists"></ol>
+      <div class="reel-nav">
+        <span class="reel-count mono"><b>01</b> / <span class="reel-total">10</span></span>
+        <span class="reel-progress" aria-hidden="true"><i></i></span>
+        <span class="reel-hint mono">Swipe</span>
+        <button class="reel-btn reel-prev" type="button" aria-label="Previous artists">←</button>
+        <button class="reel-btn reel-next" type="button" aria-label="Next artists">→</button>
+      </div>
     </section>
 
     <!-- ░░ 03 — Transmissions / mixes & releases ░░ -->
@@ -238,11 +245,54 @@
 
 
   <!-- now-playing deck -->
+  <!-- now playing: full-screen stage -->
+  <div class="stage" id="stage" role="dialog" aria-modal="true" aria-labelledby="stage-title" hidden>
+    <div class="stage__bg" aria-hidden="true"></div>
+    <div class="stage__top mono">
+      <span class="stage__label"><i aria-hidden="true"></i>Now playing</span>
+      <button class="stage__close" type="button">Minimise <span aria-hidden="true">↓</span></button>
+    </div>
+    <div class="stage__main">
+      <div class="stage__platter">
+        <canvas class="stage__ring" aria-hidden="true"></canvas>
+        <div class="stage__disc" aria-hidden="true"><img alt=""></div>
+        <button class="stage__play" type="button" aria-label="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg></button>
+        <span class="stage__tip mono" aria-hidden="true"></span>
+        <i class="brk" aria-hidden="true"></i>
+      </div>
+      <div class="stage__info">
+        <p class="stage__meta mono"></p>
+        <h2 class="stage__title" id="stage-title"></h2>
+        <p class="stage__by"></p>
+        <div class="stage__readout">
+          <span class="stage__now">0:00</span><span class="stage__total"></span>
+          <span class="stage__state mono">Standby</span>
+        </div>
+        <div class="stage__seek" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>
+        <div class="stage__ctrl">
+          <button class="stage__skip mono" type="button" data-skip="-30" aria-label="Back 30 seconds">−30s</button>
+          <button class="stage__toggle" type="button" aria-label="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg></button>
+          <button class="stage__skip mono" type="button" data-skip="30" aria-label="Forward 30 seconds">+30s</button>
+        </div>
+        <details class="stage__tracks"></details>
+        <a class="stage__ext mono" href="#" target="_blank" rel="noopener">Open on SoundCloud ↗︎</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- now playing: bar while the stage is minimised -->
   <div class="deck" hidden>
-    <span class="deck__disc" aria-hidden="true"><img alt=""></span>
-    <span class="deck__info"><span class="deck__title"></span><span class="deck__time mono">0:00</span></span>
+    <button class="deck__open" type="button" aria-label="Open now playing">
+      <span class="deck__disc" aria-hidden="true"><img alt=""></span>
+      <span class="deck__info"><span class="deck__title"></span><span class="deck__time mono">0:00</span></span>
+    </button>
     <button class="deck__toggle" type="button" aria-label="Pause"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg></button>
     <i class="deck__bar" aria-hidden="true"></i>
+  </div>
+
+  <!-- hidden SoundCloud widgets (shown only if a browser blocks playback) -->
+  <div class="sc-host" inert>
+    <p class="sc-host__note mono">Your browser needs one tap on SoundCloud's play button to start</p>
   </div>
 
   <noscript>

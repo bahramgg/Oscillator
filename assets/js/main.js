@@ -453,6 +453,67 @@
       roster.cards.forEach(function (c) { gio.observe(c.photo); });
     }
     watch(roster.list, 'roster');
+    initReel();
+  }
+
+  // the roster scrolls sideways like the label's poster carousel:
+  // swipe on touch, arrows or drag with a mouse, counter + progress line
+  function initReel() {
+    var R = roster.list, count = $('.reel-count b'), bar = $('.reel-progress i');
+    var prev = $('.reel-prev'), next = $('.reel-next');
+    $('.reel-total').textContent = pad(roster.cards.length);
+    var step = function () {
+      var c = roster.cards[0] && roster.cards[0].li;
+      return c ? c.getBoundingClientRect().width + (parseFloat(getComputedStyle(R).columnGap) || 0) : R.clientWidth;
+    };
+    var sync = function () {
+      var max = R.scrollWidth - R.clientWidth, st = step();
+      var idx = Math.min(roster.cards.length - 1, Math.max(0, Math.round(R.scrollLeft / st)));
+      count.textContent = pad(idx + 1);
+      var w = R.scrollWidth ? R.clientWidth / R.scrollWidth : 1;
+      bar.style.width = (Math.min(1, w) * 100).toFixed(2) + '%';
+      bar.style.left = (max > 0 ? (R.scrollLeft / max) * (1 - w) * 100 : 0).toFixed(2) + '%';
+      prev.disabled = R.scrollLeft <= 2;
+      next.disabled = R.scrollLeft >= max - 2;
+    };
+    var ticking = false;
+    R.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () { ticking = false; sync(); });
+    }, { passive: true });
+    var go = function (dir) { R.scrollBy({ left: dir * step(), behavior: reduced ? 'auto' : 'smooth' }); };
+    prev.addEventListener('click', function () { go(-1); });
+    next.addEventListener('click', function () { go(1); });
+
+    // mouse drag (touch already scrolls natively)
+    var drag = null, dragged = false;
+    R.addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      drag = { x: e.clientX, left: R.scrollLeft, moved: false };
+    });
+    window.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      var dx = e.clientX - drag.x;
+      if (!drag.moved && Math.abs(dx) > 6) { drag.moved = true; R.classList.add('is-drag'); }
+      if (drag.moved) R.scrollLeft = drag.left - dx;
+    });
+    window.addEventListener('pointerup', function () {
+      if (!drag) return;
+      var moved = drag.moved;
+      drag = null;
+      if (!moved) return;
+      dragged = true;
+      setTimeout(function () { dragged = false; }, 250);
+      R.classList.remove('is-drag');
+      var st = step();
+      R.scrollTo({ left: Math.round(R.scrollLeft / st) * st, behavior: reduced ? 'auto' : 'smooth' });
+    });
+    // a drag must not also open the artist it started on
+    R.addEventListener('click', function (e) { if (dragged) { e.preventDefault(); e.stopPropagation(); dragged = false; } }, true);
+    R.addEventListener('dragstart', function (e) { e.preventDefault(); });
+    roster.syncReel = sync;
+    sync();
   }
 
   // fit each vertical name to its panel
@@ -467,6 +528,7 @@
       n.style.fontSize = fs.toFixed(1) + 'px';
       if (c.cvs) { var t = sizeCanvas(c.cvs, 2); drawSigil(t.ctx, c.sig, 0, t.w, t.h); }
     });
+    if (roster.syncReel) roster.syncReel();
   }
 
   function drawRoster() {
@@ -645,7 +707,7 @@
           var el = document.getElementById('tx-' + id);
           if (el) el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
           var o = txs.filter(function (x) { return x.t.id === id; })[0];
-          if (o) Player.toggle(o);
+          if (o) listen(o, null, el);
         }, 950);
       }
     });
@@ -668,11 +730,12 @@
     window.addEventListener('hashchange', function () { route(true); });
   }
 
-  /* ─── 03 transmissions: the platter deck ──────────────────────────────
-     each mix is a record on a platter: the cover spins as the disc, the
-     mix's real waveform wraps around it as a ring, progress fills the ring
-     in yellow. Tap the ring (or the bar) to seek. Audio comes from a hidden
-     SoundCloud widget, driven through its API. */
+  /* ─── 03 transmissions ─────────────────────────────────────────────────
+     the list stays simple (cover, title, waveform line). Pressing play opens
+     the stage: a full-screen "now playing" page where the cover spins as a
+     record inside a ring of the mix's real waveform. Minimise it and the mix
+     keeps playing in the bottom bar. Audio comes from hidden SoundCloud
+     widgets driven through their API. */
   var txs = [];
   var ICON_PLAY = '<svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>';
   var ICON_PAUSE = '<svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg>';
@@ -684,34 +747,35 @@
     var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
     return total >= 3600 ? h + ':' + pad(m) + ':' + pad(s) : m + ':' + pad(s);
   }
+  function byline(t) {
+    return artistIndex(t.artist) >= 0
+      ? '<a href="#/artist/' + esc(t.artist) + '">' + esc(artistName(t.artist)) + '</a>'
+      : esc(t.artist || '');
+  }
+  function metaline(t, i) {
+    var tl = t.tracklist || [];
+    return '<span>TX-' + pad(i + 1) + '</span><span>' + esc(t.type) + '</span><span>' + fmtDate(t.date) + '</span><span>' + fmtClock(t.duration, t.duration) + '</span>' +
+      (tl.length ? '<span>' + tl.length + ' tracks</span>' : '');
+  }
 
   function initTransmissions() {
     var list = $('.tx-list'), T = D.transmissions;
     list.innerHTML = T.map(function (t, i) {
       var tl = t.tracklist || [];
-      var by = artistIndex(t.artist) >= 0
-        ? '<a href="#/artist/' + esc(t.artist) + '">' + esc(artistName(t.artist)) + '</a>'
-        : esc(t.artist || '');
       return '<article class="tx" id="tx-' + esc(t.id) + '">' +
-        '<div class="tx__platter">' +
-          '<canvas class="tx__ring" aria-hidden="true"></canvas>' +
-          '<div class="tx__disc" aria-hidden="true"><img src="' + esc(t.cover) + '" alt="" loading="lazy"></div>' +
-          '<button class="tx__play" type="button" aria-label="Play ' + esc(t.title) + '">' + ICON_PLAY + ICON_PAUSE + '</button>' +
-          '<span class="tx__tip mono" aria-hidden="true"></span>' +
-          '<i class="brk" aria-hidden="true"></i>' +
-        '</div>' +
+        '<button class="tx__cover" type="button" aria-label="Play ' + esc(t.title) + '">' +
+          '<img src="' + esc(t.cover) + '" alt="" loading="lazy"><i class="brk" aria-hidden="true"></i>' +
+          '<span class="tx__coverplay" aria-hidden="true">' + ICON_PLAY + '</span>' +
+        '</button>' +
         '<div class="tx__body">' +
-          '<p class="tx__meta mono"><span>TX-' + pad(i + 1) + '</span><span>' + esc(t.type) + '</span><span>' + fmtDate(t.date) + '</span>' +
-            (tl.length ? '<span>' + tl.length + ' tracks</span>' : '') + '</p>' +
+          '<p class="tx__meta mono">' + metaline(t, i) + '</p>' +
           '<h3 class="tx__title">' + esc(t.title) + '</h3>' +
-          '<p class="tx__by">by ' + by + '</p>' +
-          '<div class="tx__readout">' +
-            '<span class="tx__now">' + fmtClock(0, t.duration) + '</span>' +
-            '<span class="tx__total">/ ' + fmtClock(t.duration, t.duration) + '</span>' +
-            '<span class="tx__state mono">Standby</span>' +
+          '<p class="tx__by">by ' + byline(t) + '</p>' +
+          '<div class="tx__deck">' +
+            '<button class="tx__play" type="button" aria-label="Play ' + esc(t.title) + '">' + ICON_PLAY + ICON_PAUSE + '</button>' +
+            '<div class="tx__wave" role="slider" tabindex="0" aria-label="Seek ' + esc(t.title) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><canvas aria-hidden="true"></canvas></div>' +
           '</div>' +
-          '<div class="tx__bar" role="slider" tabindex="0" aria-label="Seek ' + esc(t.title) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>' +
-          '<div class="tx__player" inert></div>' +
+          '<div class="tx__dur mono"><span class="tx__pos">' + fmtClock(0, t.duration) + '</span><span>' + fmtClock(t.duration, t.duration) + '</span></div>' +
           (tl.length ? '<details class="tx__tracks"><summary class="mono"><span>Tracklist · ' + pad(tl.length) + '</span></summary><ol>' +
             tl.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol></details>' : '') +
           (t.soundcloud ? '<a class="tx__ext mono" href="' + esc(t.soundcloud) + '" target="_blank" rel="noopener">Open on SoundCloud ↗︎</a>' : '') +
@@ -720,39 +784,28 @@
 
     txs = $$('.tx', list).map(function (el, i) {
       var o = {
-        el: el, t: T[i], platter: $('.tx__platter', el), cvs: $('.tx__ring', el), tip: $('.tx__tip', el),
-        bar: $('.tx__bar', el), now: $('.tx__now', el), state: $('.tx__state', el), playBtn: $('.tx__play', el),
-        hover: -1, progress: 0, sec: 0, dirty: true
+        el: el, t: T[i], i: i, wave: $('.tx__wave', el), cvs: $('.tx__wave canvas', el), pos: $('.tx__pos', el),
+        playBtn: $('.tx__play', el), stateText: 'Standby', hover: -1, progress: 0, sec: 0
       };
       var data = o.t.waveform;
       if (!data || !data.length) { var r = rng(hash(o.t.id)); data = []; for (var k = 0; k < 200; k++) data.push(0.25 + 0.75 * Math.pow(r(), 0.6)); }
       o.data = data;
 
-      $('.tx__play', el).addEventListener('click', function (e) { e.stopPropagation(); Player.toggle(o); });
-      o.platter.addEventListener('pointermove', function (e) {
-        var f = ringFrac(o, e);
-        o.hover = f;
-        o.platter.classList.toggle('is-seek', f >= 0);
-        if (f >= 0) {
-          var r = o.platter.getBoundingClientRect();
-          o.tip.textContent = fmtClock(f * o.t.duration, o.t.duration);
-          o.tip.style.left = (e.clientX - r.left) + 'px'; o.tip.style.top = (e.clientY - r.top) + 'px';
-        }
-        o.tip.classList.toggle('is-on', f >= 0 && e.pointerType === 'mouse');
-        drawTx(o);
+      // card play: pause if it's playing, otherwise start it and open the stage
+      o.playBtn.addEventListener('click', function () { if (o.playing) Player.toggle(o); else listen(o, null, o.playBtn); });
+      $('.tx__cover', el).addEventListener('click', function (e) { listen(o, null, e.currentTarget); });
+      o.wave.addEventListener('pointermove', function (e) {
+        var r = o.wave.getBoundingClientRect();
+        o.hover = clamp((e.clientX - r.left) / r.width, 0, 1);
+        drawLine(o);
       });
-      o.platter.addEventListener('pointerleave', function () { o.hover = -1; o.tip.classList.remove('is-on'); o.platter.classList.remove('is-seek'); drawTx(o); });
-      o.platter.addEventListener('click', function (e) {
-        var f = ringFrac(o, e);
-        if (f >= 0) Player.toggle(o, f);
+      o.wave.addEventListener('pointerleave', function () { o.hover = -1; drawLine(o); });
+      o.wave.addEventListener('click', function (e) {
+        var r = o.wave.getBoundingClientRect();
+        listen(o, clamp((e.clientX - r.left) / r.width, 0, 1), o.wave);
       });
-      var barSeek = function (e) {
-        var r = o.bar.getBoundingClientRect();
-        Player.toggle(o, clamp((e.clientX - r.left) / r.width, 0, 1));
-      };
-      o.bar.addEventListener('click', barSeek);
-      o.bar.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); Player.toggle(o); }
+      o.wave.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); listen(o, null, o.wave); }
         if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
           e.preventDefault();
           Player.toggle(o, clamp(o.progress + (e.key === 'ArrowRight' ? 0.02 : -0.02), 0, 1));
@@ -760,12 +813,117 @@
       });
       return o;
     });
-    watch(list, 'tx');
+    initStage();
+  }
+
+  // start (or seek) a mix and bring up the stage
+  function listen(o, frac, fromEl) {
+    stage.show(o, fromEl);
+    if (frac != null) Player.toggle(o, frac);
+    else if (!o.playing) Player.toggle(o);
+  }
+
+  function setState(o, text) {
+    o.stateText = text;
+    if (stage.cur === o) stage.state.textContent = text;
+  }
+
+  function resizeTx() {
+    txs.forEach(function (o) { var s = sizeCanvas(o.cvs, 2); o.ctx = s.ctx; o.w = s.w; o.h = s.h; o.d = s.d; drawLine(o); });
+    if (stage.isOpen) stage.resize();
+  }
+
+  // the list card's waveform line
+  function drawLine(o) {
+    var c = o.ctx;
+    if (!c) return;
+    var w = o.w, h = o.h, d = o.d, bw = 2 * d, gap = 2 * d, n = Math.max(1, Math.floor(w / (bw + gap)));
+    c.clearRect(0, 0, w, h);
+    for (var i = 0; i < n; i++) {
+      var f = i / n, v = o.data[Math.floor(f * o.data.length)] || 0;
+      var bh = Math.max(2 * d, v * h * 0.94);
+      c.fillStyle = f < o.progress ? '#e4e418' : (o.hover >= 0 && f < o.hover ? 'rgba(233,231,223,.7)' : 'rgba(233,231,223,.24)');
+      c.fillRect(i * (bw + gap), (h - bh) / 2, bw, bh);
+    }
+  }
+
+  function updateTx(o) {
+    o.pos.textContent = fmtClock(o.sec, o.t.duration);
+    o.wave.setAttribute('aria-valuenow', Math.round(o.progress * 100));
+    drawLine(o);
+    if (stage.cur === o) stage.update();
+  }
+
+  /* ─── the stage: full-screen now-playing page ───────────────────────── */
+  var stage = { el: $('#stage'), isOpen: false, cur: null, hover: -1, dirty: true, lastFocus: null };
+
+  function initStage() {
+    var S_ = stage, el = S_.el;
+    S_.bg = $('.stage__bg', el); S_.platter = $('.stage__platter', el); S_.cvs = $('.stage__ring', el);
+    S_.disc = $('.stage__disc img', el); S_.play = $('.stage__play', el); S_.tip = $('.stage__tip', el);
+    S_.meta = $('.stage__meta', el); S_.title = $('.stage__title', el); S_.by = $('.stage__by', el);
+    S_.now = $('.stage__now', el); S_.total = $('.stage__total', el); S_.state = $('.stage__state', el);
+    S_.seek = $('.stage__seek', el); S_.toggle = $('.stage__toggle', el); S_.tracks = $('.stage__tracks', el);
+    S_.ext = $('.stage__ext', el); S_.close = $('.stage__close', el);
+
+    var toggleCur = function () { if (S_.cur) Player.toggle(S_.cur); };
+    S_.play.addEventListener('click', function (e) { e.stopPropagation(); toggleCur(); });
+    S_.toggle.addEventListener('click', toggleCur);
+    $$('.stage__skip', el).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var o = S_.cur; if (!o) return;
+        Player.toggle(o, clamp((o.sec + Number(b.dataset.skip)) / o.t.duration, 0, 0.999));
+      });
+    });
+    S_.platter.addEventListener('pointermove', function (e) {
+      var f = ringFrac(e);
+      S_.hover = f; S_.dirty = true;
+      S_.platter.classList.toggle('is-seek', f >= 0);
+      if (f >= 0 && S_.cur) {
+        var r = S_.platter.getBoundingClientRect();
+        S_.tip.textContent = fmtClock(f * S_.cur.t.duration, S_.cur.t.duration);
+        S_.tip.style.left = (e.clientX - r.left) + 'px'; S_.tip.style.top = (e.clientY - r.top) + 'px';
+      }
+      S_.tip.classList.toggle('is-on', f >= 0 && e.pointerType === 'mouse');
+    });
+    S_.platter.addEventListener('pointerleave', function () { S_.hover = -1; S_.dirty = true; S_.tip.classList.remove('is-on'); S_.platter.classList.remove('is-seek'); });
+    S_.platter.addEventListener('click', function (e) {
+      var f = ringFrac(e);
+      if (f >= 0 && S_.cur) Player.toggle(S_.cur, f);
+    });
+    var seekTo = function (e) {
+      var r = S_.seek.getBoundingClientRect();
+      if (S_.cur) Player.toggle(S_.cur, clamp((e.clientX - r.left) / r.width, 0, 0.999));
+    };
+    S_.seek.addEventListener('click', seekTo);
+    S_.seek.addEventListener('keydown', function (e) {
+      var o = S_.cur; if (!o) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        Player.toggle(o, clamp(o.progress + (e.key === 'ArrowRight' ? 0.02 : -0.02), 0, 0.999));
+      }
+    });
+    S_.close.addEventListener('click', function () { S_.hide(); });
+    el.addEventListener('keydown', function (e) {
+      if (!S_.isOpen) return;
+      if (e.key === 'Escape') { e.preventDefault(); S_.hide(); }
+      else if (e.key === 'Tab') {
+        var f = $$('a[href], button, [tabindex]:not([tabindex="-1"]), summary', el).filter(function (x) { return x.offsetParent !== null; });
+        if (!f.length) return;
+        var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+    el.addEventListener('click', function (e) {
+      // the artist link closes the stage (the profile opens underneath via the hash)
+      if (e.target.closest('.stage__by a')) S_.hide();
+    });
   }
 
   // pointer → position on the ring (0 at 12 o'clock, clockwise), or -1 off the ring
-  function ringFrac(o, e) {
-    var r = o.platter.getBoundingClientRect();
+  function ringFrac(e) {
+    var r = stage.platter.getBoundingClientRect();
     var x = e.clientX - (r.left + r.width / 2), y = e.clientY - (r.top + r.height / 2);
     var dist = Math.sqrt(x * x + y * y) / (r.width / 2);
     if (dist < 0.6 || dist > 1.02) return -1;
@@ -774,30 +932,86 @@
     return a / TAU;
   }
 
-  function setState(o, text) { o.state.textContent = text; }
+  stage.fill = function (o) {
+    var t = o.t, tl = t.tracklist || [];
+    stage.cur = o;
+    stage.el.classList.toggle('is-playing', !!o.playing);
+    stage.bg.style.backgroundImage = 'url("' + absUrl(t.cover) + '")';
+    if (stage.disc.getAttribute('src') !== t.cover) stage.disc.setAttribute('src', t.cover);
+    stage.meta.innerHTML = metaline(t, o.i);
+    stage.title.textContent = t.title;
+    stage.by.innerHTML = 'by ' + byline(t);
+    stage.total.textContent = '/ ' + fmtClock(t.duration, t.duration);
+    stage.seek.setAttribute('aria-label', 'Seek ' + t.title);
+    stage.tracks.hidden = !tl.length;
+    stage.tracks.innerHTML = tl.length ? '<summary class="mono"><span>Tracklist · ' + pad(tl.length) + '</span></summary><ol>' +
+      tl.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' : '';
+    stage.ext.hidden = !t.soundcloud;
+    if (t.soundcloud) stage.ext.setAttribute('href', t.soundcloud);
+    stage.state.textContent = o.stateText;
+    stage.update();
+  };
+  stage.update = function () {
+    var o = stage.cur; if (!o) return;
+    stage.now.textContent = fmtClock(o.sec, o.t.duration);
+    stage.seek.style.setProperty('--p', o.progress.toFixed(4));
+    stage.seek.setAttribute('aria-valuenow', Math.round(o.progress * 100));
+    var label = (o.playing ? 'Pause ' : 'Play ') + o.t.title;
+    stage.play.setAttribute('aria-label', label);
+    stage.toggle.setAttribute('aria-label', label);
+    stage.el.classList.toggle('is-playing', !!o.playing);
+    stage.el.classList.toggle('is-loading', !!o.loading);
+    stage.dirty = true;
+  };
+  stage.resize = function () {
+    var s = sizeCanvas(stage.cvs, 2); stage.ctx = s.ctx; stage.w = s.w; stage.h = s.h; stage.d = s.d; stage.dirty = true;
+  };
+  stage.show = function (o, fromEl) {
+    stage.fill(o);
+    if (stage.isOpen) return;
+    // open as a circle growing from whatever was pressed
+    var r = fromEl && fromEl.getBoundingClientRect ? fromEl.getBoundingClientRect() : null;
+    stage.el.style.setProperty('--ox', r ? (r.left + r.width / 2) + 'px' : '50%');
+    stage.el.style.setProperty('--oy', r ? (r.top + r.height / 2) + 'px' : '50%');
+    stage.lastFocus = document.activeElement;
+    stage.el.hidden = false;
+    document.documentElement.classList.add('is-locked', 'stage-open');
+    stage.resize();
+    void stage.el.offsetWidth;
+    requestAnimationFrame(function () {
+      stage.el.classList.add('is-open');
+      stage.isOpen = true;
+      stage.close.focus({ preventScroll: true });
+    });
+  };
+  stage.hide = function () {
+    if (!stage.isOpen) return;
+    stage.isOpen = false;
+    stage.el.classList.remove('is-open');
+    document.documentElement.classList.remove('stage-open');
+    if (deck.cur && deck.cur.started) deck.show(deck.cur);
+    setTimeout(function () {
+      if (stage.isOpen) return;
+      stage.el.hidden = true;
+      if (!pf.open) document.documentElement.classList.remove('is-locked');
+      if (stage.lastFocus && stage.lastFocus.focus && document.contains(stage.lastFocus)) stage.lastFocus.focus({ preventScroll: true });
+    }, reduced ? 0 : 700);
+  };
 
-  function resizeTx() {
-    txs.forEach(function (o) { var s = sizeCanvas(o.cvs, 2); o.ctx = s.ctx; o.w = s.w; o.h = s.h; o.d = s.d; drawTx(o); });
-  }
-
-  function drawTx(o) {
-    var c = o.ctx;
-    if (!c) return;
-    var w = o.w, h = o.h, d = o.d, cx = w / 2, cy = h / 2;
+  function drawStage() {
+    var o = stage.cur, c = stage.ctx;
+    if (!o || !c) return;
+    var w = stage.w, h = stage.h, d = stage.d, cx = w / 2, cy = h / 2;
     var R = Math.min(w, h) / 2 * 0.97, r0 = R * 0.66, span = R - r0, track = r0 - 7 * d;
     c.clearRect(0, 0, w, h);
-
-    // inner track + progress arc
     c.lineCap = 'butt';
-    c.lineWidth = 1 * d; c.strokeStyle = 'rgba(233,231,223,.14)';
+    c.lineWidth = 1 * d; c.strokeStyle = 'rgba(233,231,223,.16)';
     c.beginPath(); c.arc(cx, cy, track, 0, TAU); c.stroke();
     if (o.progress > 0) {
       c.lineWidth = 2 * d; c.strokeStyle = '#e4e418';
       c.beginPath(); c.arc(cx, cy, track, -Math.PI / 2, -Math.PI / 2 + o.progress * TAU); c.stroke();
     }
-
-    // radial waveform
-    var N = 150, live = o.playing && !reduced;
+    var N = 160, live = o.playing && !reduced;
     c.lineCap = 'round';
     c.lineWidth = Math.max(1.4 * d, (TAU * r0 / N) * 0.42);
     for (var i = 0; i < N; i++) {
@@ -805,35 +1019,23 @@
       if (live && Math.abs(f - o.progress) < 0.025) v = Math.min(1, v * (0.7 + 0.4 * Math.abs(Math.sin(S.t * 11 + i * 1.7))));
       var len = span * (0.12 + 0.86 * v) * 0.9, a = -Math.PI / 2 + f * TAU, ca = Math.cos(a), sa = Math.sin(a);
       c.strokeStyle = f < o.progress ? '#e4e418'
-        : (o.hover >= 0 && f < o.hover ? 'rgba(233,231,223,.62)' : 'rgba(233,231,223,.2)');
+        : (stage.hover >= 0 && f < stage.hover ? 'rgba(233,231,223,.62)' : 'rgba(233,231,223,.22)');
       c.beginPath();
       c.moveTo(cx + ca * r0, cy + sa * r0);
       c.lineTo(cx + ca * (r0 + len), cy + sa * (r0 + len));
       c.stroke();
     }
-
-    // playhead
     var ha = -Math.PI / 2 + o.progress * TAU;
     c.fillStyle = '#e4e418';
     c.beginPath(); c.arc(cx + Math.cos(ha) * track, cy + Math.sin(ha) * track, 3.5 * d, 0, TAU); c.fill();
-    o.dirty = false;
+    stage.dirty = false;
   }
 
-  function drawTxs() {
-    for (var i = 0; i < txs.length; i++) if (txs[i].playing || txs[i].dirty) drawTx(txs[i]);
-  }
-
-  function updateTx(o) {
-    o.now.textContent = fmtClock(o.sec, o.t.duration);
-    o.bar.style.setProperty('--p', o.progress.toFixed(4));
-    o.bar.setAttribute('aria-valuenow', Math.round(o.progress * 100));
-    o.dirty = true;
-  }
-
-  /* now-playing bar */
-  var deck = { el: $('.deck'), title: $('.deck__title'), time: $('.deck__time'), btn: $('.deck__toggle'), disc: $('.deck__disc img') };
+  /* now-playing bar (shown while the stage is minimised) */
+  var deck = { el: $('.deck'), title: $('.deck__title'), time: $('.deck__time'), btn: $('.deck__toggle'), disc: $('.deck__disc img'), open: $('.deck__open') };
   deck.show = function (o) {
-    deck.cur = o; deck.el.hidden = false;
+    deck.cur = o;
+    deck.el.hidden = false;
     document.documentElement.classList.add('has-deck');
     deck.title.textContent = o.t.title + ' · ' + artistName(o.t.artist);
     if (deck.disc.getAttribute('src') !== o.t.cover) deck.disc.setAttribute('src', o.t.cover);
@@ -846,6 +1048,20 @@
     deck.el.classList.toggle('is-playing', !!o.playing);
     deck.btn.setAttribute('aria-label', o.playing ? 'Pause' : 'Play');
   };
+
+  /* hidden SoundCloud widgets: one slot per mix in a shared host. The host
+     only becomes visible (above the stage) when a browser blocks playback
+     that was started from outside the widget. */
+  var scHost = $('.sc-host');
+  function scSlot(o) {
+    if (!o.slot) { o.slot = document.createElement('div'); o.slot.className = 'sc-slot'; scHost.appendChild(o.slot); }
+    return o.slot;
+  }
+  function scReveal(o, on) {
+    scHost.classList.toggle('is-visible', on);
+    scHost.inert = !on;
+    txs.forEach(function (x) { if (x.slot) x.slot.classList.toggle('is-cur', on && x === o); });
+  }
 
   var Player = {
     api: null,
@@ -868,12 +1084,19 @@
     // the mix the visitor asked for last; a mix that finishes loading after
     // the visitor has moved on must not start on its own
     want: null,
+    setPlaying: function (o, on) {
+      o.playing = on;
+      o.el.classList.toggle('is-playing', on);
+      o.playBtn.setAttribute('aria-label', (on ? 'Pause ' : 'Play ') + o.t.title);
+      if (stage.cur === o) stage.update();
+      deck.update(o);
+    },
     toggle: function (o, frac) {
       if (!o.t.soundcloud) return;
       Player.want = o;
       if (E && E.on) setSignal(false);
       this.pauseAll(o);
-      if (frac != null) { o.progress = frac; o.sec = frac * o.t.duration; updateTx(o); drawTx(o); }
+      if (frac != null) { o.progress = frac; o.sec = frac * o.t.duration; updateTx(o); }
       if (o.widget && o.ready) {
         if (frac != null) { o.widget.seekTo(frac * o.t.duration * 1000); o.widget.play(); }
         else o.widget.toggle();
@@ -886,15 +1109,16 @@
       var err = $('.tx__error', o.el); if (err) err.remove();
       o.el.classList.add('is-loading');
       setState(o, 'Tuning in');
+      if (stage.cur === o) stage.update();
       var self = this;
       this.loadApi().then(function () {
         if (o.gen !== gen) return;
-        var box = $('.tx__player', o.el), ifr = document.createElement('iframe');
+        var slot = scSlot(o), ifr = document.createElement('iframe');
         ifr.allow = 'autoplay; encrypted-media';
         ifr.title = 'SoundCloud player: ' + o.t.title;
         ifr.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(o.t.soundcloud) +
           '&color=%23e4e418&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true';
-        box.appendChild(ifr);
+        slot.appendChild(ifr);
         var w = o.widget = window.SC.Widget(ifr), EV = window.SC.Widget.Events;
         var fail = setTimeout(function () { if (o.gen === gen && !o.ready) self.fail(o); }, 12000);
         w.bind(EV.READY, function () {
@@ -905,6 +1129,7 @@
             o.loading = false;
             o.el.classList.remove('is-loading');
             setState(o, 'Standby');
+            if (stage.cur === o) stage.update();
             return;
           }
           w.play();
@@ -916,31 +1141,28 @@
               if (o.gen !== gen || !paused || o.started || Player.want !== o) return;
               o.loading = false;
               o.el.classList.remove('is-loading');
-              box.classList.add('is-visible'); box.inert = false;
-              setState(o, 'Tap play below');
+              setState(o, 'Tap play in the player below');
+              if (stage.cur === o) stage.update();
+              scReveal(o, true);
             });
           }, 5000);
         });
         w.bind(EV.PLAY, function () {
           if (o.gen !== gen) return;
           Player.want = o;                     // also counts a tap inside SoundCloud's own player
-          o.playing = true; o.started = true; o.loading = false;
-          o.el.classList.remove('is-loading'); o.el.classList.add('is-playing');
-          o.playBtn.setAttribute('aria-label', 'Pause ' + o.t.title);
-          box.classList.remove('is-visible'); box.inert = true;
+          o.started = true; o.loading = false;
+          o.el.classList.remove('is-loading');
+          scReveal(o, false);
           setState(o, 'On air');
           if (E && E.on) setSignal(false);
           self.pauseAll(o);
-          deck.show(o);
-          o.dirty = true;
+          Player.setPlaying(o, true);
+          if (!stage.isOpen) deck.show(o); else deck.cur = o;
         });
         var stop = function () {
           if (o.gen !== gen) return;
-          o.playing = false;
-          o.el.classList.remove('is-playing');
-          o.playBtn.setAttribute('aria-label', 'Play ' + o.t.title);
+          Player.setPlaying(o, false);
           setState(o, o.progress > 0.999 ? 'Ended' : 'Paused');
-          deck.update(o); o.dirty = true;
         };
         w.bind(EV.PAUSE, stop);
         w.bind(EV.FINISH, stop);
@@ -955,19 +1177,21 @@
     // READY from the dead widget can't start a second, unreachable copy
     fail: function (o) {
       o.gen = (o.gen || 0) + 1;
-      var box = $('.tx__player', o.el);
-      box.innerHTML = ''; box.classList.remove('is-visible'); box.inert = true;
-      o.widget = null; o.ready = false; o.loading = false; o.playing = false;
-      o.el.classList.remove('is-loading', 'is-playing');
+      if (o.slot) o.slot.innerHTML = '';
+      scReveal(o, false);
+      o.widget = null; o.ready = false; o.loading = false;
+      o.el.classList.remove('is-loading');
+      Player.setPlaying(o, false);
       setState(o, 'Offline');
       if ($('.tx__error', o.el)) return;
       var p = document.createElement('p');
       p.className = 'tx__error mono';
       p.innerHTML = 'SoundCloud couldn\'t be reached from here. <a href="' + esc(o.t.soundcloud) + '" target="_blank" rel="noopener">Listen on SoundCloud ↗︎</a>';
-      box.after(p);
+      $('.tx__dur', o.el).after(p);
     }
   };
   deck.btn.addEventListener('click', function () { if (deck.cur && deck.cur.widget) Player.toggle(deck.cur); });
+  deck.open.addEventListener('click', function () { if (deck.cur) { deck.el.hidden = true; stage.show(deck.cur, deck.open); } });
 
   /* ─── 04 feedback: panorama + contact sheet ────────────────────────── */
   var fb = { track: $('.feedback__track'), pano: $('.pano'), img: null, x: 0, lastX: 0, v: 0, strips: reduced ? 1 : 9, tc: $('.feedback__tc') };
@@ -1269,6 +1493,7 @@
       if (S.t > strobe.next) { fireStrobe(); strobe.next = S.t + 10 + Math.random() * 6; }
     }
 
+    if (stage.isOpen) { if (stage.cur && (stage.cur.playing || stage.dirty)) drawStage(); return; }
     if (pf.open) { drawProfile(); return; }
 
     // layout reads first, then writes — no forced reflow mid-frame
@@ -1278,7 +1503,6 @@
     if (vis.hero !== false) drawHero();
     drawRail();
     if (vis.roster) drawRoster();
-    if (vis.tx) drawTxs();
     if (vis.feedback) drawFeedback();
     if (vis.events) drawEvents();
   }
