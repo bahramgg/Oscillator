@@ -82,7 +82,8 @@ window.OSCILLATOR = {
     { slug: 'el4raa', name: 'El4raa', role: '', city: '', bio: [], links: { instagram: 'https://www.instagram.com/delara.toyuri/', soundcloud: '' }, transmissions: [], videos: [] },
     { slug: 'kiarash', name: 'Kiarash', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
     { slug: 'traumatic', name: 'Traumatic', role: '', city: '', bio: [], links: { instagram: 'https://www.instagram.com/trmc.live/', soundcloud: '' }, transmissions: [], videos: [] },
-    { slug: 'xaxwave', name: 'Xaxwave', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] }
+    { slug: 'xaxwave', name: 'Xaxwave', role: '', city: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'dynno', name: 'Dynno', role: 'Resident artist', city: 'Tehran', photo: 'assets/img/dynno.jpg', bio: [], links: { instagram: 'https://www.instagram.com/dynno.music/', soundcloud: '' }, transmissions: [], videos: [] }
   ],
 
   /* ------------------------------------------------------------------------
