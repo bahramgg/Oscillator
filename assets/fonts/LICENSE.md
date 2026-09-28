@@ -9,4 +9,3 @@ on Google Fonts at runtime.
 | `anton.woff2` | Anton (Vernon Adams) | Condensed poster headlines — artist names, section titles |
 | `tenor-sans.woff2` | Tenor Sans (Denis Masharov) | Text — matches the KIARASH poster lettering |
 | `orbitron-var.woff2` | Orbitron (Matt McInerney) | Wide techno titles — "WE ARE OSCILLATOR", nav wordmark |
-| `martian-mono-var.woff2` | Martian Mono (Evil Martians) | Small UI labels / readouts |

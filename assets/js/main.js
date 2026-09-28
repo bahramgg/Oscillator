@@ -265,7 +265,7 @@
         var x = cx + sm[k] * G, y = cy - sm[k + lag] * G;
         if (k) c.lineTo(x, y); else c.moveTo(x, y);
       }
-      if (++hero.frame % 6 === 0) {
+      if (hero.readX && ++hero.frame % 6 === 0) {
         hero.readX.textContent = 'τ ' + pad(lag, 3) + ' SMP';
         hero.readY.textContent = 'LPF ' + Math.round(90 + Math.pow(E.cutoff, 2.2) * 4200) + ' HZ';
         hero.readP.textContent = 'RMS ' + S.level.toFixed(3);
@@ -282,7 +282,7 @@
         var ly = cy - Math.sin(hero.fy * s) * R * m;
         if (j) c.lineTo(lx, ly); else c.moveTo(lx, ly);
       }
-      if (++hero.frame % 6 === 0) {
+      if (hero.readX && ++hero.frame % 6 === 0) {
         hero.readX.textContent = 'X ' + hero.fx.toFixed(3);
         hero.readY.textContent = 'Y ' + hero.fy.toFixed(3);
         hero.readP.textContent = 'φ ' + ((hero.ph / Math.PI) % 2).toFixed(2) + 'π';
@@ -330,33 +330,6 @@
     c.fillRect(w - 18 * d, (S.sy / max) * (h - 3 * d), 18 * d, 3 * d);
   }
 
-  /* ─── crosshair cursor ─────────────────────────────────────────────── */
-  var ch = { el: $('.crosshair'), x: $('.crosshair__x'), y: $('.crosshair__y'), read: $('.crosshair__read'), label: '', text: '' };
-  function cursorLabel(el) {
-    if (el.dataset.cursor) return el.dataset.cursor;
-    if (el.classList.contains('tx__wave')) return 'Seek';
-    if (el.tagName === 'A') return el.target === '_blank' ? 'Open ↗︎' : 'Go';
-    if (el.tagName === 'SUMMARY') return 'Expand';
-    return 'Press';
-  }
-  function initCursor() {
-    if (!finePointer) return;
-    document.addEventListener('pointerover', function (e) {
-      var t = e.target.closest && e.target.closest('a, button, summary, [data-cursor], .tx__wave');
-      ch.label = t ? cursorLabel(t) : '';
-      ch.el.classList.toggle('is-link', !!t);
-    });
-  }
-  function drawCursor() {
-    if (!finePointer || !S.hasMouse) return;
-    ch.x.style.transform = 'translate3d(0,' + S.my + 'px,0)';
-    ch.y.style.transform = 'translate3d(' + S.mx + 'px,0,0)';
-    var right = S.mx > S.vw - 160, bottom = S.my > S.vh - 60;
-    ch.read.style.transform = 'translate3d(' + (right ? S.mx - 12 : S.mx + 12) + 'px,' + (bottom ? S.my - 28 : S.my + 10) + 'px,0)' + (right ? ' translateX(-100%)' : '');
-    var txt = ch.label || (S.nx.toFixed(3) + ' · ' + (1 - S.ny).toFixed(3));
-    if (txt !== ch.text) { ch.read.textContent = txt; ch.text = txt; }
-  }
-
   /* ─── 01 carrier ───────────────────────────────────────────────────── */
   var carrier = { box: $('.carrier__text'), words: [] };
   function initCarrier() {
@@ -389,111 +362,71 @@
     }
   }
 
-  /* ─── 02 voices: roster + preview ──────────────────────────────────── */
-  var roster = { list: $('.roster'), rows: [] };
-  var pv = { el: $('.preview'), cvs: $('.preview canvas'), row: null, x: 0, y: 0, rot: 0, disp: 1, on: false };
+  /* ─── 02 voices: the roster as the label's poster series ───────────────
+     photo in yellow corner brackets + yellow panel with the name set
+     vertically, like the Instagram artist posters. Photos glitch-cut on
+     hover, once when they scroll in, and now and then on their own. */
+  var roster = { list: $('.roster'), cards: [], next: 0 };
+
+  // custom-property urls resolve against the stylesheet, so pass absolute ones
+  function absUrl(u) { try { return new URL(u, location.href).href; } catch (e) { return u; } }
+
+  function glitch(el) {
+    if (reduced || !el || el.classList.contains('is-glitch')) return;
+    el.classList.add('is-glitch');
+    setTimeout(function () { el.classList.remove('is-glitch'); }, 520);
+  }
 
   function initRoster() {
     var A = D.artists;
     $('.voices__count').textContent = pad(A.length) + ' channels';
     roster.list.innerHTML = A.map(function (a, i) {
-      return '<li class="row' + (a.placeholder ? ' is-placeholder' : '') + '">' +
-        '<a class="row__link" href="#/artist/' + esc(a.slug) + '" data-slug="' + esc(a.slug) + '" data-cursor="Tune in">' +
-          '<span class="row__ch mono">CH.' + pad(i + 1) + '</span>' +
-          '<span class="row__name">' + esc(a.name) + '</span>' +
-          '<span class="row__meta mono"><span class="row__city">' + esc(a.city || '') + '</span><span class="row__role">' + esc(a.role || '') + '</span></span>' +
-          '<canvas class="row__wave" aria-hidden="true"></canvas>' +
-          '<span class="row__arrow" aria-hidden="true">→</span>' +
-          '<span class="row__thumb" aria-hidden="true">' + (a.photo ? '<img src="' + esc(a.photo) + '" alt="" loading="lazy">' : '<canvas></canvas>') + '</span>' +
+      var photo = a.photo
+        ? '<img src="' + esc(a.photo) + '" alt="' + esc(a.name) + '" loading="lazy">'
+        : '<canvas aria-hidden="true"></canvas>';
+      return '<li class="pc">' +
+        '<a class="pc__link" href="#/artist/' + esc(a.slug) + '" data-slug="' + esc(a.slug) + '">' +
+          '<span class="pc__photo"' + (a.photo ? ' style="--img:url(\'' + esc(absUrl(a.photo)) + '\')"' : '') + '>' + photo + '<i class="brk" aria-hidden="true"></i></span>' +
+          '<span class="pc__panel">' +
+            '<span class="pc__name">' + esc(a.name) + '</span>' +
+            '<span class="pc__foot"><span class="pc__no">' + pad(i + 1, 3) + '</span><span class="logo logo--icon pc__mark" aria-hidden="true"></span></span>' +
+          '</span>' +
         '</a></li>';
     }).join('');
-
-    roster.rows = $$('.row__link', roster.list).map(function (link, i) {
-      var a = A[i], row = { link: link, a: a, i: i, sig: signature(a.slug), cvs: $('.row__wave', link), amp: 0.3, hover: false, img: null };
-      if (a.photo) { row.img = new Image(); row.img.src = a.photo; }
-      var thumb = $('.row__thumb canvas', link);
-      if (thumb) row.thumb = thumb;
-      link.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') setHover(row, true); });
-      link.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') setHover(row, false); });
-      link.addEventListener('focus', function () { setHover(row, true, true); });
-      link.addEventListener('blur', function () { setHover(row, false); });
-      return row;
+    roster.cards = $$('.pc', roster.list).map(function (li, i) {
+      var c = { li: li, photo: $('.pc__photo', li), name: $('.pc__name', li), panel: $('.pc__panel', li), cvs: $('.pc__photo canvas', li), sig: signature(A[i].slug) };
+      li.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') glitch(c.photo); });
+      return c;
     });
+    if (io) {
+      var gio = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { setTimeout(function () { glitch(e.target); }, 150 + Math.random() * 400); gio.unobserve(e.target); } });
+      }, { threshold: 0.4 });
+      roster.cards.forEach(function (c) { gio.observe(c.photo); });
+    }
     watch(roster.list, 'roster');
   }
 
-  function setHover(row, on, noPreview) {
-    row.hover = on;
-    row.link.classList.toggle('is-hover', on);
-    roster.list.classList.toggle('is-hovering', roster.rows.some(function (r) { return r.hover; }));
-    if (on && !noPreview && finePointer) {
-      if (!pv.on) { pv.x = S.mx + 30; pv.y = S.my - 150; }
-      pv.row = row; pv.on = true; pv.disp = 1;
-      pv.el.classList.add('is-on');
-    } else if (!on && pv.row === row) {
-      pv.on = false; pv.el.classList.remove('is-on');
-    }
-  }
-
+  // fit each vertical name to its panel
   function resizeRoster() {
-    roster.rows.forEach(function (r) {
-      var s = sizeCanvas(r.cvs, 2);
-      r.ctx = s.ctx; r.w = s.w; r.h = s.h; r.d = s.d;
-      if (r.thumb) { var t = sizeCanvas(r.thumb, 2); drawSigil(t.ctx, r.sig, 0, t.w, t.h); }
+    roster.cards.forEach(function (c) {
+      var n = c.name, box = c.panel;
+      n.style.fontSize = '100px';
+      var len = n.scrollHeight, thick = n.scrollWidth;
+      var foot = $('.pc__foot', box);
+      var availH = box.clientHeight * 0.84 - foot.offsetHeight - 12, availW = box.clientWidth * 0.84;
+      var fs = 100 * Math.min(availH / len, availW / thick);
+      n.style.fontSize = fs.toFixed(1) + 'px';
+      if (c.cvs) { var t = sizeCanvas(c.cvs, 2); drawSigil(t.ctx, c.sig, 0, t.w, t.h); }
     });
-    if (pv.cvs) {
-      var p = sizeCanvas(pv.cvs, 1.5); pv.ctx = p.ctx; pv.w = p.w; pv.h = p.h;
-      pv.elW = pv.el.offsetWidth; pv.elH = pv.el.offsetHeight;
-    }
   }
 
   function drawRoster() {
-    for (var i = 0; i < roster.rows.length; i++) {
-      var r = roster.rows[i], c = r.ctx;
-      if (!c || !r.w) continue;
-      c.clearRect(0, 0, r.w, r.h);
-      r.amp = lerp(r.amp, r.hover ? 1 : 0.32, 0.1);
-      var sig = r.sig, spd = reduced ? 0 : S.t * sig.speed * (r.hover ? 1.8 : 0.55);
-      c.beginPath();
-      for (var x = 0; x <= r.w; x += 1.5 * r.d) {
-        var p = (x / r.w) * sig.cycles + spd;
-        var y = waveAt(sig.type, p) * 0.72 + 0.28 * Math.sin(p * TAU * sig.b + sig.phase * TAU);
-        var edge = Math.sin(Math.PI * x / r.w); // taper the ends
-        var yy = r.h / 2 - y * r.amp * edge * r.h * 0.4 * (1 + S.beat * 0.25);
-        if (x) c.lineTo(x, yy); else c.moveTo(x, yy);
-      }
-      c.strokeStyle = r.hover ? '#e4e418' : 'rgba(233,231,223,.42)';
-      c.lineWidth = 1.3 * r.d;
-      c.stroke();
-    }
-  }
-
-  function drawPreview() {
-    if (!pv.on || !pv.ctx) return;
-    var elW = pv.elW, elH = pv.elH;
-    var tx = clamp(S.mx + 36, 8, S.vw - elW - 8), ty = clamp(S.my - elH / 2, 8, S.vh - elH - 8);
-    if (S.mx + 36 + elW > S.vw - 8) tx = S.mx - elW - 36;
-    pv.x = lerp(pv.x, tx, 0.16); pv.y = lerp(pv.y, ty, 0.16);
-    pv.rot = lerp(pv.rot, clamp(S.mvx * 0.35, -7, 7), 0.1);
-    pv.el.style.transform = 'translate3d(' + pv.x.toFixed(1) + 'px,' + pv.y.toFixed(1) + 'px,0) rotate(' + pv.rot.toFixed(2) + 'deg)';
-    pv.el.classList.toggle('is-tint', S.beat > 0.55);
-
-    var c = pv.ctx, w = pv.w, h = pv.h, row = pv.row;
-    pv.disp = lerp(pv.disp, reduced ? 0 : 0.05 + Math.min(S.speed * 0.012, 0.5), 0.07);
-    var img = row.img;
-    if (img && img.complete && img.naturalWidth) {
-      c.fillStyle = '#070707'; c.fillRect(0, 0, w, h);
-      // cover-crop
-      var ir = img.naturalWidth / img.naturalHeight, cr = w / h, sw, sh, sx, sy;
-      if (ir > cr) { sh = img.naturalHeight; sw = sh * cr; sx = (img.naturalWidth - sw) / 2; sy = 0; }
-      else { sw = img.naturalWidth; sh = sw / cr; sx = 0; sy = (img.naturalHeight - sh) / 2; }
-      var n = 56, dh = h / n, srcH = sh / n;
-      for (var i = 0; i < n; i++) {
-        var off = (Math.sin(i * 0.43 + S.t * 7) * 0.12 + Math.sin(i * 1.7 - S.t * 13) * 0.03) * w * pv.disp;
-        c.drawImage(img, sx, sy + i * srcH, sw, srcH, off, i * dh, w, dh + 1);
-      }
-    } else {
-      drawSigil(c, row.sig, S.t, w, h);
+    if (reduced || !roster.cards.length) return;
+    if (!roster.next) roster.next = S.t + 3;
+    if (S.t > roster.next) {
+      glitch(roster.cards[Math.floor(Math.random() * roster.cards.length)].photo);
+      roster.next = S.t + 3 + Math.random() * 3;
     }
   }
 
@@ -519,8 +452,8 @@
 
     return '<div class="pf">' +
       '<aside class="pf__media">' +
-        '<div class="pf__portrait">' + (a.photo
-          ? '<img src="' + esc(a.photo) + '" alt="' + esc(a.name) + ' portrait"><i class="pf__tint"></i>'
+        '<div class="pf__portrait"' + (a.photo ? ' style="--img:url(\'' + esc(absUrl(a.photo)) + '\')"' : '') + '>' + (a.photo
+          ? '<img src="' + esc(a.photo) + '" alt="' + esc(a.name) + ' portrait"><i class="brk" aria-hidden="true"></i>'
           : '<canvas class="pf__sigil" aria-hidden="true"></canvas>') + '</div>' +
         '<div class="pf__sig"><canvas class="pf__sigmini" aria-hidden="true"></canvas>' +
           '<dl class="mono"><dt>Wave</dt><dd>' + sig.type + '</dd><dt>Ratio</dt><dd>' + sig.a + ':' + sig.b + '</dd>' +
@@ -560,6 +493,7 @@
     pf.canvases = $$('.pf__sigil, .pf__sigmini', pf.body).map(function (cv) { return { cv: cv, sig: signature(slug) }; });
     requestAnimationFrame(sizeProfileCanvases);
     fitProfileName();
+    setTimeout(function () { glitch($('.pf__portrait', pf.body)); }, 700);
     if (E && E.on) E.setPattern(signature(slug).seed);
   }
   // keep the longest word of the name on one line (at its final, widest stretch)
@@ -614,9 +548,6 @@
     pf.el.scrollTop = 0;
     fitProfileName();
     document.documentElement.classList.add('is-locked');
-    pv.on = false; pv.el.classList.remove('is-on');
-    roster.rows.forEach(function (r) { r.hover = false; r.link.classList.remove('is-hover'); });
-    roster.list.classList.remove('is-hovering');
     void pf.el.offsetWidth;
     requestAnimationFrame(function () {
       pf.el.classList.add('is-open');
@@ -705,7 +636,7 @@
         ? '<a href="#/artist/' + esc(t.artist) + '">' + esc(artistName(t.artist)) + '</a>'
         : esc(t.artist || '');
       return '<article class="tx" id="tx-' + esc(t.id) + '" data-reveal>' +
-        '<div class="tx__cover"><img src="' + esc(t.cover) + '" alt="' + esc(t.title) + ' cover" loading="lazy"></div>' +
+        '<div class="tx__cover"><img src="' + esc(t.cover) + '" alt="' + esc(t.title) + ' cover" loading="lazy"><i class="brk" aria-hidden="true"></i></div>' +
         '<div class="tx__body">' +
           '<p class="tx__meta mono"><span>TX-' + pad(i + 1) + '</span><span>' + esc(t.type) + '</span><span>' + fmtDate(t.date) + '</span><span>' + fmtDur(t.duration) + '</span>' +
             (tl.length ? '<span>' + tl.length + ' tracks</span>' : '') + '</p>' +
@@ -746,15 +677,6 @@
           Player.toggle(o, clamp(o.progress + (e.key === 'ArrowRight' ? 0.05 : -0.05), 0, 1));
         }
       });
-      var cover = $('.tx__cover', el);
-      if (finePointer && !reduced) {
-        cover.addEventListener('pointermove', function (e) {
-          var r = cover.getBoundingClientRect();
-          cover.style.setProperty('--ry', (((e.clientX - r.left) / r.width - 0.5) * 16).toFixed(2) + 'deg');
-          cover.style.setProperty('--rx', (-((e.clientY - r.top) / r.height - 0.5) * 16).toFixed(2) + 'deg');
-        });
-        cover.addEventListener('pointerleave', function () { cover.style.setProperty('--rx', '0deg'); cover.style.setProperty('--ry', '0deg'); });
-      }
       return o;
     });
   }
@@ -1165,7 +1087,7 @@
       if (S.t > strobe.next) { fireStrobe(); strobe.next = S.t + 10 + Math.random() * 6; }
     }
 
-    if (pf.open) { drawProfile(); drawCursor(); return; }
+    if (pf.open) { drawProfile(); return; }
 
     // layout reads first, then writes — no forced reflow mid-frame
     updateSection();
@@ -1173,9 +1095,7 @@
     if (vis.feedback) fb.rect = fb.track.getBoundingClientRect();
     if (vis.hero !== false) drawHero();
     drawRail();
-    drawCursor();
     if (vis.roster) drawRoster();
-    drawPreview();
     if (vis.feedback) drawFeedback();
     if (vis.events) drawEvents();
   }
@@ -1192,7 +1112,6 @@
   initClock();
   initNav();
   initProfile();
-  initCursor();
   initSignal();
   initInput();
   applySignalUI();

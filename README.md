@@ -7,8 +7,8 @@ The site is built as an instrument. Every section is a waveform:
 | # | Section | Wave | What it is |
 |---|---------|------|------------|
 | 00 | Power | — | Intro and hero after the "Oscillator Rises" reel: neon logo in a rotating OSCILLATOR/ ring, hard yellow strobe cuts, faint live oscilloscope |
-| 01 | Carrier | sine | The label manifesto |
-| 02 | Voices | square | The artist roster; each artist opens a full profile (`#/artist/<slug>`) |
+| 01 | Carrier | sine | The label manifesto on a yellow panel (the reel's inverted cuts) |
+| 02 | Voices | square | The roster as the label's poster series: photo in yellow brackets + yellow panel with the vertical name; glitch cuts; each opens a profile (`#/artist/<slug>`) |
 | 03 | Transmissions | saw | Mixes & releases with a custom SoundCloud player (click the waveform to seek) |
 | 04 | Feedback | noise | Scroll-scrubbed panorama that shears with scroll speed, plus a photo/video sheet |
 | 05 | Next signal | triangle | Events (shows a "no signal" state when empty) |
@@ -59,7 +59,7 @@ Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a 
   waveforms). Bio copy is a starting draft — please review it.
 - Colours: ink `#070707`, bone `#e9e7df`, yellow `#e4e418` (from the label logo).
 - Fonts (matched to the label's posters and the "Oscillator Rises" reel): Anton, Tenor Sans
-  (the KIARASH poster type), Orbitron, Martian Mono — all SIL OFL,
+  (the KIARASH poster type), Orbitron — all SIL OFL,
   see [`assets/fonts/LICENSE.md`](assets/fonts/LICENSE.md).
 - Respects `prefers-reduced-motion`; works on touch devices (no custom cursor, tap to open).
 

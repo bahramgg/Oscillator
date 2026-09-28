@@ -24,14 +24,6 @@
   font-style: normal;
   font-display: swap;
 }
-@font-face {
-  font-family: 'Martian Mono';
-  src: url('../fonts/martian-mono-var.woff2') format('woff2');
-  font-weight: 100 800;
-  font-stretch: 75% 112.5%;
-  font-style: normal;
-  font-display: swap;
-}
 
 :root {
   --ink: #070707;
@@ -49,7 +41,7 @@
   --f-text: 'Tenor Sans', 'Futura', 'Helvetica Neue', sans-serif;
   --f-wide: 'Orbitron', 'Eurostile', 'Arial Black', sans-serif;
   --f-serif: var(--f-text);
-  --f-mono: 'Martian Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --f-mono: 'Tenor Sans', 'Futura', sans-serif;
 
   --gutter: clamp(16px, 3.2vw, 56px);
   --rail: 56px;
@@ -1106,3 +1098,126 @@ body { font-size: 16px; }
   font-family: var(--f-mono); font-size: 11px; line-height: 1.4; letter-spacing: .04em;
   color: var(--bone-2); white-space: nowrap;
 }
+
+/* ==========================================================================
+   Poster language — brackets, yellow panels, glitch cuts (from the label's
+   Instagram artist series and the "Oscillator Rises" reel)
+   ========================================================================== */
+
+/* calmer: no animated grain, no fade-in-on-scroll */
+.grain { animation: none; opacity: .045; inset: 0; width: 100%; height: 100%; }
+[data-reveal], .sec__head[data-reveal] .sec__title { opacity: 1; transform: none; transition: none; }
+.mono { font-stretch: normal; letter-spacing: .1em; font-size: 10.5px; }
+.nav__clock { min-width: 13ch; }
+
+/* yellow corner brackets */
+.brk {
+  --b: var(--acid); --l: clamp(12px, 1.6vw, 22px); --t: 3px;
+  position: absolute; inset: clamp(6px, .8vw, 10px); pointer-events: none; z-index: 3;
+  background:
+    linear-gradient(var(--b), var(--b)) top left / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--b), var(--b)) top left / var(--t) var(--l) no-repeat,
+    linear-gradient(var(--b), var(--b)) top right / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--b), var(--b)) top right / var(--t) var(--l) no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom left / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom left / var(--t) var(--l) no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom right / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom right / var(--t) var(--l) no-repeat;
+}
+
+/* section titles sit in brackets, like the poster names */
+.sec__title {
+  --b: var(--acid); --l: .22em; --t: 2px;
+  padding: .1em .24em .02em;
+  background:
+    linear-gradient(var(--b), var(--b)) top left / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--b), var(--b)) top left / var(--t) var(--l) no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom right / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom right / var(--t) var(--l) no-repeat;
+}
+
+/* glitch cut: two slices of the same image jump sideways for ~0.5s */
+.pc__photo, .pf__portrait { position: relative; overflow: hidden; }
+.pc__photo::before, .pc__photo::after, .pf__portrait::before {
+  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: var(--img) center / cover no-repeat; opacity: 0;
+  filter: grayscale(1) contrast(1.3);
+}
+.is-glitch::before { animation: glitch-a .5s steps(1) 1; }
+.is-glitch::after { animation: glitch-b .5s steps(1) 1; }
+.is-glitch img { animation: glitch-c .5s steps(1) 1; }
+@keyframes glitch-a {
+  0% { opacity: 1; clip-path: inset(12% 0 70% 0); transform: translateX(-7%); }
+  20% { clip-path: inset(55% 0 28% 0); transform: translateX(9%); }
+  40% { clip-path: inset(30% 0 52% 0); transform: translateX(-4%); }
+  60% { clip-path: inset(78% 0 8% 0); transform: translateX(6%); }
+  80% { clip-path: inset(4% 0 88% 0); transform: translateX(-10%); }
+  100% { opacity: 0; }
+}
+@keyframes glitch-b {
+  0% { opacity: 1; clip-path: inset(62% 0 22% 0); transform: translateX(8%); filter: grayscale(1) contrast(1.3) brightness(1.4); }
+  25% { clip-path: inset(20% 0 66% 0); transform: translateX(-9%); }
+  50% { clip-path: inset(44% 0 40% 0); transform: translateX(5%); }
+  75% { clip-path: inset(86% 0 2% 0); transform: translateX(-6%); }
+  100% { opacity: 0; }
+}
+@keyframes glitch-c { 0%, 100% { transform: none; } 30% { transform: translateX(-1.5%); } 60% { transform: translateX(1%); } }
+
+/* ░░ 02 roster = poster series ░░ */
+.roster {
+  border-top: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2vw, 28px);
+}
+.pc__link {
+  display: grid; grid-template-columns: 62fr 38fr; gap: clamp(6px, .7vw, 10px);
+  aspect-ratio: 5 / 4.4; background: var(--ink);
+}
+.pc__photo { display: block; background: var(--ink-2); }
+.pc__photo img, .pc__photo canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  filter: grayscale(1) contrast(1.15); transition: filter .4s;
+}
+.pc__photo::after { box-shadow: inset 0 0 0 1px var(--line); }
+.pc__link:hover .pc__photo img { filter: grayscale(1) contrast(1.3) brightness(1.08); }
+.pc__panel {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: 10% 8% 8%; background: var(--acid); color: var(--ink); overflow: hidden;
+  transition: background-color .3s, color .3s;
+}
+.pc__name {
+  font-family: var(--f-display); text-transform: uppercase; line-height: .86; letter-spacing: .01em;
+  writing-mode: vertical-rl; white-space: nowrap;
+}
+.pc__foot { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; flex: none; }
+.pc__name { flex: none; }
+.pc__no {
+  font-family: var(--f-display); font-size: clamp(16px, 1.6vw, 24px); line-height: 1;
+  border: 2px solid var(--ink); padding: 2px 6px 1px;
+}
+.pc__mark { width: 70%; background-color: var(--ink); }
+.pc__link:hover .pc__panel, .pc__link:focus-visible .pc__panel { background: var(--ink); color: var(--acid); box-shadow: inset 0 0 0 2px var(--acid); }
+.pc__link:hover .pc__no, .pc__link:focus-visible .pc__no { border-color: var(--acid); }
+.pc__link:hover .pc__mark, .pc__link:focus-visible .pc__mark { background-color: var(--acid); }
+
+/* ░░ 01 carrier = a yellow panel, like the reel's inverted cuts ░░ */
+.carrier { background: var(--acid); color: var(--ink); }
+.carrier .sec__head::after { background: rgba(7, 7, 7, .35); }
+.carrier .sec__num, .carrier .sec__head .glyph { color: var(--ink); }
+.carrier .sec__title { --b: var(--ink); color: var(--ink); }
+.carrier .sec__sub, .carrier .sec__meta { color: rgba(7, 7, 7, .6); }
+.carrier__text em { color: var(--ink); background: none; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .18em; }
+.carrier .facts { border-color: rgba(7, 7, 7, .3); }
+.carrier .facts div { border-color: rgba(7, 7, 7, .3); }
+.carrier .facts dt { color: rgba(7, 7, 7, .6); }
+.carrier .facts dd { color: var(--ink); }
+
+/* ░░ 03 covers & profile portrait carry brackets too ░░ */
+.tx__cover::before { display: none; }
+.pf__portrait .brk { --l: clamp(16px, 2vw, 28px); }
+
+@media (max-width: 1100px) { .roster { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) {
+  .roster { grid-template-columns: 1fr; gap: 14px; }
+  .pc__link { aspect-ratio: 5 / 4.2; }
+}
+@media (prefers-reduced-motion: reduce) { .is-glitch::before, .is-glitch::after, .is-glitch img { animation: none; } }
