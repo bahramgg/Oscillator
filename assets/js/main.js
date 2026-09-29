@@ -1259,123 +1259,41 @@
   deck.btn.addEventListener('click', function () { if (deck.cur && deck.cur.widget) Player.toggle(deck.cur); });
   deck.open.addEventListener('click', function () { if (deck.cur) { deck.el.hidden = true; stage.show(deck.cur, deck.open); } });
 
-  /* ─── 04 feedback: panorama + contact sheet ────────────────────────── */
-  var fb = { track: $('.feedback__track'), pano: $('.pano'), img: null, x: 0, lastX: 0, v: 0, strips: reduced ? 1 : 9, tc: $('.feedback__tc') };
+  /* ─── 04 feedback: the room ────────────────────────────────────────────
+     the crowd panorama as a wide band that drifts slowly across the room
+     (CSS), with a running REC timecode; photos added later in data.js show
+     as a grid underneath */
+  var fb = { band: $('.room__band'), tc: $('.room__tc'), last: '' };
   function initFeedback() {
     var F = D.feedback || {};
-    $('.feedback__cap').innerHTML = rich(F.caption || '');
-    if (F.panorama) {
-      fb.pano.innerHTML = '<canvas></canvas>';
-      fb.cvs = $('canvas', fb.pano);
-      fb.img = new Image();
-      fb.img.src = F.panorama;
-    } else {
-      fb.track.style.height = 'auto';
-    }
-    var media = F.media || [], n = 0;
-    $('.sheet').innerHTML = media.map(function (m) {
-      var no = 'FR ' + pad(++n);
-      var cap = '<figcaption class="frame__cap mono"><b>' + no + '</b><i aria-hidden="true"></i><span>' + esc(m.caption || '') + '</span></figcaption>';
-      if (m.type === 'emblem') {
-        return '<figure class="mark">' +
-          '<div class="mark__stage"><canvas class="mark__cvs" role="img" aria-label="' + esc(m.caption || 'Mark') + '" data-src="' + esc(m.src) + '"></canvas><i class="brk" aria-hidden="true"></i></div>' +
-          (m.word ? '<p class="mark__word" aria-hidden="true">. ' + esc(m.word).toUpperCase().split('').join(' ') + ' .</p>' : '') +
-          cap + '</figure>';
-      }
+    if (F.panorama) fb.band.style.backgroundImage = 'url("' + absUrl(F.panorama) + '")';
+    else $('.room').hidden = true;
+    var m = String(F.caption || '').match(/^(.*?)\*(.+?)\*\s*(.*)$/);
+    $('.room__line').innerHTML = m
+      ? (m[1].trim() ? '<span>' + esc(m[1].trim()) + '</span>' : '') + '<strong>' + esc(m[2]) + '</strong>'
+      : '<strong>' + esc(F.caption || '') + '</strong>';
+    var media = F.media || [], sheet = $('.sheet');
+    sheet.hidden = !media.length;
+    sheet.innerHTML = media.map(function (m, i) {
+      var cap = '<figcaption class="frame__cap mono"><b>FR ' + pad(i + 1) + '</b><i aria-hidden="true"></i><span>' + esc(m.caption || '') + '</span></figcaption>';
       var inner = m.type === 'video'
         ? '<video src="' + esc(m.src) + '"' + (m.poster ? ' poster="' + esc(m.poster) + '"' : '') + ' muted loop playsinline preload="metadata"></video>'
         : '<img src="' + esc(m.src) + '" alt="' + esc(m.caption || '') + '" loading="lazy">';
       return '<figure class="frame"><div class="frame__media"' + (m.type !== 'video' ? ' style="--img:url(\'' + esc(absUrl(m.src)) + '\')"' : '') + '>' + inner + '<i class="brk" aria-hidden="true"></i></div>' + cap + '</figure>';
     }).join('');
-    // photos glitch-cut once as they come in, and on hover
-    var frames = $$('.sheet .frame__media');
-    frames.forEach(function (f) { f.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') glitch(f); }); });
-    if (io) {
-      var gio = new IntersectionObserver(function (es) {
-        es.forEach(function (e) { if (e.isIntersecting) { setTimeout(function () { glitch(e.target); }, 200); gio.unobserve(e.target); } });
-      }, { threshold: 0.45 });
-      frames.forEach(function (f) { gio.observe(f); });
-    }
-    initMark();
-    // videos play only while visible
+    $$('.sheet .frame__media').forEach(function (f) { f.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') glitch(f); }); });
     if (io) {
       var vio = new IntersectionObserver(function (es) {
         es.forEach(function (e) { if (e.isIntersecting) { var p = e.target.play(); if (p && p.catch) p.catch(function () {}); } else e.target.pause(); });
       }, { threshold: 0.25 });
       $$('.sheet video').forEach(function (v) { vio.observe(v); });
     }
-    watch($('.feedback__pin'), 'feedback');
+    watch($('.room'), 'feedback');
   }
-  function resizeFeedback() {
-    if (!fb.cvs) return;
-    var s = sizeCanvas(fb.cvs, 1.5);
-    fb.ctx = s.ctx; fb.w = s.w; fb.h = s.h; fb.d = s.d;
-  }
-  // the panorama is cut into horizontal strips that shear apart with scroll speed
+  function resizeFeedback() {}
   function drawFeedback() {
-    var img = fb.img, c = fb.ctx;
-    if (!c || !img || !img.complete || !img.naturalWidth) return;
-    var r = fb.rect;
-    var p = clamp(-r.top / Math.max(1, r.height - S.vh), 0, 1);
-    var scale = fb.h / img.naturalHeight, dw = img.naturalWidth * scale;
-    var target = -Math.max(0, dw - fb.w) * p;
-    fb.x = reduced ? target : lerp(fb.x, target, 0.14);
-    fb.v = lerp(fb.v, fb.x - fb.lastX, 0.3);
-    fb.lastX = fb.x;
-    var shear = reduced ? 0 : Math.min(Math.abs(fb.v) * 2.2, 70 * fb.d) + S.beat * 8 * fb.d;
-    var n = fb.strips, sh = fb.h / n, srcH = img.naturalHeight / n;
-    c.fillStyle = '#070707'; c.fillRect(0, 0, fb.w, fb.h);
-    for (var i = 0; i < n; i++) {
-      var off = Math.sin(i * 0.95 + S.t * 5) * shear;
-      c.drawImage(img, 0, i * srcH, img.naturalWidth, srcH, fb.x + off, i * sh, dw, sh + 1);
-    }
-    var frames = Math.floor(p * 3 * 60 * 25);
-    fb.tc.textContent = '00:' + pad(Math.floor(frames / 1500)) + ':' + pad(Math.floor(frames / 25) % 60) + ':' + pad(frames % 25);
-  }
-
-  /* ─── the mark: a logo that oscillates ─────────────────────────────────
-     the emblem is redrawn in thin horizontal strips, each pushed sideways by
-     a travelling sine wave. Far from the centre of the screen the wave is
-     wide (out of tune); as it reaches the centre it settles to a slow drift.
-     Kicks from the signal push it. */
-  var mark = { amp: 30 };
-  function initMark() {
-    var cvs = $('.mark__cvs');
-    if (!cvs) return;
-    mark.cvs = cvs; mark.el = cvs.closest('.mark');
-    mark.img = new Image();
-    mark.img.onload = function () { resizeMark(); drawMark(true); };
-    mark.img.src = cvs.getAttribute('data-src');
-    watch(mark.el, 'mark');
-  }
-  function resizeMark() {
-    if (!mark.cvs) return;
-    var s = sizeCanvas(mark.cvs, 2);
-    mark.ctx = s.ctx; mark.w = s.w; mark.h = s.h; mark.d = s.d;
-    if (reduced) drawMark(true);
-  }
-  function drawMark(force) {
-    var c = mark.ctx, img = mark.img;
-    if (!c || !img || !img.naturalWidth) return;
-    if (reduced && !force) return;
-    var w = mark.w, h = mark.h, d = mark.d;
-    // contain-fit with room for the wave
-    var sc = Math.min(w * 0.84 / img.naturalWidth, h * 0.94 / img.naturalHeight);
-    var dw = img.naturalWidth * sc, dh = img.naturalHeight * sc, ox = (w - dw) / 2, oy = (h - dh) / 2;
-    var target = 3;
-    if (!reduced && mark.el) {
-      var r = mark.el.getBoundingClientRect();
-      var off = Math.abs(r.top + r.height / 2 - S.vh / 2) / S.vh;       // 0 at the centre
-      target = 3 + Math.min(1, Math.max(0, off - 0.08) * 2.2) * 34 + S.beat * 14;
-    }
-    mark.amp = reduced ? 0 : lerp(mark.amp, target, 0.08);
-    c.clearRect(0, 0, w, h);
-    var strip = 2 * d, rows = Math.ceil(dh / strip), srcStrip = img.naturalHeight / rows, t = S.t;
-    for (var i = 0; i < rows; i++) {
-      var y = i / rows;
-      var off2 = mark.amp * d * (Math.sin(y * TAU * 1.6 - t * 1.4) * 0.8 + Math.sin(y * TAU * 5.3 + t * 2.3) * 0.2);
-      c.drawImage(img, 0, i * srcStrip, img.naturalWidth, srcStrip + 0.5, ox + off2, oy + i * strip, dw, strip + 0.5);
-    }
+    var f = Math.floor(S.t * 25), txt = '00:' + pad(Math.floor(f / 1500) % 60) + ':' + pad(Math.floor(f / 25) % 60) + ':' + pad(f % 25);
+    if (txt !== fb.last) { fb.tc.textContent = txt; fb.last = txt; }
   }
 
   /* ─── 05 next signal ───────────────────────────────────────────────── */
@@ -1576,7 +1494,7 @@
   function resizeAll() {
     S.vw = innerWidth; S.vh = innerHeight; S.sy = scrollY;
     fitTitles(); resizeScope(); resizeRail(); measureCarrier(); resizeRoster();
-    resizeTx(); resizeFeedback(); resizeMark(); resizeEvents(); measureOutput();
+    resizeTx(); resizeFeedback(); resizeEvents(); measureOutput();
     if (pf.open) { sizeProfileCanvases(); fitProfileName(); }
   }
 
@@ -1627,12 +1545,10 @@
     // layout reads first, then writes — no forced reflow mid-frame
     updateSection();
     S.docH = document.documentElement.scrollHeight;
-    if (vis.feedback) fb.rect = fb.track.getBoundingClientRect();
     if (vis.hero !== false) drawHero();
     drawRail();
     if (vis.roster) drawRoster();
     if (vis.feedback) drawFeedback();
-    if (vis.mark) drawMark();
     if (vis.events) drawEvents();
   }
 

@@ -155,16 +155,11 @@ window.OSCILLATOR = {
      media: extra photos / videos shown underneath.
        { type: 'image', src: 'assets/img/x.jpg', caption: '' }
        { type: 'video', src: 'assets/video/x.mp4', poster: 'assets/img/x.jpg', caption: '' }
-       { type: 'emblem', src: 'assets/img/x.png', caption: '', word: '' }   ← a logo/mark
-         (transparent PNG), shown large with a slow oscillating wave
      ------------------------------------------------------------------------ */
   feedback: {
     panorama: 'assets/img/crowd-panorama.jpg',
     caption: 'the room is *the instrument*',
-    media: [
-      { type: 'image', src: 'assets/img/keyv-live.jpg', caption: 'Keyv live' },
-      { type: 'image', src: 'assets/img/keyv-portrait.jpg', caption: 'Keyv' },
-      { type: 'emblem', src: 'assets/img/keyv-emblem.png', caption: 'Keyv mark', word: 'Keyv' }
-    ]
+    // extra photos / videos from the nights (shown as a grid under the room)
+    media: []
   }
 };

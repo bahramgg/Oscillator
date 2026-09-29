@@ -8,9 +8,9 @@ The site is built as an instrument. Every section is a waveform:
 |---|---------|------|------------|
 | 00 | Power | — | Intro plays the label's "Oscillator Rises" reel (muted, Sound on button, tap to skip, once per session; a drawn version runs if autoplay is blocked; skipped for reduced motion). Hero: neon logo in a rotating OSCILLATOR/ ring, yellow strobe cuts, faint live oscilloscope |
 | 01 | Carrier | sine | The label manifesto |
-| 02 | Voices | square | The roster as a swipeable reel of the label's poster series (photo in yellow brackets + yellow panel with the vertical name; glitch cuts; arrows/drag on desktop); each opens a profile (`#/artist/<slug>`) |
+| 02 | Voices | square | The roster as a swipeable reel of cards rebuilt from the label's Instagram artist posters (torn-edge photo in hook brackets, stretched vertical name in Rajdhani, symbol + number boxes, logotype); each opens a profile (`#/artist/<slug>`) |
 | 03 | Transmissions | saw | Mixes & releases. Play opens the stage: a full-screen now-playing page (blurred cover, spinning disc inside the waveform ring, time readout, ±30 s, tracklist). Minimise to the bottom bar. Audio via hidden SoundCloud widgets |
-| 04 | Feedback | noise | Scroll-scrubbed panorama that shears with scroll speed; photo frames with glitch cuts; Keyv's emblem as a centrepiece that oscillates (a travelling wave that settles as it reaches the centre of the screen, and pulses with the signal) |
+| 04 | Feedback | noise | The room: the crowd panorama as a wide band drifting slowly across the crowd, with a running REC timecode; 'the room is THE INSTRUMENT'. Photos added to `feedback.media` appear as a grid underneath |
 | 05 | Next signal | triangle | Events (shows a "no signal" state when empty) |
 | 06 | Output | pulse | Contact / demos, centred footer with the logo |
 
@@ -62,7 +62,7 @@ Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a 
 - Logo files (`assets/img/logo-*.png`, favicon, touch icon) are generated from the 2000px originals.
 - Colours: ink `#070707`, bone `#e9e7df`, yellow `#e4e418` (from the label logo).
 - Fonts (matched to the label's posters and the "Oscillator Rises" reel): Anton, Tenor Sans
-  (the KIARASH poster type), Orbitron — all SIL OFL,
+  (the KIARASH poster type), Orbitron, Rajdhani (the artist-poster names) — all SIL OFL,
   see [`assets/fonts/LICENSE.md`](assets/fonts/LICENSE.md).
 - Respects `prefers-reduced-motion`; works on touch devices (no custom cursor, tap to open).
 
