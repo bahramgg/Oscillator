@@ -1272,6 +1272,7 @@
     $('.room__line').innerHTML = m
       ? (m[1].trim() ? '<span>' + esc(m[1].trim()) + '</span>' : '') + '<strong>' + esc(m[2]) + '</strong>'
       : '<strong>' + esc(F.caption || '') + '</strong>';
+    if (F.backdrop) { var bd = document.createElement('div'); bd.className = 'feedback__mark'; bd.setAttribute('aria-hidden', 'true'); bd.style.setProperty('--mark', 'url("' + absUrl(F.backdrop) + '")'); $('#feedback').prepend(bd); }
     var media = F.media || [], sheet = $('.sheet');
     sheet.hidden = !media.length;
     sheet.innerHTML = media.map(function (m, i) {

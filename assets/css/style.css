@@ -1710,3 +1710,23 @@ body { font-size: 16px; }
 .signal-on .hero__halo::before { opacity: .35; }
 .signal-on .hero .graticule { opacity: calc(.6 + var(--beat) * .4); }
 .hero .graticule { background-image: linear-gradient(to right, rgba(228,228,24,.14) 1px, transparent 1px), linear-gradient(to bottom, rgba(228,228,24,.14) 1px, transparent 1px); }
+
+/* Keyv's mark as a faint backdrop; photos in colour-kept frames */
+.feedback { position: relative; overflow: hidden; isolation: isolate; }
+.feedback__mark {
+  position: absolute; z-index: -1; pointer-events: none;
+  left: 50%; top: 58%; width: min(1100px, 130%); aspect-ratio: 840 / 918;
+  transform: translate(-50%, -50%);
+  background: var(--acid); opacity: .07;
+  -webkit-mask: var(--mark) center / contain no-repeat; mask: var(--mark) center / contain no-repeat;
+  filter: blur(1px);
+}
+.feedback .sheet { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: clamp(12px, 1.6vw, 22px); align-items: start; }
+.feedback .frame__media { height: auto; aspect-ratio: 4 / 5; }
+.feedback .frame:first-child .frame__media { aspect-ratio: 1 / 1; }
+.feedback .frame__media img { filter: grayscale(.15) contrast(1.05); }
+@media (max-width: 860px) {
+  .feedback .sheet { grid-template-columns: 1fr 1fr; }
+  .feedback .frame:first-child { grid-column: 1 / -1; }
+  .feedback__mark { width: 170%; top: 62%; }
+}
