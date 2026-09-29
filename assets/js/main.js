@@ -363,7 +363,7 @@
   function punkTrace(c, pts, n, d, live) {
     if (reduced) { c.beginPath(); for (var r0 = 0; r0 < n; r0 += 2) { if (r0) c.lineTo(pts[r0], pts[r0 + 1]); else c.moveTo(pts[r0], pts[r0 + 1]); } c.strokeStyle = 'rgba(210,210,30,.8)'; c.lineWidth = d; c.stroke(); return; }
     var tq = Math.floor(S.t * 9), tg = Math.floor(S.t * 3), jit = (live ? 1.2 : 2.6) * d;
-    var K = live ? 1 : 0.34;   // before the signal is on, the trace stays faint behind the logo
+    var K = live ? 1 : 0.24;   // before the signal is on, the trace stays faint behind the logo
     // glitch slice: a horizontal band shifted sideways (about a third of the time)
     var gOn = hsh(tg, 7) < 0.34, gy = (0.2 + hsh(tg, 8) * 0.6) * hero.h, gh = (10 + hsh(tg, 9) * 60) * d, gdx = (hsh(tg, 10) - 0.5) * 120 * d;
     var SEG = 22, segs = Math.ceil(n / 2 / SEG);
@@ -1424,6 +1424,75 @@
     fb.tc.textContent = '00:' + pad(Math.floor(frames / 1500)) + ':' + pad(Math.floor(frames / 25) % 60) + ':' + pad(frames % 25);
   }
 
+  /* ─── Keyv's logo: whole while it sits in view; scroll on and it breaks into
+     particles that fall away downward — scroll back and they fly home ─────── */
+  var km = { wrap: $('.keyv-mark__stage'), img: null, n: 0, p: 0 };
+  function initKeyvMark() {
+    if (!km.wrap || reduced) return;
+    km.cvs = document.createElement('canvas'); km.cvs.className = 'keyv-mark__cvs'; km.cvs.setAttribute('aria-hidden', 'true');
+    km.wrap.appendChild(km.cvs);
+    km.img = new Image();
+    km.img.onload = function () { km.wrap.classList.add('is-live'); resizeKeyvMark(); };
+    km.img.src = 'assets/img/keyv-emblem.png';
+    watch(km.cvs, 'keyv');
+  }
+  function resizeKeyvMark() {
+    if (!km.cvs || !km.img || !km.img.naturalWidth) return;
+    var el = $('.keyv-mark__img'), w = el.offsetWidth, h = el.offsetHeight;
+    if (!w) return;
+    var pad = Math.round(w * 0.35), fall = Math.round(S.vh * 0.9), d = DPR(2);
+    km.w = w; km.h = h; km.pad = pad; km.d = d;
+    km.cvs.style.left = -pad + 'px'; km.cvs.style.width = (w + pad * 2) + 'px'; km.cvs.style.height = (h + fall) + 'px';
+    km.cvs.width = Math.round((w + pad * 2) * d); km.cvs.height = Math.round((h + fall) * d);
+    km.ctx = km.cvs.getContext('2d'); km.last = -1;   // a resize clears the canvas: force a redraw
+    // the logo, tinted bone, at its on-screen size: drawn whole at rest, and sampled into particles
+    var t = document.createElement('canvas'); t.width = Math.round(w * d); t.height = Math.round(h * d);
+    var g = t.getContext('2d'); g.drawImage(km.img, 0, 0, t.width, t.height);
+    g.globalCompositeOperation = 'source-in'; g.fillStyle = '#e9e7df'; g.fillRect(0, 0, t.width, t.height);
+    km.tint = t;
+    var data = g.getImageData(0, 0, t.width, t.height).data, step = Math.max(2, Math.round((w < 360 ? 2.6 : 3) * d));
+    var xs = [], ys = [];
+    for (var y = 0; y < t.height; y += step) for (var x = 0; x < t.width; x += step) {
+      if (data[(y * t.width + x) * 4 + 3] > 120) { xs.push(x); ys.push(y); }
+    }
+    var n = km.n = xs.length;
+    km.x = new Float32Array(xs); km.y = new Float32Array(ys); km.step = step;
+    km.del = new Float32Array(n); km.fall = new Float32Array(n); km.dx = new Float32Array(n); km.ph = new Float32Array(n);
+    for (var i = 0; i < n; i++) {
+      var r = hsh(i, 3), yy = km.y[i] / t.height;
+      km.del[i] = (1 - yy) * 0.35 + r * 0.25;              // the bottom lets go first
+      km.fall[i] = (0.35 + hsh(i, 5) * 0.65) * fall * d;
+      km.dx[i] = (hsh(i, 7) - 0.5) * w * 0.5 * d;
+      km.ph[i] = hsh(i, 9) * 6.28;
+    }
+  }
+  function drawKeyvMark() {
+    var c = km.ctx; if (!c || !km.n) return;
+    var r = km.cvs.getBoundingClientRect(), mid = r.top + km.h / 2;
+    var target = clamp((S.vh * 0.5 - mid) / (S.vh * 0.55), 0, 1);
+    km.p = lerp(km.p, target, 0.16);
+    if (Math.abs(km.p - target) < 0.0005) km.p = target;
+    if (km.p === km.last) return;
+    km.last = km.p;
+    var p = km.p, d = km.d, ox = km.pad * d, W = km.cvs.width, H = km.cvs.height;
+    c.clearRect(0, 0, W, H);
+    // at rest: the crisp logo; as it breaks up the particles take over
+    var whole = clamp(1 - p * 8, 0, 1);
+    if (whole > 0) { c.globalAlpha = whole; c.drawImage(km.tint, ox, 0); }
+    if (p <= 0) { c.globalAlpha = 1; return; }
+    c.fillStyle = '#e9e7df';
+    var sz = km.step * 0.9, on = clamp(p * 8, 0, 1);
+    for (var i = 0; i < km.n; i++) {
+      var q = clamp((p - km.del[i]) / 0.45, 0, 1), qq = q * q;
+      var a = on * (1 - q * 0.85);
+      if (a <= 0.02) continue;
+      c.globalAlpha = a;
+      var s2 = sz * (1 - q * 0.45);
+      c.fillRect(ox + km.x[i] + km.dx[i] * q + Math.sin(km.ph[i] + q * 5) * 6 * d * q, km.y[i] + km.fall[i] * qq, s2, s2);
+    }
+    c.globalAlpha = 1;
+  }
+
   /* ─── 05 next signal ───────────────────────────────────────────────── */
   var ns = { cvs: null };
   function initEvents() {
@@ -1621,7 +1690,7 @@
   function resizeAll() {
     S.vw = innerWidth; S.vh = innerHeight; S.sy = scrollY;
     fitTitles(); resizeScope(); resizeRail(); measureCarrier(); resizeRoster();
-    resizeTx(); resizeFeedback(); resizeEvents(); measureOutput();
+    resizeTx(); resizeFeedback(); resizeKeyvMark(); resizeEvents(); measureOutput();
     if (pf.open) { sizeProfileCanvases(); fitProfileName(); }
   }
 
@@ -1677,6 +1746,7 @@
     drawRail();
     if (vis.roster) drawRoster();
     if (vis.feedback) drawFeedback();
+    if (vis.keyv) drawKeyvMark();
     if (vis.events) drawEvents();
   }
 
@@ -1688,6 +1758,7 @@
   initRoster();
   initTransmissions();
   initFeedback();
+  initKeyvMark();
   initEvents();
   initOutput();
   initClock();

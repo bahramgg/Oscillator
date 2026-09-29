@@ -1852,3 +1852,9 @@ body { font-size: 16px; }
 .keyv-mark figcaption { color: var(--bone-3); letter-spacing: .32em; text-transform: uppercase; font-size: 11px; }
 .feedback .keyv-mark + .sheet { padding-top: clamp(64px, 8vw, 120px); }
 @media (max-width: 860px) { .keyv-mark__img { width: 72vw; } }
+
+/* the particle canvas hangs below the logo so the pieces can fall over the photos */
+.keyv-mark { position: relative; z-index: 2; }
+.keyv-mark__stage { position: relative; }
+.keyv-mark__cvs { position: absolute; top: 0; max-width: none; max-height: none; pointer-events: none; }
+.keyv-mark__stage.is-live .keyv-mark__img { visibility: hidden; }
