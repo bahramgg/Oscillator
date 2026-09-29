@@ -159,8 +159,6 @@ window.OSCILLATOR = {
   feedback: {
     panorama: 'assets/img/crowd-panorama.jpg',
     caption: 'the room is *the instrument*',
-    // Keyv's emblem: at the end of the scroll the room closes into its shape
-    emblem: 'assets/img/keyv-emblem.png',
     // extra photos / videos from the nights (shown as a grid under the room)
     media: [
       { type: 'image', src: 'assets/img/keyv-night-2.jpg', caption: 'Keyv live' },

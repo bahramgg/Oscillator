@@ -1837,6 +1837,3 @@ body { font-size: 16px; }
 .hero.is-strobe .hero__tag em.tape { color: var(--acid); background-color: #000; }
 @media (max-width: 860px) { .sec__sub.tape { justify-self: start; margin-bottom: 0; } }
 @media (prefers-reduced-motion: reduce) { .tape { transition: none; } }
-
-/* feedback: a longer pinned run on phones so Keyv's emblem holds on screen */
-@media (max-width: 860px) { .feedback__track { height: 300vh; } }
