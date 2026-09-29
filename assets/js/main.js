@@ -1389,6 +1389,10 @@
       return '<figure class="frame' + (m.wide ? ' frame--wide' : '') + '"><div class="frame__media"' + (m.type !== 'video' ? ' style="--img:url(\'' + esc(absUrl(m.src)) + '\')"' : '') + '>' + inner + '<i class="brk" aria-hidden="true"></i></div>' + cap + '</figure>';
     }).join('');
     $$('.sheet .frame__media').forEach(function (f) { f.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') glitch(f); }); });
+    // black & white until tapped: a tap brings the colour in (tap again to take it back)
+    $$('.sheet .frame').forEach(function (fr) {
+      fr.addEventListener('click', function () { fr.classList.toggle('is-colour'); });
+    });
     if (io) {
       var vio = new IntersectionObserver(function (es) {
         es.forEach(function (e) { if (e.isIntersecting) { var p = e.target.play(); if (p && p.catch) p.catch(function () {}); } else e.target.pause(); });
