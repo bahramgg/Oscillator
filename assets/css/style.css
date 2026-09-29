@@ -1837,3 +1837,18 @@ body { font-size: 16px; }
 .hero.is-strobe .hero__tag em.tape { color: var(--acid); background-color: #000; }
 @media (max-width: 860px) { .sec__sub.tape { justify-self: start; margin-bottom: 0; } }
 @media (prefers-reduced-motion: reduce) { .tape { transition: none; } }
+
+/* Keyv's logo: its own block between the room and the photos — large, still, bone white */
+.keyv-mark {
+  display: flex; flex-direction: column; align-items: center; gap: clamp(16px, 2vw, 24px);
+  margin: 0; padding: clamp(72px, 10vw, 150px) var(--gutter) 0;
+}
+.keyv-mark__img {
+  display: block; width: min(440px, 34vw); aspect-ratio: 840 / 918;
+  background: var(--bone);
+  -webkit-mask: url('../img/keyv-emblem.png') center / contain no-repeat;
+  mask: url('../img/keyv-emblem.png') center / contain no-repeat;
+}
+.keyv-mark figcaption { color: var(--bone-3); letter-spacing: .32em; text-transform: uppercase; font-size: 11px; }
+.feedback .keyv-mark + .sheet { padding-top: clamp(64px, 8vw, 120px); }
+@media (max-width: 860px) { .keyv-mark__img { width: 72vw; } }
