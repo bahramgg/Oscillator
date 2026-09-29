@@ -1783,3 +1783,6 @@ body { font-size: 16px; }
   .sig-row .room__line { align-items: center; }
 }
 @media (prefers-reduced-motion: reduce) { .sig__ink { background-color: rgba(233,231,223,.35); } }
+
+/* footer: two columns now that the clock cell is gone */
+@media (min-width: 861px) { .output__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

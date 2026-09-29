@@ -321,7 +321,7 @@
     c.globalCompositeOperation = 'source-over';
     c.clearRect(0, 0, w, h);   // transparent: no trail residue, no visible edge
     var cx = hero.cx, cy = hero.cy, R = hero.R;
-    c.beginPath();
+    var pts = hero.pts || (hero.pts = new Float32Array(4400)), n = 0;
     var buf = E && E.on ? E.wave() : null;
     if (buf) {
       // delay-coordinate embedding of the live audio: x = s(t), y = s(t + τ)
@@ -329,10 +329,7 @@
       var sm = hero.sm || (hero.sm = new Float32Array(buf.length)), acc = buf[0];
       for (var q = 0; q < buf.length; q++) { acc += (buf[q] - acc) * 0.22; sm[q] = acc; }
       var lag = 12 + Math.round(S.nx * 70), N = buf.length - lag, G = R * 3.4;
-      for (var k = 0; k < N; k += 2) {
-        var x = cx + sm[k] * G, y = cy - sm[k + lag] * G;
-        if (k) c.lineTo(x, y); else c.moveTo(x, y);
-      }
+      for (var k = 0; k < N && n < 4400; k += 2) { pts[n++] = cx + sm[k] * G; pts[n++] = cy - sm[k + lag] * G; }
       if (hero.readX && ++hero.frame % 6 === 0) {
         hero.readX.textContent = 'τ ' + pad(lag, 3) + ' SMP';
         hero.readY.textContent = 'LPF ' + Math.round(90 + Math.pow(E.cutoff, 2.2) * 4200) + ' HZ';
@@ -346,9 +343,8 @@
       for (var j = 0; j <= P; j++) {
         var s = (j / P) * TAU * 2;
         var m = 1 + 0.035 * Math.sin(s * 9 + S.t * 2);
-        var lx = cx + Math.sin(hero.fx * s + hero.ph) * R * 1.35 * m;
-        var ly = cy - Math.sin(hero.fy * s) * R * m;
-        if (j) c.lineTo(lx, ly); else c.moveTo(lx, ly);
+        pts[n++] = cx + Math.sin(hero.fx * s + hero.ph) * R * 1.35 * m;
+        pts[n++] = cy - Math.sin(hero.fy * s) * R * m;
       }
       if (hero.readX && ++hero.frame % 6 === 0) {
         hero.readX.textContent = 'X ' + hero.fx.toFixed(3);
@@ -356,11 +352,55 @@
         hero.readP.textContent = 'φ ' + ((hero.ph / Math.PI) % 2).toFixed(2) + 'π';
       }
     }
-    // thin dim trace with a black halo (no yellow glow)
-    c.globalCompositeOperation = 'source-over';
-    c.lineJoin = 'round';
-    c.strokeStyle = 'rgba(0,0,0,0.9)'; c.lineWidth = 5 * d; c.stroke();
-    c.strokeStyle = 'rgba(210,210,30,0.8)'; c.lineWidth = 0.9 * d; c.stroke();
+    punkTrace(c, pts, n, d, !!buf);
+  }
+
+  // cheap deterministic noise: same inputs → same value, so the line "boils" in held frames
+  function hsh(a, b) { var x = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return x - Math.floor(x); }
+
+  // photocopied, hand-cut trace: boiling jitter, torn gaps, uneven ink, off-register ghost,
+  // a slice of the figure jumping sideways now and then, toner specks
+  function punkTrace(c, pts, n, d, live) {
+    if (reduced) { c.beginPath(); for (var r0 = 0; r0 < n; r0 += 2) { if (r0) c.lineTo(pts[r0], pts[r0 + 1]); else c.moveTo(pts[r0], pts[r0 + 1]); } c.strokeStyle = 'rgba(210,210,30,.8)'; c.lineWidth = d; c.stroke(); return; }
+    var tq = Math.floor(S.t * 9), tg = Math.floor(S.t * 3), jit = (live ? 1.2 : 2.6) * d;
+    // glitch slice: a horizontal band shifted sideways (about a third of the time)
+    var gOn = hsh(tg, 7) < 0.34, gy = (0.2 + hsh(tg, 8) * 0.6) * hero.h, gh = (10 + hsh(tg, 9) * 60) * d, gdx = (hsh(tg, 10) - 0.5) * 120 * d;
+    var SEG = 22, segs = Math.ceil(n / 2 / SEG);
+    c.lineJoin = 'miter'; c.lineCap = 'butt';
+    for (var pass = 0; pass < 2; pass++) {
+      // pass 0: bone ghost, off-register; pass 1: the yellow ink
+      var ox = pass ? 0 : 3 * d, oy = pass ? 0 : -2 * d;
+      for (var sg = 0; sg < segs; sg++) {
+        var cut = hsh(sg, Math.floor(S.t * 2) + pass * 13);
+        if (cut < (pass ? 0.12 : 0.45)) continue;               // torn gaps
+        var i0 = sg * SEG * 2, i1 = Math.min(n, i0 + SEG * 2 + 2);
+        c.beginPath();
+        for (var i = i0; i < i1; i += 2) {
+          var x = pts[i], y = pts[i + 1], v = i >> 1;
+          x += (hsh(v, tq) - 0.5) * jit; y += (hsh(v + 0.5, tq) - 0.5) * jit;
+          if (gOn && y > gy && y < gy + gh) x += gdx;
+          if (i === i0) c.moveTo(x + ox, y + oy); else c.lineTo(x + ox, y + oy);
+        }
+        var ink = hsh(sg, tq + 3);
+        if (pass) {
+          c.strokeStyle = 'rgba(0,0,0,.75)'; c.lineWidth = 4 * d; c.stroke();
+          c.strokeStyle = 'rgba(214,214,28,' + (0.55 + ink * 0.4).toFixed(2) + ')';
+          c.lineWidth = (0.6 + ink * ink * 2.4) * d;
+        } else {
+          c.strokeStyle = 'rgba(233,231,223,.22)'; c.lineWidth = 0.8 * d;
+        }
+        c.stroke();
+      }
+    }
+    // toner specks & scratches near the line
+    c.fillStyle = 'rgba(233,231,223,.5)';
+    for (var k = 0; k < 26; k++) {
+      var pi = (Math.floor(hsh(k, tq) * (n / 2)) * 2);
+      var sx = pts[pi] + (hsh(k, tq + 1) - 0.5) * 40 * d, sy = pts[pi + 1] + (hsh(k, tq + 2) - 0.5) * 40 * d;
+      var big = hsh(k, tq + 4);
+      if (big > 0.9) c.fillRect(sx, sy, (8 + big * 20) * d, 1 * d);      // scratch
+      else c.fillRect(sx, sy, (1 + big * 1.5) * d, (1 + big * 1.5) * d);
+    }
   }
 
   /* ─── rail: the one line that runs down the page ────────────────────── */
@@ -1411,8 +1451,7 @@
     $('.output__grid').innerHTML =
       '<div><h3 class="mono">Demos &amp; bookings</h3><p>' + rich(L.demos) + '</p>' +
         '<a class="cta" href="' + esc(bookingHref()) + '" target="_blank" rel="noopener">' + (L.email ? 'Email ' + esc(L.email) : 'DM ' + esc(L.handle)) + ' ↗︎</a></div>' +
-      '<div><h3 class="mono">Follow the signal</h3><ul>' + follow.join('') + '</ul></div>' +
-      '<div><h3 class="mono">Transmitting from</h3><p class="output__city">' + esc(L.origin) + '</p><p class="mono js-clock" style="margin-top:10px;color:var(--acid)">--:--:--</p></div>';
+      '<div><h3 class="mono">Follow the signal</h3><ul>' + follow.join('') + '</ul></div>';
     $('.year').textContent = new Date().getFullYear();
     watch(th.el, 'output');
   }
