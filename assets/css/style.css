@@ -18,6 +18,13 @@
   font-display: swap;
 }
 @font-face {
+  font-family: 'Rajdhani';
+  src: url('../fonts/rajdhani-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
   font-family: 'Orbitron';
   src: url('../fonts/orbitron-var.woff2') format('woff2');
   font-weight: 400 900;
@@ -1509,3 +1516,75 @@ body { font-size: 16px; }
   .mark__stage { height: auto; aspect-ratio: 1 / 1.05; }
 }
 .stage:focus { outline: none; }
+
+/* ==========================================================================
+   02 Artist card = the label's Instagram poster, rebuilt
+   (geometry measured from the POOYAN / MAHYAR ARABIYAN posters, 1179×1160)
+   ========================================================================== */
+.pc__link, .roster .pc__link {
+  position: relative; display: block; aspect-ratio: 1179 / 1160;
+  background: #000; container-type: inline-size; overflow: hidden;
+}
+.pc__link > span { position: absolute; }
+/* hooks: the curled corner brackets */
+.hk {
+  position: absolute; z-index: 3; width: 3.9cqw; aspect-ratio: 1; pointer-events: none;
+  background: var(--acid);
+  -webkit-mask: url('../img/poster-corner.png') center / contain no-repeat;
+  mask: url('../img/poster-corner.png') center / contain no-repeat;
+  transition: transform .45s var(--ease-out);
+}
+.hk--s { width: 2.6cqw; -webkit-mask-image: url('../img/poster-corner-s.png'); mask-image: url('../img/poster-corner-s.png'); }
+.hk--tl { left: 0; top: 0; }
+.hk--tr { right: 0; top: 0; transform: scaleX(-1); }
+.hk--bl { left: 0; bottom: 0; transform: scaleY(-1); }
+.hk--br { right: 0; bottom: 0; transform: scale(-1, -1); }
+.pc__link:hover .pc__frame .hk--tl, .pc__link:focus-visible .pc__frame .hk--tl { transform: translate(-.6cqw, -.6cqw); }
+.pc__link:hover .pc__frame .hk--tr, .pc__link:focus-visible .pc__frame .hk--tr { transform: scaleX(-1) translate(-.6cqw, -.6cqw); }
+.pc__link:hover .pc__frame .hk--bl, .pc__link:focus-visible .pc__frame .hk--bl { transform: scaleY(-1) translate(-.6cqw, -.6cqw); }
+.pc__link:hover .pc__frame .hk--br, .pc__link:focus-visible .pc__frame .hk--br { transform: scale(-1, -1) translate(-.6cqw, -.6cqw); }
+
+/* photo with the white torn edge */
+.pc__frame { left: 2.3%; top: 1.9%; width: 59.1%; height: 96.8%; }
+.pc__torn, .pc__frame .pc__photo { position: absolute; left: -2.9%; right: -2.9%; top: -1.8%; bottom: -1.8%; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+.pc__torn { background: #ececec; -webkit-mask-image: url('../img/torn-outer.png'); mask-image: url('../img/torn-outer.png'); }
+.pc__frame .pc__photo { display: block; overflow: hidden; background: #1a1a1a; -webkit-mask-image: url('../img/torn-inner.png'); mask-image: url('../img/torn-inner.png'); }
+.pc__frame .pc__photo img, .pc__frame .pc__photo canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.08); }
+.pc__frame .pc__photo::after { box-shadow: none; }
+
+/* the name, stretched to fill its bracketed box */
+.pc__namebox { left: 65.4%; top: 2%; width: 32.7%; height: 72.5%; }
+.pc__name {
+  position: absolute; left: 50%; top: 50%; transform-origin: 50% 50%;
+  display: flex; flex-direction: row-reverse; gap: .08em;
+  font-family: 'Rajdhani', var(--f-display); font-weight: 700; text-transform: uppercase;
+  line-height: .74; letter-spacing: 0; color: var(--acid); white-space: nowrap;
+}
+.pc__name span { writing-mode: vertical-rl; }
+
+/* symbol box + series number box */
+.pc__sym { left: 65.4%; top: 75.1%; width: 15.1%; height: 11.6%; }
+.pc__num { left: 81.4%; top: 75.1%; width: 16.3%; height: 11.6%; }
+.pc__glyph {
+  position: absolute; left: 50%; top: 52%; width: 58%; aspect-ratio: 344 / 357; transform: translate(-50%, -50%);
+  background: var(--acid);
+  -webkit-mask: url('../img/poster-glyph.png') center / contain no-repeat;
+  mask: url('../img/poster-glyph.png') center / contain no-repeat;
+}
+.pc__no {
+  position: absolute; left: 50%; top: 50%; transform-origin: 50% 50%;
+  font-family: 'Rajdhani', var(--f-display); font-weight: 700; line-height: .74; color: var(--acid);
+  border: 0; padding: 0; white-space: nowrap;
+}
+/* the OSCILLATOR logotype at the foot */
+.pc__type {
+  left: 65.4%; top: 89.2%; width: 32.7%; height: 9.4%;
+  background: var(--acid);
+  -webkit-mask: url('../img/poster-logotype.png') center / contain no-repeat;
+  mask: url('../img/poster-logotype.png') center / contain no-repeat;
+}
+@media (max-width: 1100px) { .roster .pc__link { aspect-ratio: 1179 / 1160; } }
+@media (max-width: 560px) { .roster .pc__link { aspect-ratio: 1179 / 1160; } }
+.pc__link .pc__name { writing-mode: horizontal-tb; flex: none; }
+.pc__name, .pc__no { -webkit-text-stroke: .03em currentColor; paint-order: stroke fill; }
+.pc__name { gap: .02em; }

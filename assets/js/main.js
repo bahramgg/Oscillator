@@ -450,21 +450,35 @@
   function initRoster() {
     var A = D.artists;
     $('.voices__count').textContent = pad(A.length) + ' channels';
+    // each card is the label's Instagram artist poster: torn-edge photo in
+    // hook brackets, the name set vertically in its own bracketed box, a
+    // symbol box + series number box, and the logotype underneath
+    var hooks = '<i class="hk hk--tl"></i><i class="hk hk--tr"></i><i class="hk hk--bl"></i><i class="hk hk--br"></i>';
+    var shooks = '<i class="hk hk--s hk--tl"></i><i class="hk hk--s hk--tr"></i><i class="hk hk--s hk--bl"></i><i class="hk hk--s hk--br"></i>';
     roster.list.innerHTML = A.map(function (a, i) {
       var photo = a.photo
         ? '<img src="' + esc(a.photo) + '" alt="' + esc(a.name) + '" loading="lazy">'
         : '<canvas aria-hidden="true"></canvas>';
+      var words = String(a.name).toUpperCase().split(/\s+/);
+      // long names are set twice, side by side, like the MAHYAR ARABIYAN poster
+      var full = words.join(' ');
+      var lines = a.name.length > 9 ? [full, full] : [full];
       return '<li class="pc">' +
-        '<a class="pc__link" href="#/artist/' + esc(a.slug) + '" data-slug="' + esc(a.slug) + '">' +
-          '<span class="pc__photo"' + (a.photo ? ' style="--img:url(\'' + esc(absUrl(a.photo)) + '\')"' : '') + '>' + photo + '<i class="brk" aria-hidden="true"></i></span>' +
-          '<span class="pc__panel">' +
-            '<span class="pc__name">' + esc(a.name) + '</span>' +
-            '<span class="pc__foot"><span class="pc__no">' + pad(i + 1, 3) + '</span><span class="logo logo--icon pc__mark" aria-hidden="true"></span></span>' +
+        '<a class="pc__link" href="#/artist/' + esc(a.slug) + '" data-slug="' + esc(a.slug) + '" aria-label="' + esc(a.name) + '">' +
+          '<span class="pc__frame" aria-hidden="true">' + hooks +
+            '<span class="pc__torn"></span>' +
+            '<span class="pc__photo"' + (a.photo ? ' style="--img:url(\'' + esc(absUrl(a.photo)) + '\')"' : '') + '>' + photo + '</span>' +
           '</span>' +
+          '<span class="pc__namebox" aria-hidden="true">' + hooks +
+            '<span class="pc__name">' + lines.map(function (l) { return '<span>' + esc(l) + '</span>'; }).join('') + '</span>' +
+          '</span>' +
+          '<span class="pc__sym" aria-hidden="true">' + shooks + '<i class="pc__glyph"></i></span>' +
+          '<span class="pc__num" aria-hidden="true">' + shooks + '<span class="pc__no">' + pad(i + 1, 3) + '</span></span>' +
+          '<span class="pc__type" aria-hidden="true"></span>' +
         '</a></li>';
     }).join('');
     roster.cards = $$('.pc', roster.list).map(function (li, i) {
-      var c = { li: li, photo: $('.pc__photo', li), name: $('.pc__name', li), panel: $('.pc__panel', li), cvs: $('.pc__photo canvas', li), sig: signature(A[i].slug) };
+      var c = { li: li, photo: $('.pc__photo', li), name: $('.pc__name', li), box: $('.pc__namebox', li), no: $('.pc__no', li), num: $('.pc__num', li), cvs: $('.pc__photo canvas', li), sig: signature(A[i].slug) };
       li.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') glitch(c.photo); });
       return c;
     });
@@ -557,15 +571,19 @@
   }
 
   // fit each vertical name to its panel
+  // stretch each name to fill its box exactly (the posters distort the type to fit)
+  function fitStretch(el, box, padX, padY) {
+    el.style.transform = 'none';
+    el.style.fontSize = '100px';
+    var w = el.offsetWidth, h = el.offsetHeight;
+    var bw = box.clientWidth * (1 - padX), bh = box.clientHeight * (1 - padY);
+    if (!w || !h || !bw || !bh) return;
+    el.style.transform = 'translate(-50%, -50%) scale(' + (bw / w).toFixed(4) + ',' + (bh / h).toFixed(4) + ')';
+  }
   function resizeRoster() {
     roster.cards.forEach(function (c) {
-      var n = c.name, box = c.panel;
-      n.style.fontSize = '100px';
-      var len = n.scrollHeight, thick = n.scrollWidth;
-      var foot = $('.pc__foot', box);
-      var availH = box.clientHeight * 0.84 - foot.offsetHeight - 12, availW = box.clientWidth * 0.84;
-      var fs = 100 * Math.min(availH / len, availW / thick);
-      n.style.fontSize = fs.toFixed(1) + 'px';
+      fitStretch(c.name, c.box, 0.14, 0.09);
+      fitStretch(c.no, c.num, 0.2, 0.2);
       if (c.cvs) { var t = sizeCanvas(c.cvs, 2); drawSigil(t.ctx, c.sig, 0, t.w, t.h); }
     });
     if (roster.syncReel) roster.syncReel();
