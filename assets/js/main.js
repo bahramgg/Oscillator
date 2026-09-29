@@ -445,7 +445,7 @@
   function initCarrier() {
     carrier.box.innerHTML = D.label.about.map(function (p) { return '<p>' + rich(p) + '</p>'; }).join('');
     carrier.words = [];
-    $('.facts').innerHTML = D.label.facts.map(function (f) {
+    if ($('.facts')) $('.facts').innerHTML = D.label.facts.map(function (f) {
       return '<div><dt>' + esc(f[0]) + '</dt><dd>' + esc(f[1]) + '</dd></div>';
     }).join('');
     watch(carrier.box, 'carrier');
@@ -731,7 +731,8 @@
 
   function profileHTML(a, i) {
     var n = D.artists.length, next = D.artists[(i + 1) % n], sig = signature(a.slug);
-    var tx = (a.transmissions || []).map(function (id) { return D.transmissions.filter(function (t) { return t.id === id; })[0]; }).filter(Boolean);
+    var allTx = D.transmissions.concat(D.series || []);
+    var tx = (a.transmissions || []).map(function (id) { return allTx.filter(function (t) { return t.id === id; })[0]; }).filter(Boolean);
     var links = Object.keys(a.links || {}).filter(function (k) { return a.links[k]; }).map(function (k) {
       return '<a class="mono" href="' + esc(a.links[k]) + '" target="_blank" rel="noopener">' + esc(LINK_NAMES[k] || k) + ' ↗︎</a>';
     }).join('');
@@ -887,6 +888,7 @@
         requestClose();
         setTimeout(function () {
           var el = document.getElementById('tx-' + id);
+          if (el && el.hidden) { el.hidden = false; resizeTx(); }
           if (el) el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
           var o = txs.filter(function (x) { return x.t.id === id; })[0];
           if (o) listen(o, null, el);
@@ -941,8 +943,8 @@
   }
 
   function initTransmissions() {
-    var list = $('.tx-list'), T = D.transmissions;
-    list.innerHTML = T.map(function (t, i) {
+    var list = $('.tx-list'), F = D.transmissions, SR = D.series || [], T = F.concat(SR);
+    list.innerHTML = F.map(function (t, i) {
       var tl = t.tracklist || [];
       return '<article class="tx" id="tx-' + esc(t.id) + '">' +
         '<button class="tx__cover" type="button" aria-label="Play ' + esc(t.title) + '">' +
@@ -963,7 +965,43 @@
         '</div></article>';
     }).join('');
 
-    txs = $$('.tx', list).map(function (el, i) {
+    // the label's numbered series: compact rows, same player
+    var box = $('.series'), SHOW = 8;
+    if (SR.length) {
+      box.hidden = false;
+      $('.series__count').textContent = SR.length;
+      $('.series__list').innerHTML = SR.map(function (t, i) {
+        var who = artistIndex(t.artist) >= 0
+          ? '<a href="#/artist/' + esc(t.artist) + '">' + esc(artistName(t.artist)) + '</a>'
+          : esc(t.artist);
+        return '<article class="tx tx--row" id="tx-' + esc(t.id) + '"' + (i >= SHOW ? ' hidden' : '') + '>' +
+          '<button class="tx__cover" type="button" aria-label="Play ' + esc(t.title) + '">' +
+            (t.cover ? '<img src="' + esc(t.cover) + '" alt="' + esc(t.title) + ' cover" loading="lazy">' : '') + '</button>' +
+          '<p class="tx__num">' + String(t.title).replace(/^.*#/, '#') + '</p>' +
+          '<div class="tx__body">' +
+            '<h3 class="tx__who">' + who + '</h3>' +
+            '<p class="tx__meta mono"><span>' + fmtDate(t.date) + '</span><span>' + fmtClock(t.duration, t.duration) + '</span>' +
+              (t.soundcloud ? '<a class="tx__ext" href="' + esc(t.soundcloud) + '" target="_blank" rel="noopener">SoundCloud ↗︎</a>' : '') + '</p>' +
+            '<div class="tx__deck">' +
+              '<button class="tx__play" type="button" aria-label="Play ' + esc(t.title) + '">' + ICON_PLAY + ICON_PAUSE + '</button>' +
+              '<div class="tx__wave" role="slider" tabindex="0" aria-label="Seek ' + esc(t.title) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><canvas aria-hidden="true"></canvas></div>' +
+              '<span class="tx__pos mono">' + fmtClock(0, t.duration) + '</span>' +
+            '</div>' +
+          '</div></article>';
+      }).join('');
+      var more = $('.series__more');
+      if (SR.length > SHOW) {
+        more.hidden = false;
+        more.textContent = 'Show all ' + SR.length + ' ↓';
+        more.addEventListener('click', function () {
+          $$('.series__list .tx[hidden]').forEach(function (el) { el.hidden = false; });
+          more.hidden = true;
+          resizeTx();
+        });
+      }
+    }
+
+    txs = $$('.tx-list .tx, .series__list .tx').map(function (el, i) {
       var o = {
         el: el, t: T[i], i: i, wave: $('.tx__wave', el), cvs: $('.tx__wave canvas', el), pos: $('.tx__pos', el),
         playBtn: $('.tx__play', el), stateText: 'Standby', hover: -1, progress: 0, sec: 0
@@ -1377,7 +1415,7 @@
       var p = document.createElement('p');
       p.className = 'tx__error mono';
       p.innerHTML = 'SoundCloud couldn\'t be reached from here. <a href="' + esc(o.t.soundcloud) + '" target="_blank" rel="noopener">Listen on SoundCloud ↗︎</a>';
-      $('.tx__dur', o.el).after(p);
+      ($('.tx__dur', o.el) || $('.tx__deck', o.el)).after(p);
     }
   };
   deck.btn.addEventListener('click', function () { if (deck.cur && deck.cur.widget) Player.toggle(deck.cur); });
@@ -1430,7 +1468,9 @@
     var r = fb.rect;
     var p = clamp(-r.top / Math.max(1, r.height - S.vh), 0, 1);
     var scale = fb.h / img.naturalHeight, dw = img.naturalWidth * scale;
-    var target = -Math.max(0, dw - fb.w) * p;
+    // travel only across the lit part of the room (both ends of the panorama are black)
+    var cx = (0.26 + 0.44 * p) * dw;
+    var target = -clamp(cx - fb.w / 2, 0, Math.max(0, dw - fb.w));
     fb.x = reduced ? target : lerp(fb.x, target, 0.14);
     fb.v = lerp(fb.v, fb.x - fb.lastX, 0.3);
     fb.lastX = fb.x;
@@ -1518,30 +1558,48 @@
   var ns = { cvs: null };
   function initEvents() {
     var box = $('.events'), E_ = (D.events || []).slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
-    if (!E_.length) {
-      box.innerHTML = '<div class="nosignal">' +
+    var today = new Date().toISOString().slice(0, 10);
+    var next = E_.filter(function (ev) { return ev.date >= today; });
+    var past = E_.filter(function (ev) { return ev.date < today; }).reverse();
+    var lineupOf = function (ev) {
+      return (ev.lineup || []).map(function (x) {
+        return artistIndex(x) >= 0 ? '<a href="#/artist/' + esc(x) + '">' + esc(artistName(x)) + '</a>' : esc(x);
+      }).join(', ');
+    };
+    var html = '';
+    if (!next.length) {
+      html = '<div class="nosignal">' +
         '<canvas class="nosignal__line" aria-hidden="true"></canvas>' +
         '<p class="nosignal__big">No signal</p>' +
         '<div class="nosignal__row"><p>Nothing scheduled yet. New dates are announced first on Instagram.</p>' +
         '<a class="cta" href="' + esc(D.label.instagram) + '" target="_blank" rel="noopener">Follow ' + esc(D.label.handle) + ' ↗︎</a></div></div>';
-      ns.cvs = $('.nosignal__line', box);
-      watch(ns.cvs, 'events');
-      return;
+    } else {
+      html = next.map(function (ev) {
+        var parts = ev.date.split('-'), lineup = lineupOf(ev);
+        return '<article class="event" data-reveal>' +
+          '<p class="event__date">' + parts[2] + '.' + parts[1] + '<small class="mono">' + parts[0] + '</small></p>' +
+          '<div><h3 class="event__title">' + esc(ev.title) + '</h3>' +
+          '<p class="event__where mono">' + esc([ev.venue, ev.city].filter(Boolean).join(' · ')) + '</p>' +
+          (lineup ? '<p class="event__lineup">' + lineup + '</p>' : '') + '</div>' +
+          (ev.link ? '<a class="cta" href="' + esc(ev.link) + '" target="_blank" rel="noopener">Info ↗︎</a>' : '<span></span>') +
+          '</article>';
+      }).join('');
     }
-    var today = new Date().toISOString().slice(0, 10);
-    box.innerHTML = E_.map(function (ev) {
-      var parts = ev.date.split('-');
-      var lineup = (ev.lineup || []).map(function (x) {
-        return artistIndex(x) >= 0 ? '<a href="#/artist/' + esc(x) + '">' + esc(artistName(x)) + '</a>' : esc(x);
-      }).join(', ');
-      return '<article class="event' + (ev.date < today ? ' is-past' : '') + '" data-reveal>' +
-        '<p class="event__date">' + parts[2] + '.' + parts[1] + '<small class="mono">' + parts[0] + (ev.date < today ? ' · past' : '') + '</small></p>' +
-        '<div><h3 class="event__title">' + esc(ev.title) + '</h3>' +
-        '<p class="event__where mono">' + esc([ev.venue, ev.city].filter(Boolean).join(' · ')) + '</p>' +
-        (lineup ? '<p class="event__lineup">' + lineup + '</p>' : '') + '</div>' +
-        (ev.link ? '<a class="cta" href="' + esc(ev.link) + '" target="_blank" rel="noopener">Info ↗︎</a>' : '<span></span>') +
-        '</article>';
-    }).join('');
+    // past nights: the posters as an archive (black & white; colour on hover / tap)
+    if (past.length) {
+      html += '<div class="past"><header class="past__head"><h3 class="past__title">Past signals</h3><p class="mono">' + pad(past.length) + ' nights</p></header>' +
+        '<div class="past__grid">' + past.map(function (ev) {
+          var parts = ev.date.split('-'), lineup = lineupOf(ev);
+          return '<figure class="past__item">' +
+            (ev.poster ? '<div class="past__poster"><img src="' + esc(ev.poster) + '" alt="' + esc(ev.title) + ' poster" loading="lazy"><i class="brk" aria-hidden="true"></i></div>' : '') +
+            '<figcaption><b class="mono">' + parts[2] + '.' + parts[1] + '.' + parts[0] + '</b><span class="past__name">' + esc(ev.title) + '</span>' +
+            (lineup ? '<span class="past__lineup">' + lineup + '</span>' : '') + '</figcaption></figure>';
+        }).join('') + '</div></div>';
+    }
+    box.innerHTML = html;
+    $$('.past__item', box).forEach(function (f) { f.addEventListener('click', function (e) { if (!e.target.closest('a')) f.classList.toggle('is-colour'); }); });
+    ns.cvs = $('.nosignal__line', box);
+    if (ns.cvs) watch(ns.cvs, 'events');
   }
   function resizeEvents() { if (ns.cvs) { var s = sizeCanvas(ns.cvs, 2); ns.ctx = s.ctx; ns.w = s.w; ns.h = s.h; ns.d = s.d; } }
   function drawEvents() {

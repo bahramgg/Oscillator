@@ -9,9 +9,9 @@ The site is built as an instrument. Every section is a waveform:
 | 00 | Power | — | Intro plays the label's "Oscillator Rises" reel (muted, Sound on button, tap to skip, once per session; a drawn version runs if autoplay is blocked; skipped for reduced motion). Hero: neon logo in a rotating OSCILLATOR/ ring, yellow strobe cuts, faint live oscilloscope |
 | 01 | Carrier | sine | The label manifesto |
 | 02 | Voices | square | The roster as a swipeable reel of cards that also advances by itself every 2 s (pauses on touch, drag or hover), rebuilt from the label's Instagram artist posters (torn-edge photo in hook brackets, stretched vertical name in Rajdhani, symbol + number boxes, logotype); each opens a profile (`#/artist/<slug>`) |
-| 03 | Transmissions | saw | Mixes & releases. Play opens the stage: a full-screen now-playing page (blurred cover, spinning disc inside the waveform ring, time readout, ±30 s, tracklist). Minimise to the bottom bar. Audio via hidden SoundCloud widgets |
+| 03 | Transmissions | saw | Mixes & releases, then **The Oscillator Series**: the label's numbered mixes (#001–#031 from soundcloud.com/oscillatorr, `series` in data.js) as a compact archive; each roster artist's mix also appears on their profile. Play opens the stage: a full-screen now-playing page (blurred cover, spinning disc inside the waveform ring, time readout, ±30 s, tracklist). Minimise to the bottom bar. Audio via hidden SoundCloud widgets |
 | 04 | Feedback | noise | The room: the crowd panorama pinned to the screen, panning sideways as you scroll (strips shear with scroll speed), with a running REC timecode; 'the room is THE INSTRUMENT'. Then Keyv's logo on its own in bone white: whole while it sits in view, scroll on and it breaks into particles that fall away downward, scroll back and they fly home; photos in `feedback.media` appear as a grid underneath |
-| 05 | Next signal | triangle | Events (shows a "no signal" state when empty) |
+| 05 | Next signal | triangle | Events (shows a "no signal" state when nothing is upcoming); past dates with a `poster` form the "Past signals" archive |
 | 06 | Output | pulse | Contact / demos, centred footer with the logo |
 
 Press **Turn on the signal** and the site generates a techno loop live in the browser
@@ -39,7 +39,8 @@ to touch the HTML, CSS or other scripts to update the site.
   Roster photos are cropped from the label's Instagram posters (low resolution) — swap in originals when available.
 - **Transmissions** — mixes/releases. `soundcloud` is the public track URL; `duration`
   is in seconds; `waveform` is optional.
-- **Events** — leave `events: []` for the "no signal" state, or add dates.
+- **Events** — leave `events: []` for the "no signal" state, or add dates. Past dates with a `poster` appear in the "Past signals" archive.
+- **Series** — add a new numbered mix to the top of `series`.
 - **Feedback** — `panorama` is the wide image; `media` holds extra photos and `.mp4` videos.
 - `*asterisks*` in any text switch to the italic serif accent.
 - Empty links (`''`) are hidden automatically.

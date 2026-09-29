@@ -1872,3 +1872,66 @@ body { font-size: 16px; }
 /* nothing may widen the page: the particle canvas spills downward only */
 .keyv-mark { overflow-x: clip; overflow-y: visible; }
 html, body { overflow-x: clip; }
+
+/* ==========================================================================
+   The Oscillator Series — the label's numbered mixes as a compact archive
+   ========================================================================== */
+.series { margin-top: clamp(72px, 9vw, 140px); }
+.series__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.series__title { font-family: var(--f-display); font-weight: 400; text-transform: uppercase; font-size: clamp(30px, 4vw, 64px); line-height: .9; }
+.series__sub { color: var(--bone-3); }
+.series__list { display: flex; flex-direction: column; }
+.tx.tx--row {
+  display: grid; grid-template-columns: 64px 76px minmax(0, 1fr); align-items: center;
+  gap: 0 clamp(14px, 2vw, 28px); padding: 14px 0; border-bottom: 1px solid var(--line);
+}
+.tx.tx--row[hidden] { display: none; }
+.tx--row .tx__cover { width: 64px; aspect-ratio: 1; }
+.tx--row .tx__cover img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.1); transition: filter .4s; }
+.tx--row:hover .tx__cover img, .tx--row.is-playing .tx__cover img { filter: none; }
+.tx__num { font-family: 'Rajdhani', var(--f-display); font-weight: 700; font-size: clamp(26px, 2.6vw, 38px); color: var(--acid); letter-spacing: .02em; line-height: 1; }
+.tx--row .tx__body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); grid-template-areas: "who deck" "meta deck"; gap: 2px 24px; align-items: center; }
+.tx__who { grid-area: who; font-family: var(--f-display); font-weight: 400; text-transform: uppercase; font-size: clamp(22px, 2.2vw, 34px); line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx__who a { color: var(--bone); text-decoration: none; transition: color .25s; }
+.tx__who a:hover { color: var(--acid); }
+.tx--row .tx__meta { grid-area: meta; display: flex; gap: 14px; color: var(--bone-3); margin: 0; }
+.tx--row .tx__ext { color: var(--bone-3); }
+.tx--row .tx__ext:hover { color: var(--acid); }
+.tx--row .tx__deck { grid-area: deck; display: flex; align-items: center; gap: 14px; margin: 0; }
+.tx--row .tx__play { width: 38px; height: 38px; flex: none; }
+.tx--row .tx__play svg { width: 13px; height: 13px; }
+.tx--row .tx__wave { height: 34px; }
+.tx--row .tx__pos { color: var(--bone-3); font-variant-numeric: tabular-nums; min-width: 4.5em; text-align: right; }
+.series__more {
+  display: block; margin: 28px auto 0; padding: 14px 26px; border: 1px solid var(--line-2); border-radius: 999px;
+  color: var(--bone); background: none; letter-spacing: .22em; text-transform: uppercase; cursor: pointer; transition: border-color .3s, color .3s;
+}
+.series__more:hover { border-color: var(--acid); color: var(--acid); }
+@media (max-width: 860px) {
+  .tx.tx--row { grid-template-columns: 56px minmax(0, 1fr); grid-template-areas: "cover body"; gap: 0 14px; align-items: start; }
+  .tx--row .tx__cover { grid-area: cover; width: 56px; }
+  .tx.tx--row { position: relative; }
+  .tx--row .tx__num { position: absolute; left: 0; top: 52px; font-size: 17px; padding: 1px 4px 0; background: #0a0a0a; }
+  .tx--row .tx__body { grid-area: body; grid-template-columns: 1fr; grid-template-areas: "who" "meta" "deck"; gap: 4px; }
+  .tx--row .tx__deck { margin-top: 6px; }
+}
+.tx--row .tx__error { grid-column: 1 / -1; margin-top: 6px; }
+.tx--row .tx__body > .tx__error { grid-area: auto; }
+
+/* Past signals — the posters of past nights */
+.past { margin-top: clamp(72px, 9vw, 140px); }
+.past__head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--line); margin-bottom: clamp(24px, 3vw, 40px); }
+.past__title { font-family: var(--f-display); font-weight: 400; text-transform: uppercase; font-size: clamp(30px, 4vw, 64px); line-height: .9; }
+.past__head p { color: var(--bone-3); }
+.past__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: clamp(16px, 2vw, 28px); }
+.past__item { margin: 0; cursor: pointer; }
+.past__poster { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: var(--ink-2); }
+.past__poster img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.08); transition: filter .7s cubic-bezier(.2, .7, .2, 1); }
+.past__item.is-colour img { filter: none; }
+@media (hover: hover) { .past__item:hover img { filter: none; } }
+.past__item figcaption { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+.past__item figcaption b { color: var(--acid); font-weight: 400; }
+.past__name { font-family: var(--f-display); text-transform: uppercase; font-size: 22px; line-height: 1; }
+.past__lineup { color: var(--bone-2); font-size: 14px; }
+.past__lineup a { color: inherit; }
+@media (max-width: 860px) { .past__grid { grid-template-columns: 1fr 1fr; } .past__name { font-size: 18px; } }
