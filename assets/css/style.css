@@ -1935,3 +1935,9 @@ html, body { overflow-x: clip; }
 .past__lineup { color: var(--bone-2); font-size: 14px; }
 .past__lineup a { color: inherit; }
 @media (max-width: 860px) { .past__grid { grid-template-columns: 1fr 1fr; } .past__name { font-size: 18px; } }
+
+/* stage: Close (stops the music) on the left, Minimise (keeps playing) on the right */
+.stage__stop { padding: 9px 16px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--bone); transition: border-color .3s, color .3s; }
+.stage__stop:hover { border-color: #ff3b2f; color: #ff3b2f; }
+.stage__top .stage__label { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+@media (max-width: 420px) { .stage__stop, .stage__close { padding: 8px 12px; } .stage__top .stage__label { font-size: 10px; } }

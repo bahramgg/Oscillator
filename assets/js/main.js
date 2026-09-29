@@ -966,7 +966,7 @@
     }).join('');
 
     // the label's numbered series: compact rows, same player
-    var box = $('.series'), SHOW = 8;
+    var box = $('.series'), SHOW = 5;
     if (SR.length) {
       box.hidden = false;
       $('.series__count').textContent = SR.length;
@@ -992,7 +992,7 @@
       var more = $('.series__more');
       if (SR.length > SHOW) {
         more.hidden = false;
-        more.textContent = 'Show all ' + SR.length + ' ↓';
+        more.textContent = 'Show more · ' + (SR.length - SHOW) + ' ↓';
         more.addEventListener('click', function () {
           $$('.series__list .tx[hidden]').forEach(function (el) { el.hidden = false; });
           more.hidden = true;
@@ -1208,6 +1208,16 @@
       stage.close.focus({ preventScroll: true });
     });
   };
+  // close: stop the music and leave no mini player behind (Minimise keeps it playing)
+  stage.stop = function () {
+    Player.want = null;
+    Player.pauseAll(null);
+    deck.cur = null;
+    deck.el.hidden = true;
+    document.documentElement.classList.remove('has-deck');
+    stage.hide();
+  };
+  $('.stage__stop').addEventListener('click', function () { stage.stop(); });
   stage.hide = function () {
     if (!stage.isOpen) return;
     stage.isOpen = false;
