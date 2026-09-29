@@ -1744,3 +1744,18 @@ body { font-size: 16px; }
 .feedback .sheet .frame:first-child .frame__media { aspect-ratio: 4 / 5; }
 .feedback .sheet .frame.frame--wide .frame__media { aspect-ratio: 16 / 9; height: auto; }
 @media (max-width: 860px) { .feedback .sheet .frame:first-child .frame__media { aspect-ratio: 1 / 1; } }
+
+/* REC band: several shots, each drifting; hard cut with a flash between them */
+.room__band { background: #000 !important; animation: none; filter: contrast(1.08); overflow: hidden; }
+.room__shot {
+  position: absolute; inset: 0; opacity: 0;
+  background: 50% 50% / cover no-repeat;
+}
+.room__shot.is-on { opacity: 1; animation: shot-drift 9.5s ease-out both; }
+.room__shot--pano { background-size: auto 100%; background-position: 30% 50%; filter: grayscale(1); }
+.room__shot--pano.is-on { animation: room-pan 9.5s ease-in-out both; }
+@keyframes shot-drift { from { transform: scale(1.12) translateX(2%); } to { transform: scale(1.02) translateX(-2%); } }
+.room__band::before { content: ''; position: absolute; inset: 0; z-index: 2; background: var(--acid); opacity: 0; pointer-events: none; }
+.room__band.is-cut::before { opacity: .85; }
+.room__band::after { z-index: 3; }
+@media (prefers-reduced-motion: reduce) { .room__shot.is-on { animation: none; } }

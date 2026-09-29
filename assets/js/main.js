@@ -1266,8 +1266,23 @@
   var fb = { band: $('.room__band'), tc: $('.room__tc'), last: '' };
   function initFeedback() {
     var F = D.feedback || {};
-    if (F.panorama) fb.band.style.backgroundImage = 'url("' + absUrl(F.panorama) + '")';
-    else $('.room').hidden = true;
+    var shots = [F.panorama].concat(F.reel || []).filter(Boolean);
+    if (!shots.length) $('.room').hidden = true;
+    fb.band.innerHTML = shots.map(function (src, i) {
+      return '<i class="room__shot' + (i === 0 ? ' is-on' : '') + (i === 0 ? ' room__shot--pano' : '') + '" style="background-image:url(\'' + esc(absUrl(src)) + '\')"></i>';
+    }).join('');
+    fb.shots = $$('.room__shot', fb.band); fb.cur = 0;
+    if (fb.shots.length > 1 && !reduced) setInterval(function () {
+      if (!vis.feedback || document.hidden) return;
+      var prev = fb.shots[fb.cur]; fb.cur = (fb.cur + 1) % fb.shots.length;
+      var next = fb.shots[fb.cur];
+      fb.band.classList.add('is-cut');
+      setTimeout(function () {
+        prev.classList.remove('is-on');
+        next.classList.remove('is-on'); void next.offsetWidth; next.classList.add('is-on');
+        fb.band.classList.remove('is-cut');
+      }, 140);
+    }, 9000);
     var m = String(F.caption || '').match(/^(.*?)\*(.+?)\*\s*(.*)$/);
     $('.room__line').innerHTML = m
       ? (m[1].trim() ? '<span>' + esc(m[1].trim()) + '</span>' : '') + '<strong>' + esc(m[2]) + '</strong>'

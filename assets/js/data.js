@@ -158,14 +158,14 @@ window.OSCILLATOR = {
      ------------------------------------------------------------------------ */
   feedback: {
     panorama: 'assets/img/crowd-panorama.jpg',
+    // the REC band cycles through these (after the panorama)
+    reel: ['assets/img/crowd-red.jpg', 'assets/img/crowd-courtyard.jpg'],
     caption: 'the room is *the instrument*',
     // extra photos / videos from the nights (shown as a grid under the room)
     media: [
       { type: 'image', src: 'assets/img/keyv-night-2.jpg', caption: 'Keyv live' },
       { type: 'image', src: 'assets/img/keyv-night-1.jpg', caption: 'Keyv, the booth' },
-      { type: 'image', src: 'assets/img/keyv-night-3.jpg', caption: 'Keyv, hands on' },
-      { type: 'image', src: 'assets/img/crowd-red.jpg', caption: 'From the booth', wide: true },
-      { type: 'image', src: 'assets/img/crowd-courtyard.jpg', caption: 'The courtyard', wide: true }
+      { type: 'image', src: 'assets/img/keyv-night-3.jpg', caption: 'Keyv, hands on' }
     ],
     // Keyv's mark, faint behind the whole section
     backdrop: 'assets/img/keyv-emblem.png'
