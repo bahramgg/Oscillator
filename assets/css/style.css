@@ -1730,3 +1730,17 @@ body { font-size: 16px; }
   .feedback .frame:first-child { grid-column: 1 / -1; }
   .feedback__mark { width: 170%; top: 62%; }
 }
+
+/* feedback grid: three portraits, then wide crowd shots */
+.feedback .sheet { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.feedback .frame { grid-column: span 2; }
+.feedback .frame--wide { grid-column: span 3; }
+.feedback .frame--wide .frame__media { aspect-ratio: 16 / 9; }
+@media (max-width: 860px) {
+  .feedback .sheet { grid-template-columns: 1fr 1fr; }
+  .feedback .frame { grid-column: auto; }
+  .feedback .frame:first-child, .feedback .frame--wide { grid-column: 1 / -1; }
+}
+.feedback .sheet .frame:first-child .frame__media { aspect-ratio: 4 / 5; }
+.feedback .sheet .frame.frame--wide .frame__media { aspect-ratio: 16 / 9; height: auto; }
+@media (max-width: 860px) { .feedback .sheet .frame:first-child .frame__media { aspect-ratio: 1 / 1; } }

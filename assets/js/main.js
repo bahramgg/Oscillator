@@ -1280,7 +1280,7 @@
       var inner = m.type === 'video'
         ? '<video src="' + esc(m.src) + '"' + (m.poster ? ' poster="' + esc(m.poster) + '"' : '') + ' muted loop playsinline preload="metadata"></video>'
         : '<img src="' + esc(m.src) + '" alt="' + esc(m.caption || '') + '" loading="lazy">';
-      return '<figure class="frame"><div class="frame__media"' + (m.type !== 'video' ? ' style="--img:url(\'' + esc(absUrl(m.src)) + '\')"' : '') + '>' + inner + '<i class="brk" aria-hidden="true"></i></div>' + cap + '</figure>';
+      return '<figure class="frame' + (m.wide ? ' frame--wide' : '') + '"><div class="frame__media"' + (m.type !== 'video' ? ' style="--img:url(\'' + esc(absUrl(m.src)) + '\')"' : '') + '>' + inner + '<i class="brk" aria-hidden="true"></i></div>' + cap + '</figure>';
     }).join('');
     $$('.sheet .frame__media').forEach(function (f) { f.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') glitch(f); }); });
     if (io) {

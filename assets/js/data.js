@@ -163,7 +163,9 @@ window.OSCILLATOR = {
     media: [
       { type: 'image', src: 'assets/img/keyv-night-2.jpg', caption: 'Keyv live' },
       { type: 'image', src: 'assets/img/keyv-night-1.jpg', caption: 'Keyv, the booth' },
-      { type: 'image', src: 'assets/img/keyv-night-3.jpg', caption: 'Keyv, hands on' }
+      { type: 'image', src: 'assets/img/keyv-night-3.jpg', caption: 'Keyv, hands on' },
+      { type: 'image', src: 'assets/img/crowd-red.jpg', caption: 'From the booth', wide: true },
+      { type: 'image', src: 'assets/img/crowd-courtyard.jpg', caption: 'The courtyard', wide: true }
     ],
     // Keyv's mark, faint behind the whole section
     backdrop: 'assets/img/keyv-emblem.png'
