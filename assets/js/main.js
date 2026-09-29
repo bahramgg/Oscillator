@@ -449,30 +449,7 @@
     }).join('');
     watch(carrier.box, 'carrier');
   }
-  /* ─── punk layer: photocopied titles, stamped facts, a sliced logo ──── */
-  // every section title is a cut-and-paste job: each letter set slightly off its neighbours,
-  // with an off-register yellow copy behind that jams now and then
-  function initCutTitles() {
-    $$('.sec__title').forEach(function (h, hi) {
-      var txt = h.textContent.trim();
-      h.setAttribute('aria-label', txt);
-      h.setAttribute('data-text', txt);
-      h.innerHTML = txt.split('').map(function (ch, i) {
-        if (ch === ' ') return ' ';
-        var r = hsh(i + 1, hi + 3), r2 = hsh(i + 7, hi + 11);
-        var rot = ((r - 0.5) * 5).toFixed(2), dy = ((r2 - 0.5) * 0.08).toFixed(3);
-        return '<span class="cutl" aria-hidden="true" style="--rot:' + rot + 'deg;--dy:' + dy + 'em">' + esc(ch) + '</span>';
-      }).join('');
-      h.style.setProperty('--jam', (5 + hsh(hi, 2) * 6).toFixed(2) + 's');
-      h.style.setProperty('--jam-d', (-hsh(hi, 5) * 6).toFixed(2) + 's');
-    });
-    // the facts become rubber stamps, each pressed at its own angle
-    $$('.facts > div').forEach(function (d, i) {
-      d.style.setProperty('--rot', ((hsh(i, 21) - 0.5) * 7).toFixed(2) + 'deg');
-      d.style.setProperty('--ink-x', Math.round(hsh(i, 22) * 100) + '%');
-    });
-  }
-
+  /* ─── footer: the logo cut into strips ─────────────────────────────── */
   // the footer logo, cut into strips that slip out of register and snap back
   function initCutLogo() {
     var el = $('.output__logo.cut'); if (!el) return;
@@ -1377,21 +1354,17 @@
     $('.room__line').innerHTML = m
       ? (m[1].trim() ? '<span>' + esc(m[1].trim()) + '</span>' : '') + '<strong>' + esc(m[2]) + '</strong>'
       : '<strong>' + esc(F.caption || '') + '</strong>';
-    // Keyv's emblem: a signature beside the line; pulses travel out through its contour bands
+    // Keyv's emblem as a window: the room moves inside his mark, the caption laid across its foot
     var emb = F.emblem || F.backdrop;
     if (emb) {
-      var sig = document.createElement('div'); sig.className = 'sig';
-      sig.innerHTML = '<a class="sig__mark"' + (F.emblemLink ? ' href="' + esc(F.emblemLink) + '" target="_blank" rel="noopener"' : '') + ' aria-label="Keyv"><i class="sig__ink"></i></a>' +
-        '<span class="sig__tag mono">' + esc(F.emblemTag || 'Keyv / curator') + '</span>';
-      var line = $('.room__line'); line.parentNode.insertBefore(sig, line);
-      var wrap = document.createElement('div'); wrap.className = 'sig-row';
-      line.parentNode.insertBefore(wrap, sig); wrap.appendChild(sig); wrap.appendChild(line);
-      fb.ink = $('.sig__ink', sig); fb.ink.style.setProperty('--mark', 'url("' + absUrl(emb) + '")');
-      fb.rings = []; fb.nextRing = 0; fb.lastBeat = 0;
-      sig.addEventListener('pointerdown', function (e) {
-        var r = fb.ink.getBoundingClientRect();
-        fb.rings.push({ t: S.t, x: (e.clientX - r.left) / r.width * 100, y: (e.clientY - r.top) / r.height * 100, hot: 1 });
-      });
+      var win = document.createElement('div'); win.className = 'kw';
+      win.innerHTML = '<a class="kw__mark"' + (F.emblemLink ? ' href="' + esc(F.emblemLink) + '" target="_blank" rel="noopener"' : '') + ' aria-label="Keyv">' +
+        '<i class="kw__crowd"></i></a>';
+      var line = $('.room__line'); line.parentNode.insertBefore(win, line); win.appendChild(line);
+      fb.ink = $('.kw__crowd', win);
+      fb.ink.style.setProperty('--mark', 'url("' + absUrl(emb) + '")');
+      fb.ink.style.setProperty('--crowd', 'url("' + absUrl(F.emblemFill || F.panorama) + '")');
+      fb.kb = 0;
     }
     var media = F.media || [], sheet = $('.sheet');
     sheet.hidden = !media.length;
@@ -1415,21 +1388,10 @@
   function drawFeedback() {
     var f = Math.floor(S.t * 25), txt = '00:' + pad(Math.floor(f / 1500) % 60) + ':' + pad(Math.floor(f / 25) % 60) + ':' + pad(f % 25);
     if (txt !== fb.last) { fb.tc.textContent = txt; fb.last = txt; }
-    if (!fb.ink || reduced) return;
-    // a ring on every kick while the signal is on, a slow breath otherwise
-    var E = window.OscEngine;
-    if (E && E.on) { if (S.beatCount !== fb.lastBeat) { fb.lastBeat = S.beatCount; fb.rings.push({ t: S.t, x: 50, y: 47 }); } }
-    else if (S.t > fb.nextRing) { fb.nextRing = S.t + 1.7; fb.rings.push({ t: S.t, x: 50, y: 47 }); }
-    var bg = [], keep = [];
-    for (var i = 0; i < fb.rings.length; i++) {
-      var g = fb.rings[i], age = S.t - g.t, life = 2.6;
-      if (age > life) continue; keep.push(g);
-      var r = age / life * 78, a = (1 - age / life) * (g.hot ? 1 : .85);
-      bg.push('radial-gradient(circle at ' + g.x.toFixed(1) + '% ' + g.y.toFixed(1) + '%, transparent ' + Math.max(0, r - 9).toFixed(1) + '%, rgba(233,231,223,' + a.toFixed(3) + ') ' + r.toFixed(1) + '%, transparent ' + (r + 1.5).toFixed(1) + '%)');
-    }
-    fb.rings = keep;
-    bg.push('linear-gradient(rgba(233,231,223,.16), rgba(233,231,223,.16))');
-    fb.ink.style.backgroundImage = bg.join(',');
+    if (!fb.ink) return;
+    // the window breathes with the kick while the signal is on
+    var kb = S.beat.toFixed(2);
+    if (kb !== fb.kb) { fb.kb = kb; fb.ink.style.setProperty('--kb', kb); }
   }
 
   /* ─── 05 next signal ───────────────────────────────────────────────── */
@@ -1439,8 +1401,7 @@
     if (!E_.length) {
       box.innerHTML = '<div class="nosignal">' +
         '<canvas class="nosignal__line" aria-hidden="true"></canvas>' +
-        '<p class="nosignal__big" data-text="No signal">No signal</p>' +
-        '<span class="nosignal__stamp" aria-hidden="true"><small>next date</small>TBA</span>' +
+        '<p class="nosignal__big">No signal</p>' +
         '<div class="nosignal__row"><p>Nothing scheduled yet. New dates are announced first on Instagram.</p>' +
         '<a class="cta" href="' + esc(D.label.instagram) + '" target="_blank" rel="noopener">Follow ' + esc(D.label.handle) + ' ↗︎</a></div></div>';
       ns.cvs = $('.nosignal__line', box);
@@ -1692,7 +1653,6 @@
   initGlyphs();
   initHero();
   initCarrier();
-  initCutTitles();
   initCutLogo();
   initRoster();
   initTransmissions();
