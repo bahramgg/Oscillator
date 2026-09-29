@@ -450,6 +450,26 @@
     }).join('');
     watch(carrier.box, 'carrier');
   }
+  /* ─── tape: yellow strips cut in the logo's geometry (45° corners, a notch like its stroke ends),
+     stuck on slightly crooked when they come into view ─────────────────── */
+  function initTape() {
+    var els = $$('.carrier__text em, .hero__tag em, .feedback__cap em, .pf__bio em, .output__grid p em, .sec__sub, .theremin .tape');
+    els.forEach(function (el, i) {
+      el.classList.add('tape');
+      var r = hsh(i, 41), sgn = i % 2 ? 1 : -1;
+      el.style.setProperty('--tilt', (sgn * (0.8 + r * 1.3)).toFixed(2) + 'deg');
+    });
+    if (reduced || !('IntersectionObserver' in window)) { els.forEach(function (el) { el.classList.add('is-on'); }); return; }
+    var tio = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var el = e.target; tio.unobserve(el);
+        setTimeout(function () { el.classList.add('is-on'); }, 180 + Math.random() * 260);
+      });
+    }, { threshold: 0.6 });
+    els.forEach(function (el) { tio.observe(el); });
+  }
+
   /* ─── footer: the logo cut into strips ─────────────────────────────── */
   // the footer logo, cut into strips that slip out of register and snap back
   function initCutLogo() {
@@ -1472,8 +1492,8 @@
     th.el.innerHTML = lines.map(function (words) {
       return '<span class="ln">' + words.map(function (wd) {
         var accent = /^\*.*\*$/.test(wd), word = wd.replace(/\*/g, '');
-        return '<span class="wd">' + word.split('').map(function (ch_) {
-          return '<span class="l"' + (accent ? ' style="color:var(--acid)"' : '') + ' aria-hidden="true">' + esc(ch_) + '</span>';
+        return '<span class="wd' + (accent ? ' tape' : '') + '">' + word.split('').map(function (ch_) {
+          return '<span class="l" aria-hidden="true">' + esc(ch_) + '</span>';
         }).join('') + '</span>';
       }).join(' ') + '</span>';
     }).join('');
@@ -1684,6 +1704,7 @@
   initEvents();
   initOutput();
   initClock();
+  initTape();
   initNav();
   initProfile();
   initSignal();

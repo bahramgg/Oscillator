@@ -1810,3 +1810,27 @@ body { font-size: 16px; }
 /* 04 Feedback back to the pinned panorama: the section must not clip (sticky pin), photo grid keeps its gutters */
 .feedback { overflow: visible; }
 .feedback .sheet { padding: clamp(56px, 7vw, 110px) var(--gutter) 0; }
+
+/* ==========================================================================
+   Tape — yellow strips cut in the logo's geometry: a 45° chamfer on two corners
+   (like the ends of its bars) and a stepped notch (like its stroke terminals).
+   Stuck on a little crooked; they slide on when they come into view.
+   ========================================================================== */
+.tape {
+  display: inline-block; position: relative;
+  padding: .06em .34em .02em; margin: 0 .06em;
+  font-style: normal; color: var(--acid);
+  background: linear-gradient(var(--acid), var(--acid)) 0 0 / 0% 100% no-repeat;
+  transform: rotate(var(--tilt, -1.2deg));
+  clip-path: polygon(.34em 0, 100% 0, 100% calc(100% - .34em), calc(100% - .34em) 100%,
+    1.02em 100%, .84em calc(100% - .17em), .56em calc(100% - .17em), .38em 100%, 0 100%, 0 .34em);
+  transition: background-size .55s cubic-bezier(.7, 0, .2, 1), color .15s .3s;
+}
+.tape.is-on { background-size: 100% 100%; color: #0a0a0a; }
+.tape .l { color: inherit; }
+.sec__sub.tape { font-family: var(--f-text); font-style: normal; font-size: clamp(13px, 1.1vw, 17px); letter-spacing: .06em; padding: .22em .6em .16em; align-self: end; margin-bottom: .5em; }
+.theremin .wd.tape { padding: 0 .12em; }
+.hero__tag em.tape { text-shadow: none; }
+.hero.is-strobe .hero__tag em.tape { color: var(--acid); background-color: #000; }
+@media (max-width: 860px) { .sec__sub.tape { justify-self: start; margin-bottom: 0; } }
+@media (prefers-reduced-motion: reduce) { .tape { transition: none; } }
