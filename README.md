@@ -12,7 +12,7 @@ The site is built as an instrument. Every section is a waveform:
 | 03 | Transmissions | saw | Mixes & releases, then **The Oscillator Series**: the label's numbered mixes (#001–#031 from soundcloud.com/oscillatorr, `series` in data.js) as a compact archive; each roster artist's mix also appears on their profile. Play opens the stage: a full-screen now-playing page (blurred cover, spinning disc inside the waveform ring, time readout, ±30 s, tracklist). Minimise to the bottom bar. Audio via hidden SoundCloud widgets |
 | 04 | Feedback | noise | The room: the crowd panorama pinned to the screen, panning sideways as you scroll (strips shear with scroll speed), with a running REC timecode; 'the room is THE INSTRUMENT'. Then Keyv's logo on its own in bone white: whole while it sits in view, scroll on and it breaks into particles that fall away downward, scroll back and they fly home; photos in `feedback.media` appear as a grid underneath |
 | 05 | Next signal | triangle | Events (shows a "no signal" state when nothing is upcoming); past dates with a `poster` form the "Past signals" archive |
-| 06 | Output | pulse | Contact / demos, centred footer with the logo |
+| 06 | Output | pulse | Contact: 'Send a signal' opens a full-screen form (Demo / Booking / Collaboration / Other, fields follow the choice; an artist's profile opens it as a booking for that artist). Submissions go through FormSubmit (`label.form` in data.js) to the label's inbox |
 
 Press **Turn on the signal** and the site generates a techno loop live in the browser
 with the Web Audio API (kick, hats, clap, acid bassline — no samples). The scope then

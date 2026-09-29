@@ -252,6 +252,64 @@
 
   <!-- now-playing deck -->
   <!-- now playing: full-screen stage -->
+  <!-- ░░ Contact form: demos, bookings, collaborations ░░ -->
+  <div class="cf" id="contact" role="dialog" aria-modal="true" aria-labelledby="cf-title" tabindex="-1" hidden>
+    <div class="cf__top mono">
+      <button class="cf__close" type="button"><span aria-hidden="true">✕</span> Close</button>
+      <span class="cf__label"><i aria-hidden="true"></i>Channel open</span>
+    </div>
+    <div class="cf__wrap">
+      <form class="cf__form" novalidate>
+        <header class="cf__head">
+          <p class="mono">06 / Output</p>
+          <h2 class="cf__title" id="cf-title">Send us your <em>signal</em></h2>
+          <p class="cf__intro">Demos, bookings, collaborations. Every signal gets heard.</p>
+        </header>
+
+        <fieldset class="cf__types">
+          <legend class="mono">What is it about?</legend>
+          <label><input type="radio" name="type" value="Demo" checked><span>Demo</span></label>
+          <label><input type="radio" name="type" value="Booking"><span>Booking</span></label>
+          <label><input type="radio" name="type" value="Collaboration"><span>Collaboration</span></label>
+          <label><input type="radio" name="type" value="Other"><span>Other</span></label>
+        </fieldset>
+
+        <div class="cf__grid">
+          <label class="cf__f"><span class="mono">Name / artist name *</span><input name="name" autocomplete="name" required></label>
+          <label class="cf__f"><span class="mono">Email *</span><input name="email" type="email" autocomplete="email" inputmode="email" required></label>
+          <label class="cf__f"><span class="mono">Instagram</span><input name="instagram" placeholder="@" autocomplete="off"></label>
+          <label class="cf__f"><span class="mono">City / country</span><input name="city" autocomplete="address-level2"></label>
+
+          <label class="cf__f cf__f--wide" data-for="Demo"><span class="mono">Link to your music *</span><input name="link" type="url" inputmode="url" placeholder="SoundCloud, Drive, Dropbox (private links are fine)" data-req></label>
+          <label class="cf__f" data-for="Demo"><span class="mono">Style / BPM</span><input name="style" placeholder="e.g. hypnotic, 138"></label>
+          <label class="cf__f" data-for="Demo"><span class="mono">Released before?</span><input name="released" placeholder="Labels, if any"></label>
+
+          <label class="cf__f" data-for="Booking"><span class="mono">Artist *</span><select name="artist" data-req><option value="">Choose</option></select></label>
+          <label class="cf__f" data-for="Booking"><span class="mono">Event date *</span><input name="date" type="date" data-req></label>
+          <label class="cf__f" data-for="Booking"><span class="mono">Venue &amp; city *</span><input name="venue" data-req></label>
+          <label class="cf__f" data-for="Booking"><span class="mono">Capacity</span><input name="capacity" inputmode="numeric" placeholder="approx."></label>
+
+          <label class="cf__f cf__f--wide" data-for="Collaboration"><span class="mono">Project / organisation *</span><input name="project" data-req></label>
+
+          <label class="cf__f cf__f--wide"><span class="mono">Message *</span><textarea name="message" rows="5" required></textarea></label>
+          <input class="cf__hp" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
+        </div>
+
+        <div class="cf__foot">
+          <p class="cf__status mono" aria-live="polite"></p>
+          <button class="cf__send" type="submit">Transmit <span aria-hidden="true">↗</span></button>
+        </div>
+      </form>
+
+      <div class="cf__done" hidden>
+        <p class="mono">Transmission complete</p>
+        <p class="cf__doneTitle">Signal <em>received</em></p>
+        <p class="cf__doneText">Thanks. We listen to everything and reply by email.</p>
+        <button class="cf__again mono" type="button">Close ✕</button>
+      </div>
+    </div>
+  </div>
+
   <div class="stage" id="stage" role="dialog" aria-modal="true" aria-labelledby="stage-title" tabindex="-1" hidden>
     <div class="stage__bg" aria-hidden="true"></div>
     <div class="stage__top mono">

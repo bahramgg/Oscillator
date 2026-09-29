@@ -18,6 +18,8 @@ window.OSCILLATOR = {
     instagram: 'https://www.instagram.com/oscillator__/',
     soundcloud: 'https://on.soundcloud.com/1oNQcz1onDKpvNzims',
     email: '',                 // e.g. 'demos@oscillator.xyz' — hidden when empty
+    // the contact form posts here (FormSubmit relays each message to this inbox by email)
+    form: 'https://formsubmit.co/ajax/monadicart@gmail.com',
     curator: 'Keyv',
     origin: 'Tehran',
     tagline: 'a techno label & artist collective, curated by *Keyv*',
@@ -35,7 +37,7 @@ window.OSCILLATOR = {
       ['Transmits on', 'Instagram · SoundCloud']
     ],
 
-    demos: 'Send a private link via Instagram DM. Every signal gets heard.'
+    demos: 'Demos, bookings, collaborations: send it through the form. Every signal gets heard.'
   },
 
   /* ------------------------------------------------------------------------

@@ -489,6 +489,124 @@
     els.forEach(function (el) { tio.observe(el); });
   }
 
+  /* ─── contact form: demos, bookings, collaborations ─────────────────────
+     Opens over everything; fields follow the chosen subject; posts to the
+     label's form relay (D.label.form) and shows "signal received". */
+  var cf = { el: $('#contact'), form: $('.cf__form'), done: $('.cf__done'), status: $('.cf__status'), open: false, last: null };
+  function initContact() {
+    if (!cf.el) return;
+    var sel = $('select[name=artist]', cf.el);
+    sel.innerHTML = '<option value="">Choose</option>' + D.artists.map(function (a) {
+      return '<option value="' + esc(a.name) + '">' + esc(a.name) + '</option>';
+    }).join('') + '<option value="Oscillator showcase">Oscillator showcase (several artists)</option>';
+    var setType = function (t) {
+      $$('[data-for]', cf.el).forEach(function (f) {
+        var on = f.dataset.for === t;
+        f.hidden = !on;
+        $$('[data-req]', f).forEach(function (i) { i.required = on; });
+      });
+    };
+    cf.setType = setType;
+    $$('input[name=type]', cf.el).forEach(function (r) { r.addEventListener('change', function () { setType(r.value); clearErr(); }); });
+    setType('Demo');
+
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-contact]');
+      if (!b) return;
+      e.preventDefault();
+      openContact(b.dataset.contact, b.dataset.artist, b);
+    });
+    $('.cf__close', cf.el).addEventListener('click', closeContact);
+    $('.cf__again', cf.el).addEventListener('click', closeContact);
+    cf.el.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeContact(); }
+      if (e.key === 'Tab') {                          // keep focus inside the form
+        var f = $$('button, input:not([type=hidden]):not(.cf__hp), select, textarea', cf.el).filter(function (x) { return x.offsetParent && !x.disabled; });
+        if (!f.length) return;
+        if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+        else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+        e.stopPropagation();                          // the profile / stage traps underneath must not act
+      }
+    });
+    cf.form.addEventListener('input', function (e) { var l = e.target.closest('.cf__f'); if (l) l.classList.remove('is-bad'); });
+    cf.form.addEventListener('submit', sendContact);
+  }
+  function clearErr() { $$('.cf__f.is-bad', cf.el).forEach(function (l) { l.classList.remove('is-bad'); }); cf.status.textContent = ''; cf.status.className = 'cf__status mono'; }
+  function openContact(type, artist, from) {
+    cf.last = from || document.activeElement;
+    cf.form.hidden = false; cf.done.hidden = true; clearErr();
+    var r = $('input[name=type][value="' + (type || 'Demo') + '"]', cf.el) || $('input[name=type]', cf.el);
+    r.checked = true; cf.setType(r.value);
+    if (artist) { var a = D.artists[artistIndex(artist)]; if (a) $('select[name=artist]', cf.el).value = a.name; }
+    cf.el.hidden = false;
+    document.documentElement.classList.add('is-locked');
+    void cf.el.offsetWidth;
+    cf.el.classList.add('is-open'); cf.open = true;
+    cf.el.scrollTop = 0;
+    setTimeout(function () { var n = $('input[name=name]', cf.el); if (n && !('ontouchstart' in window)) n.focus({ preventScroll: true }); else cf.el.focus({ preventScroll: true }); }, 60);
+  }
+  function closeContact() {
+    if (!cf.open) return;
+    cf.open = false;
+    cf.el.classList.remove('is-open');
+    setTimeout(function () {
+      if (cf.open) return;
+      cf.el.hidden = true;
+      if (!pf.open && !stage.isOpen) document.documentElement.classList.remove('is-locked');
+      if (cf.last && cf.last.focus && document.contains(cf.last)) cf.last.focus({ preventScroll: true });
+    }, reduced ? 0 : 400);
+  }
+  function sendContact(e) {
+    e.preventDefault();
+    clearErr();
+    var bad = [];
+    $$('input, select, textarea', cf.form).forEach(function (i) {
+      if (i.closest('[hidden]') || i.classList.contains('cf__hp') || i.type === 'radio') return;
+      var v = (i.value || '').trim(), ok = true;
+      if (i.required && !v) ok = false;
+      if (ok && v && i.type === 'email') ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+      if (ok && v && i.type === 'url') ok = /^(https?:\/\/)?[^\s.]+\.[^\s]{2,}/i.test(v);
+      if (!ok) { bad.push(i); i.closest('.cf__f').classList.add('is-bad'); }
+    });
+    if (bad.length) {
+      cf.status.textContent = bad.length === 1 ? 'One field needs a look.' : bad.length + ' fields need a look.';
+      cf.status.classList.add('is-err');
+      bad[0].focus();
+      return;
+    }
+    if ($('.cf__hp', cf.form).value) return;           // a bot filled the hidden field
+    var fd = {}, type = $('input[name=type]:checked', cf.form).value;
+    $$('input, select, textarea', cf.form).forEach(function (i) {
+      if (i.closest('[hidden]') || i.classList.contains('cf__hp') || i.type === 'radio') return;
+      var v = (i.value || '').trim(); if (v) fd[i.name] = v;
+    });
+    var payload = {
+      _subject: 'Oscillator · ' + type + ' · ' + fd.name + (fd.artist ? ' → ' + fd.artist : ''),
+      _template: 'table', _captcha: 'false', _replyto: fd.email,
+      Subject: type
+    };
+    Object.keys(fd).forEach(function (k) { payload[k.charAt(0).toUpperCase() + k.slice(1)] = fd[k]; });
+    var btn = $('.cf__send', cf.form);
+    btn.disabled = true; cf.form.classList.add('is-sending');
+    cf.status.textContent = 'Transmitting…';
+    fetch(D.label.form, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok || String(res.j.success) === 'false') throw new Error(res.j.message || 'failed');
+        cf.form.reset(); cf.setType('Demo');
+        cf.form.hidden = true; cf.done.hidden = false;
+        $('.cf__again', cf.el).focus({ preventScroll: true });
+      })
+      .catch(function () {
+        cf.status.innerHTML = 'The signal didn\'t go through. Try again, or <a href="' + esc(D.label.instagram) + '" target="_blank" rel="noopener">DM ' + esc(D.label.handle) + ' ↗︎</a>';
+        cf.status.classList.add('is-err');
+      })
+      .then(function () { btn.disabled = false; cf.form.classList.remove('is-sending'); });
+  }
+
   /* ─── footer: the logo cut into strips ─────────────────────────────── */
   // the footer logo, cut into strips that slip out of register and snap back
   function initCutLogo() {
@@ -766,7 +884,7 @@
           }).join('') + '</section>' : '') +
         (videos ? '<section class="pf__block"><h3 class="mono"><span>Video</span><span>' + pad((a.videos || []).length) + '</span></h3><div class="pf__videos">' + videos + '</div></section>' : '') +
         (gallery ? '<section class="pf__block"><h3 class="mono"><span>Frames</span><span>' + pad(a.photos.length) + '</span></h3><div class="pf__gallery">' + gallery + '</div></section>' : '') +
-        '<a class="cta pf__book" href="' + esc(bookingHref()) + '" target="_blank" rel="noopener">Booking &amp; inquiries · ' + esc(D.label.email || D.label.handle) + ' ↗︎</a>' +
+        '<button class="cta pf__book" type="button" data-contact="Booking" data-artist="' + esc(a.slug) + '">Booking &amp; inquiries ↗︎</button>' +
       '</div>' +
     '</div>' +
     '<a class="pf__next" href="#/artist/' + esc(next.slug) + '" data-swap="' + esc(next.slug) + '" data-cursor="Next channel">' +
@@ -1155,11 +1273,28 @@
     return a / TAU;
   }
 
+  // the stage's blurred backdrop, baked once per cover into a tiny image: scaling it up
+  // gives the blur for free, so opening the stage doesn't re-blur a full-screen layer
+  var bgCache = {};
+  function stageBg(src) {
+    if (bgCache[src]) { stage.bg.style.backgroundImage = 'url("' + bgCache[src] + '")'; return; }
+    var img = new Image();
+    img.onload = function () {
+      try {
+        var c = document.createElement('canvas'); c.width = c.height = 20;
+        var g = c.getContext('2d'); g.drawImage(img, 0, 0, 20, 20);
+        g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(0, 0, 20, 20);
+        bgCache[src] = c.toDataURL('image/png');
+      } catch (e) { bgCache[src] = absUrl(src); }
+      if (stage.cur && stage.cur.t.cover === src) stage.bg.style.backgroundImage = 'url("' + bgCache[src] + '")';
+    };
+    img.src = absUrl(src);
+  }
   stage.fill = function (o) {
     var t = o.t, tl = t.tracklist || [];
     stage.cur = o;
     stage.el.classList.toggle('is-playing', !!o.playing);
-    stage.bg.style.backgroundImage = 'url("' + absUrl(t.cover) + '")';
+    stageBg(t.cover);
     if (stage.disc.getAttribute('src') !== t.cover) stage.disc.setAttribute('src', t.cover);
     stage.meta.innerHTML = metaline(t, o.i);
     stage.title.textContent = t.title;
@@ -1328,15 +1463,23 @@
       if (stage.cur === o) stage.update();
       deck.update(o);
     },
+    // ask the widget to play and remember that we did: on phones SoundCloud often
+    // pauses its own first attempt while the audio is still loading
+    play: function (o) {
+      o.intent = 'play'; o.playAt = Date.now(); o.retries = 0;
+      o.widget.play();
+    },
     toggle: function (o, frac) {
       if (!o.t.soundcloud) return;
       Player.want = o;
       if (E && E.on) setSignal(false);
       this.pauseAll(o);
       if (frac != null) { o.progress = frac; o.sec = frac * o.t.duration; updateTx(o); }
+      if (o.retrying) return;                // still tuning in: an extra tap must not switch it off
       if (o.widget && o.ready) {
-        if (frac != null) { o.widget.seekTo(frac * o.t.duration * 1000); o.widget.play(); }
-        else o.widget.toggle();
+        if (frac != null) { o.widget.seekTo(frac * o.t.duration * 1000); Player.play(o); }
+        else if (o.playing) { o.intent = 'pause'; o.widget.pause(); }
+        else Player.play(o);
         return;
       }
       if (o.loading) { if (frac != null) o.pendingSeek = frac; return; }
@@ -1370,7 +1513,7 @@
             if (stage.cur === o) stage.update();
             return;
           }
-          w.play();
+          self.play(o);
           // some mobile browsers block playback started from outside the widget:
           // only then (playback never started) show SoundCloud's own player to tap
           setTimeout(function () {
@@ -1399,13 +1542,38 @@
         });
         var stop = function () {
           if (o.gen !== gen) return;
+          o.retrying = false;
           Player.setPlaying(o, false);
           setState(o, o.progress > 0.999 ? 'Ended' : 'Paused');
         };
-        w.bind(EV.PAUSE, stop);
+        w.bind(EV.PAUSE, function () {
+          if (o.gen !== gen) return;
+          // a pause nobody asked for, right after we pressed play: SoundCloud gave up
+          // while loading. Try again quietly instead of showing "paused".
+          if (o.intent === 'play' && Player.want === o && Date.now() - o.playAt < 8000) {
+            if (o.retries < 4) {
+              o.retries++; o.retrying = true;
+              o.el.classList.add('is-loading');
+              setState(o, 'Tuning in');
+              if (stage.cur === o) stage.update();
+              setTimeout(function () { if (o.gen === gen && o.intent === 'play' && Player.want === o) w.play(); }, 350 * o.retries);
+              return;
+            }
+            // still refused: let the visitor press play inside SoundCloud's own player
+            o.retrying = false; o.blocked = true; o.started = false;
+            o.el.classList.remove('is-loading');
+            Player.setPlaying(o, false);
+            setState(o, 'Tap play in the player below');
+            if (stage.isOpen && stage.cur === o) scReveal(o, true);
+            return;
+          }
+          stop();
+        });
         w.bind(EV.FINISH, stop);
         w.bind(EV.PLAY_PROGRESS, function (e) {
           if (o.gen !== gen) return;
+          if (o.retrying) { o.retrying = false; o.el.classList.remove('is-loading'); setState(o, 'On air'); }
+          if (!o.playing && o.intent === 'play') Player.setPlaying(o, true);
           o.progress = e.relativePosition; o.sec = e.currentPosition / 1000;
           updateTx(o); deck.update(o);
         });
@@ -1650,7 +1818,7 @@
     if (keyv && keyv.links && keyv.links.soundcloud) follow.push('<li><a href="' + esc(keyv.links.soundcloud) + '" target="_blank" rel="noopener">' + esc(keyv.name) + ' on SoundCloud ↗︎</a></li>');
     $('.output__grid').innerHTML =
       '<div><h3 class="mono">Demos &amp; bookings</h3><p>' + rich(L.demos) + '</p>' +
-        '<a class="cta" href="' + esc(bookingHref()) + '" target="_blank" rel="noopener">' + (L.email ? 'Email ' + esc(L.email) : 'DM ' + esc(L.handle)) + ' ↗︎</a></div>' +
+        '<button class="cta" type="button" data-contact="Demo">Send a signal ↗︎</button></div>' +
       '<div><h3 class="mono">Follow the signal</h3><ul>' + follow.join('') + '</ul></div>';
     $('.year').textContent = new Date().getFullYear();
     watch(th.el, 'output');
@@ -1851,6 +2019,7 @@
   initEvents();
   initOutput();
   initClock();
+  initContact();
   initTape();
   initNav();
   initProfile();
