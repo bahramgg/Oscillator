@@ -453,11 +453,30 @@
   /* ─── tape: yellow strips cut in the logo's geometry (45° corners, a notch like its stroke ends),
      stuck on slightly crooked when they come into view ─────────────────── */
   function initTape() {
-    var els = $$('.carrier__text em, .hero__tag em, .feedback__cap em, .pf__bio em, .output__grid p em, .sec__sub, .theremin .tape');
+    var els = $$('.carrier__text em, .feedback__cap em, .pf__bio em, .theremin .tape');
     els.forEach(function (el, i) {
       el.classList.add('tape');
-      var r = hsh(i, 41), sgn = i % 2 ? 1 : -1;
-      el.style.setProperty('--tilt', (sgn * (0.8 + r * 1.3)).toFixed(2) + 'deg');
+      var h = function (k) { return hsh(i + 1, 41 + k); }, sgn = i % 2 ? 1 : -1;
+      el.style.setProperty('--tilt', (sgn * (1.2 + h(0) * 2)).toFixed(2) + 'deg');
+      el.style.setProperty('--nudge', ((h(9) - 0.5) * 0.12).toFixed(3) + 'em');
+      // each strip cut by hand: ends sliced at an angle, 45° corners of uneven size,
+      // a stepped notch somewhere along the bottom, edges not quite parallel
+      var a = (0.18 + h(1) * 0.3).toFixed(2), b = (0.18 + h(2) * 0.3).toFixed(2);
+      var cl = (h(3) * 0.35).toFixed(2), cr = (h(4) * 0.35).toFixed(2);           // slanted end cuts
+      var tl = (h(5) * 0.1).toFixed(3), br = (h(6) * 0.1).toFixed(3);             // edge drift
+      var nx = (12 + h(7) * 60).toFixed(1), nw = (0.25 + h(8) * 0.3).toFixed(2);  // notch
+      el.style.clipPath = 'polygon(' + [
+        'calc(' + a + 'em + ' + cl + 'em) ' + tl + 'em',
+        '100% 0',
+        '100% calc(100% - ' + b + 'em)',
+        'calc(100% - ' + b + 'em - ' + cr + 'em) calc(100% - ' + br + 'em)',
+        'calc(' + nx + '% + ' + nw + 'em) calc(100% - ' + br + 'em)',
+        'calc(' + nx + '% + ' + nw + 'em - .16em) calc(100% - .18em)',
+        'calc(' + nx + '% + .16em) calc(100% - .18em)',
+        nx + '% 100%',
+        '0 100%',
+        cl + 'em ' + a + 'em'
+      ].join(',') + ')';
     });
     if (reduced || !('IntersectionObserver' in window)) { els.forEach(function (el) { el.classList.add('is-on'); }); return; }
     var tio = new IntersectionObserver(function (es) {

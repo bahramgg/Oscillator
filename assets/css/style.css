@@ -1818,15 +1818,18 @@ body { font-size: 16px; }
    ========================================================================== */
 .tape {
   display: inline-block; position: relative;
-  padding: .06em .34em .02em; margin: 0 .06em;
+  padding: .08em .55em .04em .6em; margin: 0 .04em;
   font-style: normal; color: var(--acid);
-  background: linear-gradient(var(--acid), var(--acid)) 0 0 / 0% 100% no-repeat;
-  transform: rotate(var(--tilt, -1.2deg));
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.07) 0 1px, transparent 1px 5px, rgba(255,255,255,.05) 5px 6px, transparent 6px 11px),
+    linear-gradient(var(--acid), var(--acid));
+  background-size: 0% 100%, 0% 100%; background-repeat: no-repeat;
+  transform: translateY(var(--nudge, 0)) rotate(var(--tilt, -1.2deg));
   clip-path: polygon(.34em 0, 100% 0, 100% calc(100% - .34em), calc(100% - .34em) 100%,
     1.02em 100%, .84em calc(100% - .17em), .56em calc(100% - .17em), .38em 100%, 0 100%, 0 .34em);
   transition: background-size .55s cubic-bezier(.7, 0, .2, 1), color .15s .3s;
 }
-.tape.is-on { background-size: 100% 100%; color: #0a0a0a; }
+.tape.is-on { background-size: 100% 100%, 100% 100%; color: #0a0a0a; }
 .tape .l { color: inherit; }
 .sec__sub.tape { font-family: var(--f-text); font-style: normal; font-size: clamp(13px, 1.1vw, 17px); letter-spacing: .06em; padding: .22em .6em .16em; align-self: end; margin-bottom: .5em; }
 .theremin .wd.tape { padding: 0 .12em; }

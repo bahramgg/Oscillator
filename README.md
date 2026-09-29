@@ -64,7 +64,7 @@ Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a 
 - Fonts (matched to the label's posters and the "Oscillator Rises" reel): Anton, Tenor Sans
   (the KIARASH poster type), Orbitron, Rajdhani (the artist-poster names) — all SIL OFL,
   see [`assets/fonts/LICENSE.md`](assets/fonts/LICENSE.md).
-- Tape: highlighted words (`*asterisks*`), the section subtitles and the footer's SIGNAL sit on yellow tape cut in the logo's geometry (45° chamfers, a stepped notch), stuck on slightly crooked as they scroll into view.
+- Tape: highlighted words (`*asterisks*`) and the footer's SIGNAL sit on yellow tape cut by hand in the logo's geometry (angled end cuts, uneven 45° corners, a stepped notch, each strip different), stuck on crooked as they scroll into view.
 - The footer logo is cut into strips that slip out of register now and then.
 - Respects `prefers-reduced-motion`; works on touch devices (no custom cursor, tap to open).
 
