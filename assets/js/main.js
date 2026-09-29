@@ -363,7 +363,7 @@
   function punkTrace(c, pts, n, d, live) {
     if (reduced) { c.beginPath(); for (var r0 = 0; r0 < n; r0 += 2) { if (r0) c.lineTo(pts[r0], pts[r0 + 1]); else c.moveTo(pts[r0], pts[r0 + 1]); } c.strokeStyle = 'rgba(210,210,30,.8)'; c.lineWidth = d; c.stroke(); return; }
     var tq = Math.floor(S.t * 9), tg = Math.floor(S.t * 3), jit = (live ? 1.2 : 2.6) * d;
-    var K = live ? 1 : 0.42;   // before the signal is on, the trace stays faint behind the logo
+    var K = live ? 1 : 0.34;   // before the signal is on, the trace stays faint behind the logo
     // glitch slice: a horizontal band shifted sideways (about a third of the time)
     var gOn = hsh(tg, 7) < 0.34, gy = (0.2 + hsh(tg, 8) * 0.6) * hero.h, gh = (10 + hsh(tg, 9) * 60) * d, gdx = (hsh(tg, 10) - 0.5) * 120 * d;
     var SEG = 22, segs = Math.ceil(n / 2 / SEG);
