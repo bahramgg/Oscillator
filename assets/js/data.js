@@ -55,7 +55,7 @@ window.OSCILLATOR = {
       name: 'Keyv',
       role: 'Founder · Curator · DJ',
       city: 'Tehran',
-      photo: 'assets/img/keyv-portrait.jpg',
+      photo: 'assets/img/keyv-artist.jpg',
       photos: ['assets/img/keyv-live.jpg', 'assets/img/keyv-mark.jpg'],
       bio: [
         '*Keyv* is the Tehran-based DJ behind Oscillator. The ear that decides which frequencies make it onto the label.',
