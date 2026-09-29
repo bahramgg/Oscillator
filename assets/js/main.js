@@ -1287,7 +1287,22 @@
     $('.room__line').innerHTML = m
       ? (m[1].trim() ? '<span>' + esc(m[1].trim()) + '</span>' : '') + '<strong>' + esc(m[2]) + '</strong>'
       : '<strong>' + esc(F.caption || '') + '</strong>';
-    if (F.backdrop) { var bd = document.createElement('div'); bd.className = 'feedback__mark'; bd.setAttribute('aria-hidden', 'true'); bd.style.setProperty('--mark', 'url("' + absUrl(F.backdrop) + '")'); $('#feedback').prepend(bd); }
+    // Keyv's emblem: a signature beside the line; pulses travel out through its contour bands
+    var emb = F.emblem || F.backdrop;
+    if (emb) {
+      var sig = document.createElement('div'); sig.className = 'sig';
+      sig.innerHTML = '<a class="sig__mark"' + (F.emblemLink ? ' href="' + esc(F.emblemLink) + '" target="_blank" rel="noopener"' : '') + ' aria-label="Keyv"><i class="sig__ink"></i></a>' +
+        '<span class="sig__tag mono">' + esc(F.emblemTag || 'Keyv / curator') + '</span>';
+      var line = $('.room__line'); line.parentNode.insertBefore(sig, line);
+      var wrap = document.createElement('div'); wrap.className = 'sig-row';
+      line.parentNode.insertBefore(wrap, sig); wrap.appendChild(sig); wrap.appendChild(line);
+      fb.ink = $('.sig__ink', sig); fb.ink.style.setProperty('--mark', 'url("' + absUrl(emb) + '")');
+      fb.rings = []; fb.nextRing = 0; fb.lastBeat = 0;
+      sig.addEventListener('pointerdown', function (e) {
+        var r = fb.ink.getBoundingClientRect();
+        fb.rings.push({ t: S.t, x: (e.clientX - r.left) / r.width * 100, y: (e.clientY - r.top) / r.height * 100, hot: 1 });
+      });
+    }
     var media = F.media || [], sheet = $('.sheet');
     sheet.hidden = !media.length;
     sheet.innerHTML = media.map(function (m, i) {
@@ -1310,6 +1325,21 @@
   function drawFeedback() {
     var f = Math.floor(S.t * 25), txt = '00:' + pad(Math.floor(f / 1500) % 60) + ':' + pad(Math.floor(f / 25) % 60) + ':' + pad(f % 25);
     if (txt !== fb.last) { fb.tc.textContent = txt; fb.last = txt; }
+    if (!fb.ink || reduced) return;
+    // a ring on every kick while the signal is on, a slow breath otherwise
+    var E = window.OscEngine;
+    if (E && E.on) { if (S.beatCount !== fb.lastBeat) { fb.lastBeat = S.beatCount; fb.rings.push({ t: S.t, x: 50, y: 47 }); } }
+    else if (S.t > fb.nextRing) { fb.nextRing = S.t + 1.7; fb.rings.push({ t: S.t, x: 50, y: 47 }); }
+    var bg = [], keep = [];
+    for (var i = 0; i < fb.rings.length; i++) {
+      var g = fb.rings[i], age = S.t - g.t, life = 2.6;
+      if (age > life) continue; keep.push(g);
+      var r = age / life * 78, a = (1 - age / life) * (g.hot ? 1 : .85);
+      bg.push('radial-gradient(circle at ' + g.x.toFixed(1) + '% ' + g.y.toFixed(1) + '%, transparent ' + Math.max(0, r - 9).toFixed(1) + '%, rgba(233,231,223,' + a.toFixed(3) + ') ' + r.toFixed(1) + '%, transparent ' + (r + 1.5).toFixed(1) + '%)');
+    }
+    fb.rings = keep;
+    bg.push('linear-gradient(rgba(233,231,223,.16), rgba(233,231,223,.16))');
+    fb.ink.style.backgroundImage = bg.join(',');
   }
 
   /* ─── 05 next signal ───────────────────────────────────────────────── */

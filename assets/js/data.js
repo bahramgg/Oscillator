@@ -167,7 +167,9 @@ window.OSCILLATOR = {
       { type: 'image', src: 'assets/img/keyv-night-1.jpg', caption: 'Keyv, the booth' },
       { type: 'image', src: 'assets/img/keyv-night-3.jpg', caption: 'Keyv, hands on' }
     ],
-    // Keyv's mark, faint behind the whole section
-    backdrop: 'assets/img/keyv-emblem.png'
+    // Keyv's emblem, set beside the line as a signature
+    emblem: 'assets/img/keyv-emblem.png',
+    emblemTag: 'Keyv / curator',
+    emblemLink: 'https://www.instagram.com/keyvdj/'
   }
 };

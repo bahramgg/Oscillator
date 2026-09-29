@@ -1759,3 +1759,27 @@ body { font-size: 16px; }
 .room__band.is-cut::before { opacity: .85; }
 .room__band::after { z-index: 3; }
 @media (prefers-reduced-motion: reduce) { .room__shot.is-on { animation: none; } }
+
+/* Keyv's emblem: a bone-grey signature; light pulses ride its contour bands outward */
+.feedback__mark { display: none; }
+.sig-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); align-items: center;
+  gap: clamp(24px, 5vw, 80px); margin-top: clamp(40px, 5vw, 80px);
+}
+.sig-row .room__line { margin-top: 0; }
+.sig { display: flex; flex-direction: column; align-items: center; gap: 14px; touch-action: manipulation; }
+.sig__mark { display: block; width: min(100%, 360px); cursor: crosshair; -webkit-tap-highlight-color: transparent; }
+.sig__ink {
+  display: block; width: 100%; aspect-ratio: 840 / 918;
+  background-color: transparent;
+  -webkit-mask: var(--mark) center / contain no-repeat; mask: var(--mark) center / contain no-repeat;
+  transition: transform .6s var(--ease, ease);
+}
+.sig__mark:hover .sig__ink { transform: scale(1.02); }
+.sig__tag { font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: var(--bone-2); }
+@media (max-width: 860px) {
+  .sig-row { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 36px; }
+  .sig__mark { width: 64vw; }
+  .sig-row .room__line { align-items: center; }
+}
+@media (prefers-reduced-motion: reduce) { .sig__ink { background-color: rgba(233,231,223,.35); } }

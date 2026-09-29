@@ -10,7 +10,7 @@ The site is built as an instrument. Every section is a waveform:
 | 01 | Carrier | sine | The label manifesto |
 | 02 | Voices | square | The roster as a swipeable reel of cards rebuilt from the label's Instagram artist posters (torn-edge photo in hook brackets, stretched vertical name in Rajdhani, symbol + number boxes, logotype); each opens a profile (`#/artist/<slug>`) |
 | 03 | Transmissions | saw | Mixes & releases. Play opens the stage: a full-screen now-playing page (blurred cover, spinning disc inside the waveform ring, time readout, ±30 s, tracklist). Minimise to the bottom bar. Audio via hidden SoundCloud widgets |
-| 04 | Feedback | noise | The room: a REC band that cuts between crowd shots (`feedback.panorama` + `feedback.reel`), each drifting slowly, with a running REC timecode; 'the room is THE INSTRUMENT'. Photos added to `feedback.media` appear as a grid underneath |
+| 04 | Feedback | noise | The room: a REC band that cuts between crowd shots (`feedback.panorama` + `feedback.reel`), each drifting slowly, with a running REC timecode; 'the room is THE INSTRUMENT' beside Keyv's emblem in bone grey, with light pulses rippling through its contour bands (one per kick when the signal is on; tap to send your own). Photos added to `feedback.media` appear as a grid underneath |
 | 05 | Next signal | triangle | Events (shows a "no signal" state when empty) |
 | 06 | Output | pulse | Contact / demos, centred footer with the logo |
 
