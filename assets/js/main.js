@@ -328,7 +328,7 @@
       // one-pole lowpass so the hats don't fray the figure — kick & bass draw the shape
       var sm = hero.sm || (hero.sm = new Float32Array(buf.length)), acc = buf[0];
       for (var q = 0; q < buf.length; q++) { acc += (buf[q] - acc) * 0.22; sm[q] = acc; }
-      var lag = 12 + Math.round(S.nx * 70), N = buf.length - lag, G = R * 2.1;
+      var lag = 12 + Math.round(S.nx * 70), N = buf.length - lag, G = R * 3.4;
       for (var k = 0; k < N; k += 2) {
         var x = cx + sm[k] * G, y = cy - sm[k + lag] * G;
         if (k) c.lineTo(x, y); else c.moveTo(x, y);
@@ -360,7 +360,7 @@
     c.globalCompositeOperation = 'source-over';
     c.lineJoin = 'round';
     c.strokeStyle = 'rgba(0,0,0,0.9)'; c.lineWidth = 5 * d; c.stroke();
-    c.strokeStyle = 'rgba(150,150,20,0.55)'; c.lineWidth = 0.7 * d; c.stroke();
+    c.strokeStyle = 'rgba(210,210,30,0.8)'; c.lineWidth = 0.9 * d; c.stroke();
   }
 
   /* ─── rail: the one line that runs down the page ────────────────────── */

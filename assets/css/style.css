@@ -1700,3 +1700,13 @@ body { font-size: 16px; }
   .room__line strong { font-size: clamp(44px, 14vw, 72px); }
 }
 @media (prefers-reduced-motion: reduce) { .room__band { animation: none; background-position: 50% 50%; } }
+
+/* hero lines: brighter trace; the grid lines return and pulse with the kicks when the signal is on */
+.scope { opacity: .85; }
+.signal-on .scope { opacity: 1; }
+.hero .graticule { display: block; opacity: 0; transition: opacity .6s; }
+.signal-on .hero .graticule { opacity: calc(.35 + var(--beat) * .65); transition: none; }
+.hero__halo::before { transition: opacity .6s; }
+.signal-on .hero__halo::before { opacity: .35; }
+.signal-on .hero .graticule { opacity: calc(.6 + var(--beat) * .4); }
+.hero .graticule { background-image: linear-gradient(to right, rgba(228,228,24,.14) 1px, transparent 1px), linear-gradient(to bottom, rgba(228,228,24,.14) 1px, transparent 1px); }
