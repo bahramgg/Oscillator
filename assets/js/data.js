@@ -159,7 +159,7 @@ window.OSCILLATOR = {
   feedback: {
     panorama: 'assets/img/crowd-panorama.jpg',
     // the REC band cycles through these (after the panorama)
-    reel: ['assets/img/crowd-red.jpg', 'assets/img/crowd-courtyard.jpg'],
+    reel: ['assets/img/crowd-red-bw.jpg', 'assets/img/crowd-courtyard-bw.jpg'],
     caption: 'the room is *the instrument*',
     // extra photos / videos from the nights (shown as a grid under the room)
     media: [
