@@ -1588,3 +1588,61 @@ body { font-size: 16px; }
 .pc__link .pc__name { writing-mode: horizontal-tb; flex: none; }
 .pc__name, .pc__no { -webkit-text-stroke: .03em currentColor; paint-order: stroke fill; }
 .pc__name { gap: .02em; }
+
+/* ==========================================================================
+   Hero, calmer: dim trace in a black pool, one centred block underneath
+   ========================================================================== */
+.scope { opacity: .5; }
+.signal-on .scope { opacity: .8; }
+.hero .graticule { display: none; }
+.hero__halo::before {
+  content: ''; position: absolute; inset: -32%; z-index: -1; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(0,0,0,.96) 55%, rgba(0,0,0,.7) 72%, rgba(0,0,0,0) 100%);
+}
+.halo__ring { filter: drop-shadow(0 0 2px rgba(228, 228, 24, .45)); }
+.halo .logo--outline { filter: drop-shadow(0 0 2px rgba(228, 228, 24, .6)) drop-shadow(0 0 10px rgba(228, 228, 24, .18)); }
+.wearetitle { text-shadow: 0 0 6px rgba(228, 228, 24, .3); }
+
+.hero__cta {
+  left: 50%; right: auto; transform: translateX(-50%);
+  width: min(560px, calc(100% - 2 * var(--gutter)));
+  flex-direction: column; align-items: center; justify-content: flex-end; gap: 18px; text-align: center;
+}
+.hero__tag { max-width: 30ch; font-size: clamp(15px, 1.4vw, 19px); line-height: 1.45; color: var(--bone-2); }
+.hero__pwr {
+  display: inline-flex; align-items: center; gap: 12px; width: auto;
+  padding: 12px 20px 12px 16px; border-radius: 999px; background: rgba(7, 7, 7, .7);
+}
+.hero__pwr .pwr__label { font-family: var(--f-display); font-size: 15px; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.hero__bpm { color: var(--bone-3); padding-left: 12px; border-left: 1px solid var(--line-2); }
+@media (max-width: 860px) {
+  .hero__cta { bottom: calc(22px + env(safe-area-inset-bottom, 0px)); gap: 14px; }
+  .hero__tag { font-size: 15px; }
+  .hero__pwr { width: auto; }
+}
+
+/* ==========================================================================
+   Section heads + Carrier, mobile: room to breathe
+   ========================================================================== */
+@media (max-width: 860px) {
+  .sec__head {
+    display: grid; grid-template-columns: auto 1fr; grid-template-areas: "num glyph" "title title" "sub sub";
+    align-items: center; gap: 10px 12px; padding-bottom: 16px; margin-bottom: 28px;
+  }
+  .sec__num { grid-area: num; align-self: center; }
+  .sec__head .glyph { grid-area: glyph; justify-self: start; }
+  .sec__title { grid-area: title; justify-self: start; }
+  .sec__sub { grid-area: sub; font-size: 15px; }
+  .sec__meta { display: none; }
+  .sec__head--float { display: grid; }
+
+  .carrier__text { font-size: 18px; line-height: 1.6; }
+  .carrier__text p + p { margin-top: 1.1em; }
+  .carrier .facts { display: block; margin-top: 36px; border-top: 1px solid var(--line); }
+  .carrier .facts div, .carrier .facts div + div, .carrier .facts div:nth-child(n) {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    padding: 14px 0; margin: 0; border: 0; border-bottom: 1px solid var(--line);
+  }
+  .carrier .facts dt { flex: none; }
+  .carrier .facts dd { margin: 0; text-align: right; font-size: 20px; }
+}

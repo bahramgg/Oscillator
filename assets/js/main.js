@@ -307,7 +307,6 @@
   function resizeScope() {
     var s = sizeCanvas(hero.cvs, 1.6);
     hero.ctx = s.ctx; hero.w = s.w; hero.h = s.h; hero.d = s.d;
-    hero.ctx.fillStyle = '#070707'; hero.ctx.fillRect(0, 0, s.w, s.h);
     // the trace orbits the logo halo
     var hr = hero.halo.getBoundingClientRect(), cr = hero.cvs.getBoundingClientRect();
     hero.cx = (hr.left + hr.width / 2 - cr.left) * s.d;
@@ -320,8 +319,7 @@
     var c = hero.ctx, w = hero.w, h = hero.h, d = hero.d;
     if (!c) return;
     c.globalCompositeOperation = 'source-over';
-    c.fillStyle = reduced ? '#070707' : 'rgba(7,7,7,0.17)';
-    c.fillRect(0, 0, w, h);
+    c.clearRect(0, 0, w, h);   // transparent: no trail residue, no visible edge
     var cx = hero.cx, cy = hero.cy, R = hero.R;
     c.beginPath();
     var buf = E && E.on ? E.wave() : null;
@@ -358,10 +356,11 @@
         hero.readP.textContent = 'φ ' + ((hero.ph / Math.PI) % 2).toFixed(2) + 'π';
       }
     }
-    c.globalCompositeOperation = 'lighter';
+    // thin dim trace with a black halo (no yellow glow)
+    c.globalCompositeOperation = 'source-over';
     c.lineJoin = 'round';
-    c.strokeStyle = 'rgba(228, 228, 24,0.05)'; c.lineWidth = 3.5 * d; c.stroke();
-    c.strokeStyle = 'rgba(228, 228, 24,0.7)'; c.lineWidth = 0.7 * d; c.stroke();
+    c.strokeStyle = 'rgba(0,0,0,0.9)'; c.lineWidth = 5 * d; c.stroke();
+    c.strokeStyle = 'rgba(150,150,20,0.55)'; c.lineWidth = 0.7 * d; c.stroke();
   }
 
   /* ─── rail: the one line that runs down the page ────────────────────── */
@@ -1528,7 +1527,7 @@
       var l = $('.pwr__label', b);
       if (l) l.textContent = b.classList.contains('hero__pwr') ? (on ? 'Cut the signal' : 'Turn on the signal') : (on ? 'Signal on' : 'Signal off');
     });
-    if (hero.mode) hero.mode.textContent = on ? 'x: delay τ · y: filter cutoff' : 'x: ratio · y: phase';
+    if (hero.mode && hero.mode.isConnected) hero.mode.textContent = on ? 'x: delay τ · y: filter cutoff' : 'x: ratio · y: phase';
   }
   function setSignal(on) {
     if (!E || !E.supported()) return;
