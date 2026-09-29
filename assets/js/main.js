@@ -1412,7 +1412,7 @@
     var p = clamp(-r.top / Math.max(1, r.height - S.vh), 0, 1);
     var scale = fb.h / img.naturalHeight, dw = img.naturalWidth * scale;
     // with the emblem, the pan settles on the densest part of the crowd before the room closes into it
-    var panP = fb.mark ? 0.62 * Math.min(p / 0.55, 1) : p;
+    var panP = fb.mark ? 0.62 * Math.min(p / 0.45, 1) : p;
     var target = -Math.max(0, dw - fb.w) * panP;
     fb.x = reduced ? target : lerp(fb.x, target, 0.14);
     fb.v = lerp(fb.v, fb.x - fb.lastX, 0.3);
@@ -1428,7 +1428,7 @@
     // standing inside Keyv's mark — his contour gaps cut the crowd into bands
     var m = fb.mark;
     if (m && m.complete && m.naturalWidth && fb.stencil) {
-      var t = clamp((p - 0.55) / 0.33, 0, 1);
+      var t = clamp((p - 0.3) / 0.3, 0, 1);   // closes by 60% of the scroll, then holds
       t = t * t * (3 - 2 * t);
       if (t > 0) {
         var sc = fb.stencil, g = sc.getContext('2d'), W = sc.width, H = sc.height;
@@ -1447,7 +1447,7 @@
           var tg = fb.tint.getContext('2d'); tg.drawImage(m, 0, 0);
           tg.globalCompositeOperation = 'source-in'; tg.fillStyle = '#e9e7df'; tg.fillRect(0, 0, m.naturalWidth, m.naturalHeight);
         }
-        c.globalCompositeOperation = 'screen'; c.globalAlpha = 0.16 * t;
+        c.globalCompositeOperation = 'screen'; c.globalAlpha = 0.24 * t;
         c.drawImage(fb.tint, (W - mw) / 2, (H - mh) / 2 + (1 - t) * H * 0.08, mw, mh);
         c.restore();
       }
