@@ -631,6 +631,23 @@
     prev.addEventListener('click', function () { go(-1); });
     next.addEventListener('click', function () { go(1); });
 
+    // autoplay: one poster on every 2 s while the reel is on screen; any touch, drag, wheel,
+    // arrow or key hands control to the visitor for a while, a hovering mouse holds it
+    var AUTO = 2000, holdUntil = 0, hovering = false;
+    var hold = function () { holdUntil = Date.now() + 6000; };
+    ['pointerdown', 'touchstart', 'wheel', 'keydown'].forEach(function (ev) { R.addEventListener(ev, hold, { passive: true }); });
+    [prev, next].forEach(function (b) { b.addEventListener('click', hold); });
+    R.addEventListener('mouseenter', function () { hovering = true; });
+    R.addEventListener('mouseleave', function () { hovering = false; });
+    if (!reduced) setInterval(function () {
+      if (!vis.roster || document.hidden || hovering || Date.now() < holdUntil) return;
+      if (pf.open || stage.isOpen || R.classList.contains('is-drag') || R.contains(document.activeElement)) return;
+      var max = R.scrollWidth - R.clientWidth;
+      if (max <= 2) return;
+      if (R.scrollLeft >= max - 2) R.scrollTo({ left: 0, behavior: 'smooth' });
+      else go(1);
+    }, AUTO);
+
     // mouse drag (touch already scrolls natively)
     var drag = null, dragged = false, relTok = 0;
     R.addEventListener('pointerdown', function (e) {
