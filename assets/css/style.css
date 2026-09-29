@@ -1786,3 +1786,90 @@ body { font-size: 16px; }
 
 /* footer: two columns now that the clock cell is gone */
 @media (min-width: 861px) { .output__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ==========================================================================
+   Punk layer — photocopy, cut-and-paste, rubber stamp
+   ========================================================================== */
+/* section titles: cut-out letters + an off-register yellow copy that jams */
+.sec__title { position: relative; isolation: isolate; }
+.sec__title .cutl { display: inline-block; transform: translateY(var(--dy)) rotate(var(--rot)); }
+.sec__title::after {
+  content: attr(data-text); position: absolute; z-index: -1; left: .24em; top: .1em;
+  color: var(--acid); opacity: .5; white-space: nowrap; pointer-events: none;
+  transform: translate(.045em, -.035em);
+  animation: jam var(--jam, 7s) steps(1) var(--jam-d, 0s) infinite;
+}
+@keyframes jam {
+  0%, 84%, 100% { clip-path: inset(0 0 0 0); transform: translate(.045em, -.035em); }
+  86% { clip-path: inset(22% 0 48% 0); transform: translate(.34em, -.02em); opacity: .85; }
+  89% { clip-path: inset(58% 0 12% 0); transform: translate(-.22em, 0); opacity: .85; }
+  92% { clip-path: inset(0 0 0 0); transform: translate(.1em, -.06em); opacity: .5; }
+}
+
+/* carrier: key words taped over in yellow, rough-cut edges */
+.carrier__text em {
+  color: #0a0a0a; background: var(--acid); padding: 0 .22em; margin: 0 .04em;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  clip-path: polygon(0 8%, 4% 0, 30% 6%, 60% 0, 96% 4%, 100% 0, 98% 50%, 100% 96%, 70% 100%, 40% 94%, 8% 100%, 0 92%, 2% 50%);
+  display: inline-block; transform: rotate(-1.2deg);
+}
+.carrier__text p:nth-child(2) em { transform: rotate(.9deg); }
+
+/* facts: rubber stamps, no table lines */
+.carrier .facts {
+  display: flex; flex-wrap: wrap; gap: clamp(18px, 3vw, 44px); border-top: 0 !important;
+  align-items: center;
+}
+.carrier .facts div, .carrier .facts div + div, .carrier .facts div:nth-child(n) {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  padding: 12px 16px 10px !important; margin: 0 !important;
+  border: 2px solid currentColor !important; border-radius: 3px;
+  color: var(--bone); transform: rotate(var(--rot, 0deg));
+  -webkit-mask: url('../img/stamp-ink.png') var(--ink-x, 50%) 50% / 480px 240px repeat;
+  mask: url('../img/stamp-ink.png') var(--ink-x, 50%) 50% / 480px 240px repeat;
+}
+.carrier .facts div:nth-child(2n) { color: var(--acid); }
+.carrier .facts dt { color: inherit; opacity: .7; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; }
+.carrier .facts dd { margin: 0 !important; color: inherit; text-align: left !important; }
+@media (max-width: 860px) {
+  .carrier .facts { display: flex; gap: 16px 14px; margin-top: 40px; }
+  .carrier .facts dd { font-size: 18px !important; }
+}
+
+/* next signal: text and its button read as one block */
+.nosignal__row { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 22px; }
+
+/* footer logo: strips that slip out of register */
+.output__logo.cut { position: relative; display: block; aspect-ratio: 1333 / 1005; background: none; -webkit-mask: none; mask: none; }
+.output__logo.cut .logo { position: absolute; inset: 0; transition: none; }
+.output__logo.cut:hover .logo { transition: transform .25s var(--ease-out, ease); }
+
+@media (prefers-reduced-motion: reduce) { .sec__title::after { animation: none; } }
+.carrier .facts div { max-width: 100%; }
+.carrier .facts dd { white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 860px) { .carrier .facts dd { font-size: 16px !important; } }
+
+/* next signal: the headline jams like the titles; an empty date stamped on the wall */
+.nosignal__big { position: relative; isolation: isolate; }
+.nosignal__big::after {
+  content: attr(data-text); position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  color: transparent; -webkit-text-stroke: 1px var(--acid); opacity: .6;
+  transform: translate(.03em, -.025em); animation: jam 6.3s steps(1) -2s infinite;
+}
+.nosignal__stamp {
+  position: absolute; right: 4%; top: 30%; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; line-height: .82;
+  padding: .14em .32em .1em; border: 4px solid currentColor; border-radius: 6px;
+  font-family: var(--f-display); text-transform: uppercase; font-size: clamp(64px, 11vw, 190px);
+  color: var(--acid); transform: rotate(-9deg);
+  -webkit-mask: url('../img/stamp-ink.png') 30% 50% / 480px 240px repeat;
+  mask: url('../img/stamp-ink.png') 30% 50% / 480px 240px repeat;
+}
+.nosignal__stamp small { font-family: var(--f-mono); font-size: 11px; letter-spacing: .3em; line-height: 1; padding-bottom: .9em; }
+.nosignal__stamp small { font-size: clamp(10px, .9vw, 14px); }
+@media (max-width: 860px) {
+  .nosignal__stamp { position: relative; right: auto; top: auto; margin: 26px 0 6px auto; width: max-content; font-size: 72px; border-width: 3px; }
+  .nosignal { display: flex; flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) { .nosignal__big::after { animation: none; } }
+.carrier .facts div, .carrier .facts div + div, .carrier .facts div:nth-child(n) { -webkit-mask-size: 260px 130px; mask-size: 260px 130px; }

@@ -64,6 +64,7 @@ Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a 
 - Fonts (matched to the label's posters and the "Oscillator Rises" reel): Anton, Tenor Sans
   (the KIARASH poster type), Orbitron, Rajdhani (the artist-poster names) — all SIL OFL,
   see [`assets/fonts/LICENSE.md`](assets/fonts/LICENSE.md).
+- Punk layer: section titles are cut-out letters with an off-register yellow copy that jams now and then; Carrier's key words are taped over and its facts are rubber stamps (`stamp-ink.png` mask); "No signal" gets a TBA stamp; the footer logo is cut into strips that slip out of register.
 - Respects `prefers-reduced-motion`; works on touch devices (no custom cursor, tap to open).
 
 ---

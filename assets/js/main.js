@@ -449,6 +449,56 @@
     }).join('');
     watch(carrier.box, 'carrier');
   }
+  /* ─── punk layer: photocopied titles, stamped facts, a sliced logo ──── */
+  // every section title is a cut-and-paste job: each letter set slightly off its neighbours,
+  // with an off-register yellow copy behind that jams now and then
+  function initCutTitles() {
+    $$('.sec__title').forEach(function (h, hi) {
+      var txt = h.textContent.trim();
+      h.setAttribute('aria-label', txt);
+      h.setAttribute('data-text', txt);
+      h.innerHTML = txt.split('').map(function (ch, i) {
+        if (ch === ' ') return ' ';
+        var r = hsh(i + 1, hi + 3), r2 = hsh(i + 7, hi + 11);
+        var rot = ((r - 0.5) * 5).toFixed(2), dy = ((r2 - 0.5) * 0.08).toFixed(3);
+        return '<span class="cutl" aria-hidden="true" style="--rot:' + rot + 'deg;--dy:' + dy + 'em">' + esc(ch) + '</span>';
+      }).join('');
+      h.style.setProperty('--jam', (5 + hsh(hi, 2) * 6).toFixed(2) + 's');
+      h.style.setProperty('--jam-d', (-hsh(hi, 5) * 6).toFixed(2) + 's');
+    });
+    // the facts become rubber stamps, each pressed at its own angle
+    $$('.facts > div').forEach(function (d, i) {
+      d.style.setProperty('--rot', ((hsh(i, 21) - 0.5) * 7).toFixed(2) + 'deg');
+      d.style.setProperty('--ink-x', Math.round(hsh(i, 22) * 100) + '%');
+    });
+  }
+
+  // the footer logo, cut into strips that slip out of register and snap back
+  function initCutLogo() {
+    var el = $('.output__logo.cut'); if (!el) return;
+    var N = 9, strips = [];
+    for (var i = 0; i < N; i++) {
+      var s = document.createElement('i'); s.className = 'logo';
+      s.style.clipPath = 'inset(' + (i * 100 / N).toFixed(2) + '% 0 ' + (100 - (i + 1) * 100 / N).toFixed(2) + '% 0)';
+      el.appendChild(s); strips.push(s);
+    }
+    var hold = false;
+    el.addEventListener('pointerenter', function () { hold = true; strips.forEach(function (s) { s.style.transform = ''; }); });
+    el.addEventListener('pointerleave', function () { hold = false; });
+    if (reduced) return;
+    var k = 0;
+    setInterval(function () {
+      if (hold || !vis.output || document.hidden) return;
+      k++;
+      strips.forEach(function (s, i) {
+        var r = hsh(i, k), off = r < 0.3 ? (hsh(i + 9, k) - 0.5) * 16 : 0;   // % of width
+        s.style.transform = off ? 'translateX(' + off.toFixed(1) + '%)' : '';
+      });
+      // snap most of it back a beat later, like a copier catching the paper
+      setTimeout(function () { strips.forEach(function (s, i) { if (hsh(i, k + 99) < 0.7) s.style.transform = ''; }); }, 260);
+    }, 1900);
+  }
+
   function measureCarrier() {
     var top = carrier.box.getBoundingClientRect().top;
     carrier.words.forEach(function (w) { var r = w.el.getBoundingClientRect(); w.y = r.top - top; w.h = r.height; });
@@ -1389,7 +1439,8 @@
     if (!E_.length) {
       box.innerHTML = '<div class="nosignal">' +
         '<canvas class="nosignal__line" aria-hidden="true"></canvas>' +
-        '<p class="nosignal__big">No signal</p>' +
+        '<p class="nosignal__big" data-text="No signal">No signal</p>' +
+        '<span class="nosignal__stamp" aria-hidden="true"><small>next date</small>TBA</span>' +
         '<div class="nosignal__row"><p>Nothing scheduled yet. New dates are announced first on Instagram.</p>' +
         '<a class="cta" href="' + esc(D.label.instagram) + '" target="_blank" rel="noopener">Follow ' + esc(D.label.handle) + ' ↗︎</a></div></div>';
       ns.cvs = $('.nosignal__line', box);
@@ -1641,6 +1692,8 @@
   initGlyphs();
   initHero();
   initCarrier();
+  initCutTitles();
+  initCutLogo();
   initRoster();
   initTransmissions();
   initFeedback();
