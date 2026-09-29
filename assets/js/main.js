@@ -1337,6 +1337,7 @@
       fb.cvs = $('canvas', fb.pano);
       fb.img = new Image();
       fb.img.src = F.panorama;
+      if (F.emblem) { fb.mark = new Image(); fb.mark.src = F.emblem; fb.stencil = document.createElement('canvas'); }
     } else {
       fb.track.style.height = 'auto';
     }
@@ -1362,6 +1363,7 @@
     if (!fb.cvs) return;
     var s = sizeCanvas(fb.cvs, 1.5);
     fb.ctx = s.ctx; fb.w = s.w; fb.h = s.h; fb.d = s.d;
+    if (fb.stencil) { fb.stencil.width = fb.cvs.width; fb.stencil.height = fb.cvs.height; }
   }
   // the panorama is cut into horizontal strips that shear apart with scroll speed
   function drawFeedback() {
@@ -1370,7 +1372,9 @@
     var r = fb.rect;
     var p = clamp(-r.top / Math.max(1, r.height - S.vh), 0, 1);
     var scale = fb.h / img.naturalHeight, dw = img.naturalWidth * scale;
-    var target = -Math.max(0, dw - fb.w) * p;
+    // with the emblem, the pan settles on the densest part of the crowd before the room closes into it
+    var panP = fb.mark ? 0.62 * Math.min(p / 0.55, 1) : p;
+    var target = -Math.max(0, dw - fb.w) * panP;
     fb.x = reduced ? target : lerp(fb.x, target, 0.14);
     fb.v = lerp(fb.v, fb.x - fb.lastX, 0.3);
     fb.lastX = fb.x;
@@ -1380,6 +1384,34 @@
     for (var i = 0; i < n; i++) {
       var off = Math.sin(i * 0.95 + S.t * 5) * shear;
       c.drawImage(img, 0, i * srcH, img.naturalWidth, srcH, fb.x + off, i * sh, dw, sh + 1);
+    }
+    // the last stretch of the scroll: darkness closes in and the room is left
+    // standing inside Keyv's mark — his contour gaps cut the crowd into bands
+    var m = fb.mark;
+    if (m && m.complete && m.naturalWidth && fb.stencil) {
+      var t = clamp((p - 0.55) / 0.33, 0, 1);
+      t = t * t * (3 - 2 * t);
+      if (t > 0) {
+        var sc = fb.stencil, g = sc.getContext('2d'), W = sc.width, H = sc.height;
+        var base = H * 0.9 / m.naturalHeight, k = base * (1 + (1 - t) * 2.2) * (1 + S.beat * 0.025);
+        var mw = m.naturalWidth * k, mh = m.naturalHeight * k;
+        g.globalCompositeOperation = 'source-over';
+        g.clearRect(0, 0, W, H);
+        g.fillStyle = '#070707'; g.fillRect(0, 0, W, H);
+        g.globalCompositeOperation = 'destination-out';
+        g.drawImage(m, (W - mw) / 2, (H - mh) / 2 + (1 - t) * H * 0.08, mw, mh);
+        c.save(); c.setTransform(1, 0, 0, 1, 0, 0);
+        c.globalAlpha = t; c.drawImage(sc, 0, 0);
+        // a faint bone lift inside the mark so its silhouette holds over the dark parts of the room
+        if (!fb.tint) {
+          fb.tint = document.createElement('canvas'); fb.tint.width = m.naturalWidth; fb.tint.height = m.naturalHeight;
+          var tg = fb.tint.getContext('2d'); tg.drawImage(m, 0, 0);
+          tg.globalCompositeOperation = 'source-in'; tg.fillStyle = '#e9e7df'; tg.fillRect(0, 0, m.naturalWidth, m.naturalHeight);
+        }
+        c.globalCompositeOperation = 'screen'; c.globalAlpha = 0.16 * t;
+        c.drawImage(fb.tint, (W - mw) / 2, (H - mh) / 2 + (1 - t) * H * 0.08, mw, mh);
+        c.restore();
+      }
     }
     var frames = Math.floor(p * 3 * 60 * 25);
     fb.tc.textContent = '00:' + pad(Math.floor(frames / 1500)) + ':' + pad(Math.floor(frames / 25) % 60) + ':' + pad(frames % 25);
