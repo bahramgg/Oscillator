@@ -363,6 +363,7 @@
   function punkTrace(c, pts, n, d, live) {
     if (reduced) { c.beginPath(); for (var r0 = 0; r0 < n; r0 += 2) { if (r0) c.lineTo(pts[r0], pts[r0 + 1]); else c.moveTo(pts[r0], pts[r0 + 1]); } c.strokeStyle = 'rgba(210,210,30,.8)'; c.lineWidth = d; c.stroke(); return; }
     var tq = Math.floor(S.t * 9), tg = Math.floor(S.t * 3), jit = (live ? 1.2 : 2.6) * d;
+    var K = live ? 1 : 0.42;   // before the signal is on, the trace stays faint behind the logo
     // glitch slice: a horizontal band shifted sideways (about a third of the time)
     var gOn = hsh(tg, 7) < 0.34, gy = (0.2 + hsh(tg, 8) * 0.6) * hero.h, gh = (10 + hsh(tg, 9) * 60) * d, gdx = (hsh(tg, 10) - 0.5) * 120 * d;
     var SEG = 22, segs = Math.ceil(n / 2 / SEG);
@@ -383,17 +384,17 @@
         }
         var ink = hsh(sg, tq + 3);
         if (pass) {
-          c.strokeStyle = 'rgba(0,0,0,.75)'; c.lineWidth = 4 * d; c.stroke();
-          c.strokeStyle = 'rgba(214,214,28,' + (0.55 + ink * 0.4).toFixed(2) + ')';
-          c.lineWidth = (0.6 + ink * ink * 2.4) * d;
+          c.strokeStyle = 'rgba(0,0,0,' + (0.75 * K).toFixed(2) + ')'; c.lineWidth = 4 * d; c.stroke();
+          c.strokeStyle = 'rgba(214,214,28,' + ((0.55 + ink * 0.4) * K).toFixed(2) + ')';
+          c.lineWidth = (0.6 + ink * ink * (live ? 2.4 : 1.2)) * d;
         } else {
-          c.strokeStyle = 'rgba(233,231,223,.22)'; c.lineWidth = 0.8 * d;
+          c.strokeStyle = 'rgba(233,231,223,' + (0.22 * K).toFixed(2) + ')'; c.lineWidth = 0.8 * d;
         }
         c.stroke();
       }
     }
     // toner specks & scratches near the line
-    c.fillStyle = 'rgba(233,231,223,.5)';
+    c.fillStyle = 'rgba(233,231,223,' + (0.5 * K).toFixed(2) + ')';
     for (var k = 0; k < 26; k++) {
       var pi = (Math.floor(hsh(k, tq) * (n / 2)) * 2);
       var sx = pts[pi] + (hsh(k, tq + 1) - 0.5) * 40 * d, sy = pts[pi + 1] + (hsh(k, tq + 2) - 0.5) * 40 * d;
@@ -1326,45 +1327,18 @@
   deck.btn.addEventListener('click', function () { if (deck.cur && deck.cur.widget) Player.toggle(deck.cur); });
   deck.open.addEventListener('click', function () { if (deck.cur) { deck.el.hidden = true; stage.show(deck.cur, deck.open); } });
 
-  /* ─── 04 feedback: the room ────────────────────────────────────────────
-     the crowd panorama as a wide band that drifts slowly across the room
-     (CSS), with a running REC timecode; photos added later in data.js show
-     as a grid underneath */
-  var fb = { band: $('.room__band'), tc: $('.room__tc'), last: '' };
+  /* ─── 04 feedback: panorama + contact sheet ────────────────────────── */
+  var fb = { track: $('.feedback__track'), pano: $('.pano'), img: null, x: 0, lastX: 0, v: 0, strips: reduced ? 1 : 9, tc: $('.feedback__tc') };
   function initFeedback() {
     var F = D.feedback || {};
-    var shots = [F.panorama].concat(F.reel || []).filter(Boolean);
-    if (!shots.length) $('.room').hidden = true;
-    fb.band.innerHTML = shots.map(function (src, i) {
-      return '<i class="room__shot' + (i === 0 ? ' is-on' : '') + (i === 0 ? ' room__shot--pano' : '') + '" style="background-image:url(\'' + esc(absUrl(src)) + '\')"></i>';
-    }).join('');
-    fb.shots = $$('.room__shot', fb.band); fb.cur = 0;
-    if (fb.shots.length > 1 && !reduced) setInterval(function () {
-      if (!vis.feedback || document.hidden) return;
-      var prev = fb.shots[fb.cur]; fb.cur = (fb.cur + 1) % fb.shots.length;
-      var next = fb.shots[fb.cur];
-      fb.band.classList.add('is-cut');
-      setTimeout(function () {
-        prev.classList.remove('is-on');
-        next.classList.remove('is-on'); void next.offsetWidth; next.classList.add('is-on');
-        fb.band.classList.remove('is-cut');
-      }, 140);
-    }, 9000);
-    var m = String(F.caption || '').match(/^(.*?)\*(.+?)\*\s*(.*)$/);
-    $('.room__line').innerHTML = m
-      ? (m[1].trim() ? '<span>' + esc(m[1].trim()) + '</span>' : '') + '<strong>' + esc(m[2]) + '</strong>'
-      : '<strong>' + esc(F.caption || '') + '</strong>';
-    // Keyv's emblem as a window: the room moves inside his mark, the caption laid across its foot
-    var emb = F.emblem || F.backdrop;
-    if (emb) {
-      var win = document.createElement('div'); win.className = 'kw';
-      win.innerHTML = '<a class="kw__mark"' + (F.emblemLink ? ' href="' + esc(F.emblemLink) + '" target="_blank" rel="noopener"' : '') + ' aria-label="Keyv">' +
-        '<i class="kw__crowd"></i></a>';
-      var line = $('.room__line'); line.parentNode.insertBefore(win, line); win.appendChild(line);
-      fb.ink = $('.kw__crowd', win);
-      fb.ink.style.setProperty('--mark', 'url("' + absUrl(emb) + '")');
-      fb.ink.style.setProperty('--crowd', 'url("' + absUrl(F.emblemFill || F.panorama) + '")');
-      fb.kb = 0;
+    $('.feedback__cap').innerHTML = rich(F.caption || '');
+    if (F.panorama) {
+      fb.pano.innerHTML = '<canvas></canvas>';
+      fb.cvs = $('canvas', fb.pano);
+      fb.img = new Image();
+      fb.img.src = F.panorama;
+    } else {
+      fb.track.style.height = 'auto';
     }
     var media = F.media || [], sheet = $('.sheet');
     sheet.hidden = !media.length;
@@ -1382,16 +1356,33 @@
       }, { threshold: 0.25 });
       $$('.sheet video').forEach(function (v) { vio.observe(v); });
     }
-    watch($('.room'), 'feedback');
+    watch($('.feedback__pin'), 'feedback');
   }
-  function resizeFeedback() {}
+  function resizeFeedback() {
+    if (!fb.cvs) return;
+    var s = sizeCanvas(fb.cvs, 1.5);
+    fb.ctx = s.ctx; fb.w = s.w; fb.h = s.h; fb.d = s.d;
+  }
+  // the panorama is cut into horizontal strips that shear apart with scroll speed
   function drawFeedback() {
-    var f = Math.floor(S.t * 25), txt = '00:' + pad(Math.floor(f / 1500) % 60) + ':' + pad(Math.floor(f / 25) % 60) + ':' + pad(f % 25);
-    if (txt !== fb.last) { fb.tc.textContent = txt; fb.last = txt; }
-    if (!fb.ink) return;
-    // the window breathes with the kick while the signal is on
-    var kb = S.beat.toFixed(2);
-    if (kb !== fb.kb) { fb.kb = kb; fb.ink.style.setProperty('--kb', kb); }
+    var img = fb.img, c = fb.ctx;
+    if (!c || !img || !img.complete || !img.naturalWidth) return;
+    var r = fb.rect;
+    var p = clamp(-r.top / Math.max(1, r.height - S.vh), 0, 1);
+    var scale = fb.h / img.naturalHeight, dw = img.naturalWidth * scale;
+    var target = -Math.max(0, dw - fb.w) * p;
+    fb.x = reduced ? target : lerp(fb.x, target, 0.14);
+    fb.v = lerp(fb.v, fb.x - fb.lastX, 0.3);
+    fb.lastX = fb.x;
+    var shear = reduced ? 0 : Math.min(Math.abs(fb.v) * 2.2, 70 * fb.d) + S.beat * 8 * fb.d;
+    var n = fb.strips, sh = fb.h / n, srcH = img.naturalHeight / n;
+    c.fillStyle = '#070707'; c.fillRect(0, 0, fb.w, fb.h);
+    for (var i = 0; i < n; i++) {
+      var off = Math.sin(i * 0.95 + S.t * 5) * shear;
+      c.drawImage(img, 0, i * srcH, img.naturalWidth, srcH, fb.x + off, i * sh, dw, sh + 1);
+    }
+    var frames = Math.floor(p * 3 * 60 * 25);
+    fb.tc.textContent = '00:' + pad(Math.floor(frames / 1500)) + ':' + pad(Math.floor(frames / 25) % 60) + ':' + pad(frames % 25);
   }
 
   /* ─── 05 next signal ───────────────────────────────────────────────── */
@@ -1642,6 +1633,7 @@
     // layout reads first, then writes — no forced reflow mid-frame
     updateSection();
     S.docH = document.documentElement.scrollHeight;
+    if (vis.feedback) fb.rect = fb.track.getBoundingClientRect();
     if (vis.hero !== false) drawHero();
     drawRail();
     if (vis.roster) drawRoster();

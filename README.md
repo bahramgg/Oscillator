@@ -10,7 +10,7 @@ The site is built as an instrument. Every section is a waveform:
 | 01 | Carrier | sine | The label manifesto |
 | 02 | Voices | square | The roster as a swipeable reel of cards rebuilt from the label's Instagram artist posters (torn-edge photo in hook brackets, stretched vertical name in Rajdhani, symbol + number boxes, logotype); each opens a profile (`#/artist/<slug>`) |
 | 03 | Transmissions | saw | Mixes & releases. Play opens the stage: a full-screen now-playing page (blurred cover, spinning disc inside the waveform ring, time readout, ±30 s, tracklist). Minimise to the bottom bar. Audio via hidden SoundCloud widgets |
-| 04 | Feedback | noise | The room: a REC band that cuts between crowd shots (`feedback.panorama` + `feedback.reel`), each drifting slowly, with a running REC timecode; 'the room is THE INSTRUMENT' laid across Keyv's emblem, used as a window onto the black & white crowd (it breathes with the kick when the signal is on). Photos added to `feedback.media` appear as a grid underneath |
+| 04 | Feedback | noise | The room: the crowd panorama pinned to the screen, panning sideways as you scroll (strips shear with scroll speed), with a running REC timecode; 'the room is THE INSTRUMENT'. Photos in `feedback.media` appear as a grid underneath |
 | 05 | Next signal | triangle | Events (shows a "no signal" state when empty) |
 | 06 | Output | pulse | Contact / demos, centred footer with the logo |
 
@@ -57,8 +57,8 @@ Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a 
 - Instagram requires a login, so the initial content was taken from Keyv's public
   SoundCloud (the DEMONSTRATOR mixes, artwork, portrait, crowd panorama and real
   waveforms). Bio copy is a starting draft — please review it.
-- Intro video: `assets/video/oscillator-rises.mp4` (H.264, 720px, ~500 KB, denoised) with a VP9 `.webm` fallback,
-  both cut from the original reel (first 1.2 s of black trimmed, blacks crushed to true black).
+- Intro video: `assets/video/oscillator-rises.mp4` (H.264, 1080px, lanczos upscale + light sharpening, ~1.5 MB) with a VP9 `.webm` fallback,
+  both cut from the original reel (first 1.2 s of black trimmed, near-blacks crushed to true black, no denoise).
 - Logo files (`assets/img/logo-*.png`, favicon, touch icon) are generated from the 2000px originals.
 - Colours: ink `#070707`, bone `#e9e7df`, yellow `#e4e418` (from the label logo).
 - Fonts (matched to the label's posters and the "Oscillator Rises" reel): Anton, Tenor Sans
