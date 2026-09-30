@@ -849,7 +849,7 @@
 
   function profileHTML(a, i) {
     var n = D.artists.length, next = D.artists[(i + 1) % n], sig = signature(a.slug);
-    var allTx = D.transmissions.concat(D.series || []);
+    var allTx = allTransmissions();
     var tx = (a.transmissions || []).map(function (id) { return allTx.filter(function (t) { return t.id === id; })[0]; }).filter(Boolean);
     var links = Object.keys(a.links || {}).filter(function (k) { return a.links[k]; }).map(function (k) {
       return '<a class="mono" href="' + esc(a.links[k]) + '" target="_blank" rel="noopener">' + esc(LINK_NAMES[k] || k) + ' ↗︎</a>';
@@ -1062,8 +1062,63 @@
       (tl.length ? '<span>' + tl.length + ' tracks</span>' : '');
   }
 
+  // the big cards: entries are full objects, series ids ('osc-031') or { ref: 'osc-031', …overrides }
+  function featuredTx() {
+    var S = D.series || [];
+    return (D.transmissions || []).map(function (x) {
+      var id = typeof x === 'string' ? x : x.ref;
+      if (!id) return x;
+      var base = S.filter(function (t) { return t.id === id; })[0];
+      if (!base) return null;
+      var o = {}, k;
+      for (k in base) o[k] = base[k];
+      if (typeof x === 'object') for (k in x) if (k !== 'ref') o[k] = x[k];
+      return o;
+    }).filter(Boolean);
+  }
+  function allTransmissions() {
+    var F = featuredTx();
+    return F.concat((D.series || []).filter(function (t) { return !F.some(function (f) { return f.id === t.id; }); }));
+  }
+
+  // the featured video: a still with a play button; the YouTube player loads only when pressed
+  function initVideo() {
+    var V = D.video, box = $('.tv');
+    if (!box) return;
+    if (!V || !V.youtube) { box.hidden = true; return; }
+    box.hidden = false;
+    box.innerHTML =
+      '<button class="tv__screen" type="button" aria-label="Play video: ' + esc(V.title) + '">' +
+        '<img src="' + esc(V.poster || ('https://i.ytimg.com/vi/' + V.youtube + '/hqdefault.jpg')) + '" alt="" loading="lazy">' +
+        '<i class="brk" aria-hidden="true"></i>' +
+        '<span class="tv__play" aria-hidden="true">' + ICON_PLAY + '</span>' +
+        '<span class="tv__tag mono" aria-hidden="true"><i></i>Video</span>' +
+      '</button>' +
+      '<figcaption class="tv__cap">' +
+        '<p class="tx__meta mono"><span>Video</span>' + (V.date ? '<span>' + fmtDate(V.date) + '</span>' : '') + '</p>' +
+        '<h3 class="tx__title">' + esc(V.title) + '</h3>' +
+        (V.subtitle ? '<p class="tx__by">' + esc(V.subtitle) + '</p>' : '') +
+        (V.channel ? '<a class="tx__ext mono" href="' + esc(V.channel) + '" target="_blank" rel="noopener">All videos on YouTube ↗︎</a>' : '') +
+      '</figcaption>';
+    var scr = $('.tv__screen', box);
+    scr.addEventListener('click', function () {
+      // one sound at a time: the video takes over from a mix or the signal
+      Player.want = null; Player.pauseAll(null);
+      if (E && E.on) setSignal(false);
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(V.youtube) + '?autoplay=1&rel=0&playsinline=1&modestbranding=1';
+      f.title = 'YouTube video: ' + V.title;
+      f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      f.allowFullscreen = true;
+      f.className = 'tv__frame';
+      scr.replaceWith(f);
+      box.classList.add('is-playing');
+    });
+  }
+
   function initTransmissions() {
-    var list = $('.tx-list'), F = D.transmissions, SR = D.series || [], T = F.concat(SR);
+    var list = $('.tx-list'), F = featuredTx(), SR = (D.series || []).filter(function (t) { return !F.some(function (f) { return f.id === t.id; }); }), T = F.concat(SR);
+    initVideo();
     list.innerHTML = F.map(function (t, i) {
       var tl = t.tracklist || [];
       return '<article class="tx" id="tx-' + esc(t.id) + '">' +
@@ -1089,7 +1144,7 @@
     var box = $('.series'), SHOW = 5;
     if (SR.length) {
       box.hidden = false;
-      $('.series__count').textContent = SR.length;
+      $('.series__count').textContent = (D.series || []).length;
       $('.series__list').innerHTML = SR.map(function (t, i) {
         var who = artistIndex(t.artist) >= 0
           ? '<a href="#/artist/' + esc(t.artist) + '">' + esc(artistName(t.artist)) + '</a>'
@@ -1101,7 +1156,8 @@
           '<div class="tx__body">' +
             '<h3 class="tx__who">' + who + '</h3>' +
             '<p class="tx__meta mono"><span>' + fmtDate(t.date) + '</span><span>' + fmtClock(t.duration, t.duration) + '</span>' +
-              (t.soundcloud ? '<a class="tx__ext" href="' + esc(t.soundcloud) + '" target="_blank" rel="noopener">SoundCloud ↗︎</a>' : '') + '</p>' +
+              (t.soundcloud ? '<a class="tx__ext" href="' + esc(t.soundcloud) + '" target="_blank" rel="noopener">SoundCloud ↗︎</a>' : '') +
+              (t.youtube ? '<a class="tx__ext" href="https://www.youtube.com/watch?v=' + esc(t.youtube) + '" target="_blank" rel="noopener">Video ↗︎</a>' : '') + '</p>' +
             '<div class="tx__deck">' +
               '<button class="tx__play" type="button" aria-label="Play ' + esc(t.title) + '">' + ICON_PLAY + ICON_PAUSE + '</button>' +
               '<div class="tx__wave" role="slider" tabindex="0" aria-label="Seek ' + esc(t.title) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><canvas aria-hidden="true"></canvas></div>' +
@@ -1614,6 +1670,15 @@
     } else {
       fb.track.style.height = 'auto';
     }
+    // one line on the founder, one photo (black & white; colour on hover / tap)
+    var FD = F.founder, fo = $('.founder');
+    if (FD && fo) {
+      fo.hidden = false;
+      fo.innerHTML = (FD.photo ? '<figure class="founder__photo"><img src="' + esc(FD.photo) + '" alt="' + esc(FD.alt || '') + '" loading="lazy"><i class="brk" aria-hidden="true"></i></figure>' : '') +
+        '<p class="founder__line">' + rich(FD.line || '') + '</p>';
+      var fp = $('.founder__photo', fo);
+      if (fp) fp.addEventListener('click', function () { fp.classList.toggle('is-colour'); });
+    }
     var media = F.media || [], sheet = $('.sheet');
     sheet.hidden = !media.length;
     sheet.innerHTML = media.map(function (m, i) {
@@ -1817,7 +1882,7 @@
     var L = D.label, keyv = D.artists[0];
     var follow = ['<li><a href="' + esc(L.instagram) + '" target="_blank" rel="noopener">Instagram ↗︎</a></li>'];
     if (L.soundcloud) follow.push('<li><a href="' + esc(L.soundcloud) + '" target="_blank" rel="noopener">SoundCloud ↗︎</a></li>');
-    if (keyv && keyv.links && keyv.links.soundcloud) follow.push('<li><a href="' + esc(keyv.links.soundcloud) + '" target="_blank" rel="noopener">' + esc(keyv.name) + ' on SoundCloud ↗︎</a></li>');
+    if (L.youtube) follow.push('<li><a href="' + esc(L.youtube) + '" target="_blank" rel="noopener">YouTube ↗︎</a></li>');
     $('.output__grid').innerHTML =
       '<div><h3 class="mono">Demos &amp; bookings</h3><p>' + rich(L.demos) + '</p>' +
         '<button class="cta" type="button" data-contact="Demo">Send a signal ↗︎</button></div>' +

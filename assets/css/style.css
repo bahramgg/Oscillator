@@ -2049,3 +2049,51 @@ html, body { overflow-x: clip; }
 .pano { height: 52vh; }
 @media (max-width: 860px) { .pano { height: 40vh; } }
 .cf__title em { font-family: var(--f-display); }
+
+/* ==========================================================================
+   03 Transmissions — the featured video (a still until pressed)
+   ========================================================================== */
+.tv { margin: 0 0 clamp(56px, 7vw, 110px); display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: clamp(22px, 3.6vw, 64px); align-items: end; }
+.tv[hidden] { display: none; }
+.tv__screen, .tv__frame { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; padding: 0; background: #000; overflow: hidden; }
+.tv__screen { cursor: pointer; }
+.tv__screen img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.12) brightness(.85); transition: filter .6s, transform 1.2s var(--ease-out, ease); }
+.tv__screen:hover img, .tv__screen:focus-visible img { filter: grayscale(.2) contrast(1.05) brightness(.95); transform: scale(1.02); }
+.tv__screen .brk { --l: clamp(18px, 2.2vw, 30px); }
+.tv__screen::after {   /* scanlines, like the room */
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,.28) 0 1px, transparent 1px 3px);
+}
+.tv__play {
+  position: absolute; left: 50%; top: 50%; z-index: 2; transform: translate(-50%, -50%);
+  display: grid; place-items: center; width: clamp(64px, 7vw, 96px); aspect-ratio: 1; border-radius: 50%;
+  background: var(--acid); color: #0a0a0a; transition: transform .3s var(--ease-out, ease);
+}
+.tv__play svg { width: 34%; height: 34%; margin-left: 6%; }
+.tv__screen:hover .tv__play { transform: translate(-50%, -50%) scale(1.08); }
+.tv__tag { position: absolute; left: 16px; bottom: 14px; z-index: 2; display: inline-flex; align-items: center; gap: 8px; color: var(--bone); }
+.tv__tag i { width: 7px; height: 7px; border-radius: 50%; background: #ff3b2f; animation: blink 1.2s steps(2) infinite; }
+.tv__cap { display: flex; flex-direction: column; gap: 10px; padding-bottom: 6px; }
+.tv__cap .tx__ext { margin-top: 8px; align-self: flex-start; }
+@media (max-width: 860px) { .tv { grid-template-columns: 1fr; gap: 18px; } }
+
+/* ==========================================================================
+   04 Feedback — one line on the founder, one photo
+   ========================================================================== */
+.founder {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); align-items: center;
+  gap: clamp(24px, 5vw, 80px); padding: clamp(64px, 9vw, 130px) var(--gutter) 0;
+}
+.founder[hidden] { display: none; }
+.founder__photo { position: relative; margin: 0; aspect-ratio: 4 / 5; overflow: hidden; background: var(--ink-2); cursor: pointer; }
+.founder__photo img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.08); transition: filter .7s cubic-bezier(.2, .7, .2, 1); }
+.founder__photo.is-colour img { filter: none; }
+@media (hover: hover) { .founder__photo:hover img { filter: none; } }
+.founder__photo .brk { --l: clamp(16px, 2vw, 26px); }
+.founder__line { font-family: var(--f-display); text-transform: uppercase; font-size: clamp(34px, 5vw, 84px); line-height: .95; max-width: 12ch; }
+.founder__line em { font-style: normal; color: var(--acid); }
+@media (max-width: 860px) {
+  .founder { grid-template-columns: 1fr; gap: 22px; }
+  .founder__photo { width: 78%; justify-self: center; }
+  .founder__line { text-align: center; justify-self: center; font-size: clamp(30px, 9vw, 44px); }
+}
