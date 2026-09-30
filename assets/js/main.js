@@ -990,6 +990,8 @@
 
   function route(pushed) {
     var m = location.hash.match(/^#\/artist\/([\w-]+)$/);
+    var moved = { enzo: 'kenzo' };                       // renamed artists keep their old links
+    if (m && moved[m[1]]) { location.replace('#/artist/' + moved[m[1]]); return; }
     if (m) openProfile(m[1], pushed);
     else if (pf.open) closeProfile();
   }
