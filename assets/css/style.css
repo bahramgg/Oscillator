@@ -2116,55 +2116,6 @@ html, body { overflow-x: clip; }
 .pf__portrait--poster img { filter: none !important; transform: none !important; }
 .pf__portrait--poster::after { display: none; }
 
-/* ==========================================================================
-   04 Feedback — the origin: Keyv's emblem pours down into the founder's face
-   ========================================================================== */
-.origin { position: relative; height: 260vh; margin-top: clamp(40px, 6vw, 90px); }
-.origin[hidden] { display: none; }
-.origin__pin {
-  position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden;
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center;
-  gap: clamp(24px, 5vw, 80px); padding: calc(var(--nav-h) + 16px) var(--gutter) 24px;
-}
-.origin__cvs { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
-.origin__box {
-  --photo: 0;
-  position: relative; margin: 0; justify-self: end;
-  height: min(70vh, 640px); height: min(70svh, 640px); aspect-ratio: 0.9; max-width: 100%;
-}
-.origin__mark, .origin__photo { position: absolute; inset: 0; width: 100%; height: 100%; }
-.origin__mark {   /* the crisp emblem: shown until the particles take over (and when motion is reduced) */
-  background: var(--bone); opacity: 0;
-  -webkit-mask: var(--mark) center / 92% no-repeat; mask: var(--mark) center / 92% no-repeat;
-}
-.origin__photo { object-fit: cover; object-position: 50% 35%; filter: grayscale(1) contrast(1.1); opacity: var(--photo); }
-.origin__box .brk { z-index: 3; --l: clamp(18px, 2.2vw, 30px); opacity: calc(.25 + var(--photo) * .75); }
-.origin__box::after {   /* scanlines over the photograph */
-  content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: var(--photo);
-  background: repeating-linear-gradient(to bottom, rgba(0,0,0,.2) 0 1px, transparent 1px 3px);
-}
-.origin__tag { position: absolute; left: 0; bottom: -30px; display: flex; gap: 12px; color: var(--bone-3); letter-spacing: .28em; text-transform: uppercase; font-size: 11px; }
-.origin__tag b { color: var(--acid); font-weight: 400; }
-.origin__line {
-  position: relative; z-index: 3; justify-self: start; max-width: 11ch;
-  font-family: var(--f-display); text-transform: uppercase; font-size: clamp(40px, 5.6vw, 96px); line-height: .92;
-  opacity: 0; transform: translateY(24px); transition: opacity .7s, transform .9s var(--ease-out, ease);
-}
-.origin__line em { font-style: normal; color: var(--acid); }
-.origin.is-told .origin__line { opacity: 1; transform: none; }
-.origin.is-static { height: auto; }
-.origin.is-static .origin__pin { position: relative; height: auto; }
-.origin.is-static .origin__line { opacity: 1; transform: none; }
-.origin.is-static .origin__box { --photo: 1; }
-.origin:not(.is-live):not(.is-static) .origin__mark { opacity: 1; }
-@media (max-width: 860px) {
-  .origin { height: 240vh; }
-  .origin__pin { grid-template-columns: 1fr; grid-template-rows: auto auto; align-content: center; gap: 44px; }
-  .origin__box { justify-self: center; height: auto; width: min(82vw, 52svh); }
-  .origin__line { justify-self: center; text-align: center; max-width: 13ch; font-size: clamp(30px, 9vw, 46px); }
-  .origin__tag { left: 50%; transform: translateX(-50%); white-space: nowrap; }
-}
-
 /* review fixes: video player */
 .tv__mute span { display: contents; }
 .tv__mute .i-mut, .tv__mute.is-muted .i-snd { display: none; }
@@ -2172,9 +2123,9 @@ html, body { overflow-x: clip; }
 /* hidden controls are not focusable; shown while a control has keyboard focus */
 .tv__bar { visibility: hidden; transition: opacity .3s, transform .3s, visibility 0s .3s; }
 .tv[data-state="playing"] .tv__bar, .tv[data-state="paused"] .tv__bar, .tv[data-state="ended"] .tv__bar { visibility: visible; transition: opacity .3s, transform .3s, visibility 0s; }
-.tv[data-state="playing"] .tv__screen:has(:focus-visible) .tv__bar { opacity: 1 !important; transform: none !important; }
+.tv[data-state="playing"]:not(.is-still) .tv__screen:has(.tv__bar :focus-visible) .tv__bar { opacity: 1; transform: none; }
 /* a still pointer (and full screen) lets the bar step back */
-.tv.is-still[data-state="playing"] .tv__bar { opacity: 0; transform: translateY(8px); }
+.tv.is-still[data-state="playing"] .tv__bar { opacity: 0; transform: translateY(8px); pointer-events: none; }
 .tv.is-still[data-state="playing"] .tv__screen { cursor: none; }
 .tv__screen:fullscreen .tv__bar { padding-bottom: 28px; }
 /* series rows: links sit on the date line */

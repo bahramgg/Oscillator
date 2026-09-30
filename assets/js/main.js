@@ -1152,11 +1152,29 @@
     };
     // tv.want: the visitor's latest wish for the video. A mix or the synth started while the
     // video is still loading clears it, so the video must not take over when it finally starts.
+    // phones may refuse to start a video from outside its frame: then let the tap go to the frame itself.
+    // Judged by the player's own state, so a slow connection (still buffering) isn't mistaken for it.
+    var arm = function () {
+      clearTimeout(tv.bt);
+      var waited = 0, check = function () {
+        var st0 = box.dataset.state;
+        if ((st0 !== 'loading') || !tv.want || !tv.player || !tv.player.getPlayerState) return;
+        var st = tv.player.getPlayerState(), Y = window.YT.PlayerState;
+        if (st === Y.PLAYING) return;
+        if (st === Y.BUFFERING && waited < 10000) { waited += 1000; tv.bt = setTimeout(check, 1000); return; }
+        set('blocked');
+      };
+      tv.bt = setTimeout(check, 2500);
+    };
     var play = function () {
       tv.want = true;
       Player.want = null; Player.pauseAll(null);       // one sound at a time
       if (E && E.on) setSignal(false);
-      if (tv.player) { if (tv.ready) tv.player.playVideo(); else set('loading'); return; }
+      if (tv.player) {
+        if (!tv.ready) { set('loading'); return; }
+        if (!tv.started) { set('loading'); arm(); }     // never got going yet: watch for a refusal again
+        tv.player.playVideo(); return;
+      }
       if (tv.creating) { set('loading'); return; }     // a press while the API is still loading: onReady will start it
       tv.creating = true;
       set('loading');
@@ -1167,29 +1185,25 @@
           events: {
             onReady: function (e) {
               tv.ready = true; tv.creating = false;
+              var f = e.target.getIframe && e.target.getIframe();
+              if (f) f.tabIndex = -1;                     // the frame is driven by our controls, not a tab stop
               if (!tv.want) { e.target.pauseVideo(); set('idle'); return; }
               e.target.playVideo();
-              // phones may refuse to start a video from outside its frame: then let the tap go to the frame
-              // itself. Judge by the player's own state, so a slow connection (still buffering) isn't mistaken for it.
-              var waited = 0, check = function () {
-                if (box.dataset.state !== 'loading' || !tv.want) return;
-                var st = e.target.getPlayerState ? e.target.getPlayerState() : -1, Y = window.YT.PlayerState;
-                if (st === Y.BUFFERING && waited < 10000) { waited += 1000; setTimeout(check, 1000); return; }
-                if (st !== Y.PLAYING) set('blocked');
-              };
-              setTimeout(check, 2500);
+              arm();
             },
             onStateChange: function (e) {
               var S = window.YT.PlayerState;
               if (e.data === S.PLAYING) {
                 // started without being wanted (a mix or the synth took over meanwhile): stop it again
                 if (!tv.want && box.dataset.state !== 'blocked') { e.target.pauseVideo(); return; }
-                tv.want = true;
+                tv.want = true; tv.started = true; clearTimeout(tv.bt);
                 Player.want = null; Player.pauseAll(null); if (E && E.on) setSignal(false);
                 set('playing'); clearInterval(tv.timer); tv.timer = setInterval(tick, 250); tick();
+                var ae = document.activeElement;             // keyboard start: move focus to a visible control
+                if (ae && ae.classList && ae.classList.contains('tv__big')) pp.focus({ preventScroll: true });
               } else if (e.data === S.PAUSED) { set('paused'); clearInterval(tv.timer); tick(); }
               else if (e.data === S.ENDED) { set('ended'); clearInterval(tv.timer); }
-              else if (e.data === S.BUFFERING && box.dataset.state !== 'playing') set('loading');
+              else if (e.data === S.BUFFERING && tv.want && !tv.started && box.dataset.state !== 'playing') { set('loading'); arm(); }
             },
             onError: function () { tv.creating = false; tv.want = false; set('idle'); window.open('https://www.youtube.com/watch?v=' + V.youtube, '_blank', 'noopener'); }
           }
@@ -1211,22 +1225,29 @@
     // a tap on the picture itself pauses / plays (the YouTube frame never gets the pointer)
     scr.addEventListener('click', function (e) {
       if (!scr.contains(e.target) || e.target.closest('button, .tv__seek, .tv__bar')) return;
+      if (woke) { woke = false; return; }
       var st = box.dataset.state; if (st === 'idle') play(); else if (st !== 'blocked' && st !== 'loading') toggle();
     });
     mute.addEventListener('click', function (e) {
       e.stopPropagation();
-      var P = tv.player; if (!P || !P.isMuted) return;
-      var m = !P.isMuted();
+      var P = tv.player; if (!P || !P.mute) return;
+      var m = tv.muted = !tv.muted;
       if (m) P.mute(); else P.unMute();
       mute.classList.toggle('is-muted', m); mute.setAttribute('aria-label', m ? 'Sound on' : 'Mute');
     });
     // in full screen (or on a still mouse) the bar steps back after a moment
-    var idleT, wake = function () {
+    var bar = $('.tv__bar', box), idleT, woke = false, wake = function () {
       box.classList.remove('is-still'); clearTimeout(idleT);
-      idleT = setTimeout(function () { if (tv.playing) box.classList.add('is-still'); }, 2500);
+      idleT = setTimeout(function hide() {
+        if (!tv.playing) return;
+        if (drag || bar.matches(':hover')) { idleT = setTimeout(hide, 1000); return; }
+        box.classList.add('is-still');
+      }, 2500);
     };
     tv.wake = wake;
-    ['pointermove', 'pointerdown', 'keydown'].forEach(function (ev) { scr.addEventListener(ev, wake, { passive: true }); });
+    // a tap on a picture whose controls had stepped back only brings them back
+    scr.addEventListener('pointerdown', function () { woke = box.classList.contains('is-still'); }, true);
+    ['pointermove', 'pointerdown', 'keydown', 'focusin'].forEach(function (ev) { scr.addEventListener(ev, wake, { passive: true }); });
     var fsb = $('.tv__fs', box);
     if (fsb) fsb.addEventListener('click', function () {
       var on = document.fullscreenElement || document.webkitFullscreenElement;
@@ -1879,123 +1900,6 @@
     fb.tc.textContent = '00:' + pad(Math.floor(frames / 1500)) + ':' + pad(Math.floor(frames / 25) % 60) + ':' + pad(frames % 25);
   }
 
-  /* ─── the origin: Keyv's emblem → the founder's face ─────────────────────
-     Pinned while you scroll through it: the crisp emblem breaks into particles
-     that pour downward and settle into a dot portrait of the founder, which then
-     resolves into the photograph. Scroll back and it all flies home. */
-  var og = { el: $('.origin'), n: 0, p: -1, last: -1 };
-  function initOrigin() {
-    var FD = (D.feedback || {}).founder;
-    if (!og.el || !FD) return;
-    og.el.hidden = false;
-    og.pin = $('.origin__pin', og.el); og.box = $('.origin__box', og.el); og.cvs = $('.origin__cvs', og.el);
-    og.photo = $('.origin__photo', og.el); og.mark = $('.origin__mark', og.el); og.line = $('.origin__line', og.el);
-    og.line.innerHTML = rich(FD.line || '');
-    og.photo.alt = FD.alt || '';
-    og.photo.src = FD.photo;
-    og.mark.style.setProperty('--mark', 'url("' + absUrl(FD.emblem || 'assets/img/keyv-emblem.png') + '")');
-    if (reduced) { og.el.classList.add('is-static'); return; }
-    var left = 2;
-    og.em = new Image(); og.pic = new Image();
-    og.em.onload = og.pic.onload = function () { if (--left === 0) { og.el.classList.add('is-live'); buildOrigin(); } };
-    og.em.src = FD.emblem || 'assets/img/keyv-emblem.png';
-    og.pic.src = FD.photo;
-    watch(og.pin, 'origin');
-  }
-  // sample both pictures at the box's on-screen size and pair the points top-to-bottom
-  function buildOrigin() {
-    if (!og.em || !og.em.naturalWidth || !og.pic.naturalWidth) return;
-    var d = DPR(2), bw = og.box.offsetWidth, bh = og.box.offsetHeight;
-    if (!bw) return;
-    var W = og.pin.offsetWidth, H = og.pin.offsetHeight;
-    og.cvs.width = Math.round(W * d); og.cvs.height = Math.round(H * d);
-    og.ctx = og.cvs.getContext('2d'); og.d = d; og.last = -1;
-    var pr = og.pin.getBoundingClientRect(), br = og.box.getBoundingClientRect();
-    og.bx = (br.left - pr.left) * d; og.by = (br.top - pr.top) * d; og.bw = bw * d; og.bh = bh * d;
-    var cw = Math.round(bw * d), ch = Math.round(bh * d), step = Math.max(2, Math.round((bw < 380 ? 2.6 : 3.1) * d));
-    var c = document.createElement('canvas'); c.width = cw; c.height = ch;
-    var g = c.getContext('2d');
-    // emblem: contain, tinted bone (kept for the crisp first frame)
-    var ew = og.em.naturalWidth, eh = og.em.naturalHeight, es = Math.min(cw / ew, ch / eh) * 0.92;
-    var ex0 = (cw - ew * es) / 2, ey0 = (ch - eh * es) / 2;
-    g.drawImage(og.em, ex0, ey0, ew * es, eh * es);
-    g.globalCompositeOperation = 'source-in'; g.fillStyle = '#e9e7df'; g.fillRect(0, 0, cw, ch);
-    og.tint = document.createElement('canvas'); og.tint.width = cw; og.tint.height = ch;
-    og.tint.getContext('2d').drawImage(c, 0, 0);
-    var ed = g.getImageData(0, 0, cw, ch).data, E_ = [];
-    for (var y = 0; y < ch; y += step) for (var x = 0; x < cw; x += step) if (ed[(y * cw + x) * 4 + 3] > 120) E_.push(x, y);
-    var n = E_.length / 2;
-    // portrait: cover-crop, brightness decides where the dots go (bright = dense)
-    g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, cw, ch);
-    var pw = og.pic.naturalWidth, ph = og.pic.naturalHeight, ps = Math.max(cw / pw, ch / ph);
-    g.drawImage(og.pic, (cw - pw * ps) / 2, (ch - ph * ps) * 0.35, pw * ps, ph * ps);
-    var pd = g.getImageData(0, 0, cw, ch).data, cand = [], fine = Math.max(1, Math.round(step * 0.55));
-    for (y = 0; y < ch; y += fine) for (x = 0; x < cw; x += fine) {
-      var i4 = (y * cw + x) * 4, L = (pd[i4] * .3 + pd[i4 + 1] * .59 + pd[i4 + 2] * .11) / 255;
-      var w = Math.max(0, L - 0.17);
-      if (w > 0) cand.push({ x: x, y: y, L: L, k: Math.pow(hsh(x * 0.37 + 1, y * 0.61 + 2), 1 / Math.pow(w, 1.5)) });
-    }
-    cand.sort(function (a, b) { return b.k - a.k; });           // weighted sample without replacement
-    var T = cand.slice(0, n);
-    while (T.length < n && cand.length) T.push(cand[T.length % cand.length]);
-    // pair top-to-bottom so the pour reads as one downward flow
-    var Ep = []; for (var k = 0; k < n; k++) Ep.push({ x: E_[k * 2], y: E_[k * 2 + 1] });
-    Ep.sort(function (a, b) { return a.y - b.y || a.x - b.x; });
-    T.sort(function (a, b) { return a.y - b.y || a.x - b.x; });
-    og.n = n;
-    og.ex = new Float32Array(n); og.ey = new Float32Array(n); og.tx = new Float32Array(n); og.ty = new Float32Array(n);
-    og.ts = new Float32Array(n); og.del = new Float32Array(n); og.drop = new Float32Array(n); og.sw = new Float32Array(n); og.hot = new Uint8Array(n);
-    for (k = 0; k < n; k++) {
-      og.ex[k] = og.bx + Ep[k].x; og.ey[k] = og.by + Ep[k].y;
-      og.tx[k] = og.bx + T[k].x + (hsh(k, 11) - 0.5) * fine; og.ty[k] = og.by + T[k].y + (hsh(k, 12) - 0.5) * fine;
-      og.ts[k] = step * (0.45 + 0.75 * T[k].L);                 // dot size follows the face's light
-      og.del[k] = (1 - Ep[k].y / ch) * 0.3 + hsh(k, 13) * 0.18;  // the bottom of the emblem lets go first
-      og.drop[k] = (0.18 + hsh(k, 14) * 0.5) * og.bh;             // how far each one falls before it settles
-      og.sw[k] = (hsh(k, 15) - 0.5) * og.bw * 0.35;
-      og.hot[k] = hsh(k, 16) < 0.05 ? 1 : 0;                      // a few yellow ones
-    }
-    og.step = step;
-  }
-  function resizeOrigin() { if (og.el && og.el.classList.contains('is-live')) buildOrigin(); }
-  function drawOrigin() {
-    var c = og.ctx; if (!c || !og.n) return;
-    var r = og.el.getBoundingClientRect();
-    var target = clamp(-r.top / Math.max(1, r.height - S.vh), 0, 1);
-    og.p = og.p < 0 ? target : lerp(og.p, target, 0.14);
-    if (Math.abs(og.p - target) < 0.0004) og.p = target;
-    var p = og.p;
-    // stages: 0–.12 emblem · .12–.72 the pour · .72–.9 the face resolves into the photograph
-    var Q = clamp((p - 0.12) / 0.6, 0, 1), photo = clamp((p - 0.74) / 0.16, 0, 1);
-    photo = photo * photo * (3 - 2 * photo);
-    og.box.style.setProperty('--photo', photo.toFixed(3));
-    og.el.classList.toggle('is-told', p > 0.8);
-    var key = (Q * 1000 | 0) + ':' + (photo * 100 | 0) + ':' + (S.beat > 0.05 ? (S.beat * 20 | 0) : 0);
-    if (key === og.last) return;
-    og.last = key;
-    c.clearRect(0, 0, og.cvs.width, og.cvs.height);
-    if (Q <= 0) { c.globalAlpha = 1; c.drawImage(og.tint, og.bx, og.by); return; }
-    var whole = clamp(1 - Q * 10, 0, 1);
-    if (whole > 0) { c.globalAlpha = whole; c.drawImage(og.tint, og.bx, og.by); }
-    var dots = 1 - photo, kick = 1 + S.beat * 0.04;
-    if (dots <= 0.01) { c.globalAlpha = 1; return; }
-    var cx = og.bx + og.bw / 2, cy = og.by + og.bh / 2, es = og.step * 0.8;
-    for (var pass = 0; pass < 2; pass++) {
-      c.fillStyle = pass ? '#e4e418' : '#e9e7df';
-      for (var k = 0; k < og.n; k++) {
-        if (og.hot[k] !== pass) continue;
-        var q = clamp((Q - og.del[k]) / 0.52, 0, 1);
-        var e = q * q * (3 - 2 * q), arc = Math.sin(q * Math.PI);
-        var x = og.ex[k] + (og.tx[k] - og.ex[k]) * e + og.sw[k] * arc;
-        var y = og.ey[k] + (og.ty[k] - og.ey[k]) * e + og.drop[k] * arc;
-        if (q >= 1 && kick !== 1) { x = cx + (x - cx) * kick; y = cy + (y - cy) * kick; }
-        var sz = es + (og.ts[k] - es) * e;
-        c.globalAlpha = dots * (0.55 + 0.45 * (1 - arc * 0.6));
-        c.fillRect(x - sz / 2, y - sz / 2, sz, sz);
-      }
-    }
-    c.globalAlpha = 1;
-  }
-
   /* ─── 05 next signal ───────────────────────────────────────────────── */
   var ns = { cvs: null };
   function initEvents() {
@@ -2212,7 +2116,7 @@
   function resizeAll() {
     S.vw = innerWidth; S.vh = innerHeight; S.sy = scrollY;
     fitTitles(); resizeScope(); resizeRail(); measureCarrier(); resizeRoster();
-    resizeTx(); resizeFeedback(); resizeOrigin(); resizeEvents(); measureOutput();
+    resizeTx(); resizeFeedback(); resizeEvents(); measureOutput();
     if (pf.open) { sizeProfileCanvases(); fitProfileName(); }
   }
 
@@ -2268,7 +2172,6 @@
     drawRail();
     if (vis.roster) drawRoster();
     if (vis.feedback) drawFeedback();
-    if (vis.origin) drawOrigin();
     if (vis.events) drawEvents();
   }
 
@@ -2280,7 +2183,6 @@
   initRoster();
   initTransmissions();
   initFeedback();
-  initOrigin();
   initEvents();
   initOutput();
   initClock();

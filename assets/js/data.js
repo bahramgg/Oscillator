@@ -173,8 +173,6 @@ window.OSCILLATOR = {
   /* ------------------------------------------------------------------------
      FEEDBACK — "04" — the visual archive.
      panorama: the wide image the section pans across while scrolling.
-     founder: { line, emblem, photo } — the closing piece: the emblem pours down and
-       settles into the founder's portrait as you scroll, with one line beside it.
      media: extra photos / videos shown underneath.
        { type: 'image', src: 'assets/img/x.jpg', caption: '' }
        { type: 'video', src: 'assets/video/x.mp4', poster: 'assets/img/x.jpg', caption: '' }
@@ -182,13 +180,6 @@ window.OSCILLATOR = {
   feedback: {
     panorama: 'assets/img/crowd-panorama.jpg',
     caption: 'the room is *the instrument*',
-    // one line on the founder, with one photo (under Keyv's emblem)
-    founder: {
-      line: 'Oscillator was founded by *Keyvan*, aka Keyv.',
-      emblem: 'assets/img/keyv-emblem.png',
-      photo: 'assets/img/keyv-artist.jpg',
-      alt: 'Keyvan (Keyv), founder of Oscillator'
-    },
     // extra photos / videos from the nights (shown as a grid under the room)
     media: []
   }
