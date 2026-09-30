@@ -687,6 +687,11 @@
     var hooks = '<i class="hk hk--tl"></i><i class="hk hk--tr"></i><i class="hk hk--bl"></i><i class="hk hk--br"></i>';
     var shooks = '<i class="hk hk--s hk--tl"></i><i class="hk hk--s hk--tr"></i><i class="hk hk--s hk--bl"></i><i class="hk hk--s hk--br"></i>';
     roster.list.innerHTML = A.map(function (a, i) {
+      // an artist with a series poster gets the poster itself, untouched
+      if (a.poster) return '<li class="pc pc--poster">' +
+        '<a class="pc__link" href="#/artist/' + esc(a.slug) + '" data-slug="' + esc(a.slug) + '" aria-label="' + esc(a.name) + '">' +
+          '<img class="pc__poster" src="' + esc(a.poster) + '" alt="' + esc(a.name) + ' · Oscillator ' + esc(artistNo(a, i)) + '" loading="lazy" draggable="false">' +
+        '</a></li>';
       var photo = a.photo
         ? '<img src="' + esc(a.photo) + '" alt="' + esc(a.name) + '" loading="lazy">'
         : '<canvas aria-hidden="true"></canvas>';
@@ -717,7 +722,7 @@
       var gio = new IntersectionObserver(function (es) {
         es.forEach(function (e) { if (e.isIntersecting) { setTimeout(function () { glitch(e.target); }, 150 + Math.random() * 400); gio.unobserve(e.target); } });
       }, { threshold: 0.4 });
-      roster.cards.forEach(function (c) { gio.observe(c.photo); });
+      roster.cards.forEach(function (c) { if (c.photo) gio.observe(c.photo); });
     }
     watch(roster.list, 'roster');
     initReel();
@@ -830,6 +835,7 @@
   }
   function resizeRoster() {
     roster.cards.forEach(function (c) {
+      if (!c.name) return;                              // poster cards need no fitting
       fitStretch(c.name, c.box, 0.14, 0.09);
       fitStretch(c.no, c.num, 0.2, 0.2);
       if (c.cvs) { var t = sizeCanvas(c.cvs, 2); drawSigil(t.ctx, c.sig, 0, t.w, t.h); }
@@ -841,7 +847,8 @@
     if (reduced || !roster.cards.length) return;
     if (!roster.next) roster.next = S.t + 3;
     if (S.t > roster.next) {
-      glitch(roster.cards[Math.floor(Math.random() * roster.cards.length)].photo);
+      var withPhoto = roster.cards.filter(function (c) { return c.photo; });
+      if (withPhoto.length) glitch(withPhoto[Math.floor(Math.random() * withPhoto.length)].photo);
       roster.next = S.t + 3 + Math.random() * 3;
     }
   }
@@ -869,9 +876,10 @@
 
     return '<div class="pf">' +
       '<aside class="pf__media">' +
+        (a.poster ? '<div class="pf__portrait pf__portrait--poster"><img src="' + esc(a.poster) + '" alt="' + esc(a.name) + ' · Oscillator poster"></div>' :
         '<div class="pf__portrait"' + (a.photo ? ' style="--img:url(\'' + esc(absUrl(a.photo)) + '\')"' : '') + '>' + (a.photo
           ? '<img src="' + esc(a.photo) + '" alt="' + esc(a.name) + ' portrait"><i class="brk" aria-hidden="true"></i>'
-          : '<canvas class="pf__sigil" aria-hidden="true"></canvas>') + '</div>' +
+          : '<canvas class="pf__sigil" aria-hidden="true"></canvas>') + '</div>') +
         '<div class="pf__sig"><canvas class="pf__sigmini" aria-hidden="true"></canvas>' +
           '<dl class="mono"><dt>Wave</dt><dd>' + sig.type + '</dd><dt>Ratio</dt><dd>' + sig.a + ':' + sig.b + '</dd>' +
           '<dt>Phase</dt><dd>' + (sig.phase * 2).toFixed(2) + 'π</dd><dt>Seed</dt><dd>#' + sig.seed.toString(16).toUpperCase().slice(0, 6) + '</dd></dl>' +
@@ -910,7 +918,7 @@
     pf.canvases = $$('.pf__sigil, .pf__sigmini', pf.body).map(function (cv) { return { cv: cv, sig: signature(slug) }; });
     requestAnimationFrame(sizeProfileCanvases);
     fitProfileName();
-    setTimeout(function () { glitch($('.pf__portrait', pf.body)); }, 700);
+    setTimeout(function () { glitch($('.pf__portrait:not(.pf__portrait--poster)', pf.body)); }, 700);
     if (E && E.on) E.setPattern(signature(slug).seed);
   }
   // keep the longest word of the name on one line (at its final, widest stretch)
@@ -997,7 +1005,7 @@
 
   function route(pushed) {
     var m = location.hash.match(/^#\/artist\/([\w-]+)$/);
-    var moved = { enzo: 'kenzo' };                       // renamed artists keep their old links
+    var moved = { enzo: 'kenzo', el4raa: 'del4raa' };                       // renamed artists keep their old links
     if (m && moved[m[1]]) { location.replace('#/artist/' + moved[m[1]]); return; }
     if (m) openProfile(m[1], pushed);
     else if (pf.open) closeProfile();
@@ -1269,14 +1277,20 @@
             '</div>' +
           '</div></article>';
       }).join('');
-      var more = $('.series__more');
-      if (SR.length > SHOW) {
+      var more = $('.series__more'), open = false, extra = SR.length - SHOW;
+      if (extra > 0) {
         more.hidden = false;
-        more.textContent = 'Show more · ' + (SR.length - SHOW) + ' ↓';
+        var label = function () { more.textContent = open ? 'Show less ↑' : 'Show more · ' + extra + ' ↓'; more.setAttribute('aria-expanded', open ? 'true' : 'false'); };
+        label();
         more.addEventListener('click', function () {
-          $$('.series__list .tx[hidden]').forEach(function (el) { el.hidden = false; });
-          more.hidden = true;
-          resizeTx();
+          open = !open;
+          $$('.series__list .tx').forEach(function (el, i) { if (i >= SHOW) el.hidden = !open && !el.classList.contains('is-playing'); });
+          label();
+          if (open) resizeTx();
+          else {                                          // folding up: keep the button where the eye is
+            var head = $('.series__head'), r = head.getBoundingClientRect();
+            if (r.top < 0) window.scrollTo({ top: window.scrollY + r.top - 80, behavior: reduced ? 'auto' : 'smooth' });
+          }
         });
       }
     }
@@ -1775,15 +1789,6 @@
     } else {
       fb.track.style.height = 'auto';
     }
-    // one line on the founder, one photo (black & white; colour on hover / tap)
-    var FD = F.founder, fo = $('.founder');
-    if (FD && fo) {
-      fo.hidden = false;
-      fo.innerHTML = (FD.photo ? '<figure class="founder__photo"><img src="' + esc(FD.photo) + '" alt="' + esc(FD.alt || '') + '" loading="lazy"><i class="brk" aria-hidden="true"></i></figure>' : '') +
-        '<p class="founder__line">' + rich(FD.line || '') + '</p>';
-      var fp = $('.founder__photo', fo);
-      if (fp) fp.addEventListener('click', function () { fp.classList.toggle('is-colour'); });
-    }
     var media = F.media || [], sheet = $('.sheet');
     sheet.hidden = !media.length;
     sheet.innerHTML = media.map(function (m, i) {
@@ -1835,71 +1840,119 @@
     fb.tc.textContent = '00:' + pad(Math.floor(frames / 1500)) + ':' + pad(Math.floor(frames / 25) % 60) + ':' + pad(frames % 25);
   }
 
-  /* ─── Keyv's logo: whole while it sits in view; scroll on and it breaks into
-     particles that fall away downward — scroll back and they fly home ─────── */
-  var km = { wrap: $('.keyv-mark__stage'), img: null, n: 0, p: 0 };
-  function initKeyvMark() {
-    if (!km.wrap || reduced) return;
-    km.cvs = document.createElement('canvas'); km.cvs.className = 'keyv-mark__cvs'; km.cvs.setAttribute('aria-hidden', 'true');
-    km.wrap.appendChild(km.cvs);
-    km.img = new Image();
-    km.img.onload = function () { km.wrap.classList.add('is-live'); resizeKeyvMark(); };
-    km.img.src = 'assets/img/keyv-emblem.png';
-    watch(km.cvs, 'keyv');
+  /* ─── the origin: Keyv's emblem → the founder's face ─────────────────────
+     Pinned while you scroll through it: the crisp emblem breaks into particles
+     that pour downward and settle into a dot portrait of the founder, which then
+     resolves into the photograph. Scroll back and it all flies home. */
+  var og = { el: $('.origin'), n: 0, p: -1, last: -1 };
+  function initOrigin() {
+    var FD = (D.feedback || {}).founder;
+    if (!og.el || !FD) return;
+    og.el.hidden = false;
+    og.pin = $('.origin__pin', og.el); og.box = $('.origin__box', og.el); og.cvs = $('.origin__cvs', og.el);
+    og.photo = $('.origin__photo', og.el); og.mark = $('.origin__mark', og.el); og.line = $('.origin__line', og.el);
+    og.line.innerHTML = rich(FD.line || '');
+    og.photo.alt = FD.alt || '';
+    og.photo.src = FD.photo;
+    og.mark.style.setProperty('--mark', 'url("' + absUrl(FD.emblem || 'assets/img/keyv-emblem.png') + '")');
+    if (reduced) { og.el.classList.add('is-static'); return; }
+    var left = 2;
+    og.em = new Image(); og.pic = new Image();
+    og.em.onload = og.pic.onload = function () { if (--left === 0) { og.el.classList.add('is-live'); buildOrigin(); } };
+    og.em.src = FD.emblem || 'assets/img/keyv-emblem.png';
+    og.pic.src = FD.photo;
+    watch(og.pin, 'origin');
   }
-  function resizeKeyvMark() {
-    if (!km.cvs || !km.img || !km.img.naturalWidth) return;
-    var el = $('.keyv-mark__img'), w = el.offsetWidth, h = el.offsetHeight;
-    if (!w) return;
-    var pad = Math.round(w * 0.35), fall = Math.round(S.vh * 0.9), d = DPR(2);
-    km.w = w; km.h = h; km.pad = pad; km.d = d;
-    km.cvs.style.left = -pad + 'px'; km.cvs.style.width = (w + pad * 2) + 'px'; km.cvs.style.height = (h + fall) + 'px';
-    km.cvs.width = Math.round((w + pad * 2) * d); km.cvs.height = Math.round((h + fall) * d);
-    km.ctx = km.cvs.getContext('2d'); km.last = -1;   // a resize clears the canvas: force a redraw
-    // the logo, tinted bone, at its on-screen size: drawn whole at rest, and sampled into particles
-    var t = document.createElement('canvas'); t.width = Math.round(w * d); t.height = Math.round(h * d);
-    var g = t.getContext('2d'); g.drawImage(km.img, 0, 0, t.width, t.height);
-    g.globalCompositeOperation = 'source-in'; g.fillStyle = '#e9e7df'; g.fillRect(0, 0, t.width, t.height);
-    km.tint = t;
-    var data = g.getImageData(0, 0, t.width, t.height).data, step = Math.max(2, Math.round((w < 360 ? 2.6 : 3) * d));
-    var xs = [], ys = [];
-    for (var y = 0; y < t.height; y += step) for (var x = 0; x < t.width; x += step) {
-      if (data[(y * t.width + x) * 4 + 3] > 120) { xs.push(x); ys.push(y); }
+  // sample both pictures at the box's on-screen size and pair the points top-to-bottom
+  function buildOrigin() {
+    if (!og.em || !og.em.naturalWidth || !og.pic.naturalWidth) return;
+    var d = DPR(2), bw = og.box.offsetWidth, bh = og.box.offsetHeight;
+    if (!bw) return;
+    var W = og.pin.offsetWidth, H = og.pin.offsetHeight;
+    og.cvs.width = Math.round(W * d); og.cvs.height = Math.round(H * d);
+    og.ctx = og.cvs.getContext('2d'); og.d = d; og.last = -1;
+    var pr = og.pin.getBoundingClientRect(), br = og.box.getBoundingClientRect();
+    og.bx = (br.left - pr.left) * d; og.by = (br.top - pr.top) * d; og.bw = bw * d; og.bh = bh * d;
+    var cw = Math.round(bw * d), ch = Math.round(bh * d), step = Math.max(2, Math.round((bw < 380 ? 2.6 : 3.1) * d));
+    var c = document.createElement('canvas'); c.width = cw; c.height = ch;
+    var g = c.getContext('2d');
+    // emblem: contain, tinted bone (kept for the crisp first frame)
+    var ew = og.em.naturalWidth, eh = og.em.naturalHeight, es = Math.min(cw / ew, ch / eh) * 0.92;
+    var ex0 = (cw - ew * es) / 2, ey0 = (ch - eh * es) / 2;
+    g.drawImage(og.em, ex0, ey0, ew * es, eh * es);
+    g.globalCompositeOperation = 'source-in'; g.fillStyle = '#e9e7df'; g.fillRect(0, 0, cw, ch);
+    og.tint = document.createElement('canvas'); og.tint.width = cw; og.tint.height = ch;
+    og.tint.getContext('2d').drawImage(c, 0, 0);
+    var ed = g.getImageData(0, 0, cw, ch).data, E_ = [];
+    for (var y = 0; y < ch; y += step) for (var x = 0; x < cw; x += step) if (ed[(y * cw + x) * 4 + 3] > 120) E_.push(x, y);
+    var n = E_.length / 2;
+    // portrait: cover-crop, brightness decides where the dots go (bright = dense)
+    g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, cw, ch);
+    var pw = og.pic.naturalWidth, ph = og.pic.naturalHeight, ps = Math.max(cw / pw, ch / ph);
+    g.drawImage(og.pic, (cw - pw * ps) / 2, (ch - ph * ps) * 0.35, pw * ps, ph * ps);
+    var pd = g.getImageData(0, 0, cw, ch).data, cand = [], fine = Math.max(1, Math.round(step * 0.55));
+    for (y = 0; y < ch; y += fine) for (x = 0; x < cw; x += fine) {
+      var i4 = (y * cw + x) * 4, L = (pd[i4] * .3 + pd[i4 + 1] * .59 + pd[i4 + 2] * .11) / 255;
+      var w = Math.max(0, L - 0.17);
+      if (w > 0) cand.push({ x: x, y: y, L: L, k: Math.pow(hsh(x * 0.37 + 1, y * 0.61 + 2), 1 / Math.pow(w, 1.5)) });
     }
-    var n = km.n = xs.length;
-    km.x = new Float32Array(xs); km.y = new Float32Array(ys); km.step = step;
-    km.del = new Float32Array(n); km.fall = new Float32Array(n); km.dx = new Float32Array(n); km.ph = new Float32Array(n);
-    for (var i = 0; i < n; i++) {
-      var r = hsh(i, 3), yy = km.y[i] / t.height;
-      km.del[i] = (1 - yy) * 0.35 + r * 0.25;              // the bottom lets go first
-      km.fall[i] = (0.35 + hsh(i, 5) * 0.65) * fall * d;
-      km.dx[i] = (hsh(i, 7) - 0.5) * w * 0.5 * d;
-      km.ph[i] = hsh(i, 9) * 6.28;
+    cand.sort(function (a, b) { return b.k - a.k; });           // weighted sample without replacement
+    var T = cand.slice(0, n);
+    while (T.length < n && cand.length) T.push(cand[T.length % cand.length]);
+    // pair top-to-bottom so the pour reads as one downward flow
+    var Ep = []; for (var k = 0; k < n; k++) Ep.push({ x: E_[k * 2], y: E_[k * 2 + 1] });
+    Ep.sort(function (a, b) { return a.y - b.y || a.x - b.x; });
+    T.sort(function (a, b) { return a.y - b.y || a.x - b.x; });
+    og.n = n;
+    og.ex = new Float32Array(n); og.ey = new Float32Array(n); og.tx = new Float32Array(n); og.ty = new Float32Array(n);
+    og.ts = new Float32Array(n); og.del = new Float32Array(n); og.drop = new Float32Array(n); og.sw = new Float32Array(n); og.hot = new Uint8Array(n);
+    for (k = 0; k < n; k++) {
+      og.ex[k] = og.bx + Ep[k].x; og.ey[k] = og.by + Ep[k].y;
+      og.tx[k] = og.bx + T[k].x + (hsh(k, 11) - 0.5) * fine; og.ty[k] = og.by + T[k].y + (hsh(k, 12) - 0.5) * fine;
+      og.ts[k] = step * (0.45 + 0.75 * T[k].L);                 // dot size follows the face's light
+      og.del[k] = (1 - Ep[k].y / ch) * 0.3 + hsh(k, 13) * 0.18;  // the bottom of the emblem lets go first
+      og.drop[k] = (0.18 + hsh(k, 14) * 0.5) * og.bh;             // how far each one falls before it settles
+      og.sw[k] = (hsh(k, 15) - 0.5) * og.bw * 0.35;
+      og.hot[k] = hsh(k, 16) < 0.05 ? 1 : 0;                      // a few yellow ones
     }
+    og.step = step;
   }
-  function drawKeyvMark() {
-    var c = km.ctx; if (!c || !km.n) return;
-    var r = km.cvs.getBoundingClientRect(), mid = r.top + km.h / 2;
-    var target = clamp((S.vh * 0.5 - mid) / (S.vh * 0.55), 0, 1);
-    km.p = lerp(km.p, target, 0.16);
-    if (Math.abs(km.p - target) < 0.0005) km.p = target;
-    if (km.p === km.last) return;
-    km.last = km.p;
-    var p = km.p, d = km.d, ox = km.pad * d, W = km.cvs.width, H = km.cvs.height;
-    c.clearRect(0, 0, W, H);
-    // at rest: the crisp logo; as it breaks up the particles take over
-    var whole = clamp(1 - p * 8, 0, 1);
-    if (whole > 0) { c.globalAlpha = whole; c.drawImage(km.tint, ox, 0); }
-    if (p <= 0) { c.globalAlpha = 1; return; }
-    c.fillStyle = '#e9e7df';
-    var sz = km.step * 0.9, on = clamp(p * 8, 0, 1);
-    for (var i = 0; i < km.n; i++) {
-      var q = clamp((p - km.del[i]) / 0.45, 0, 1), qq = q * q;
-      var a = on * (1 - q * 0.85);
-      if (a <= 0.02) continue;
-      c.globalAlpha = a;
-      var s2 = sz * (1 - q * 0.45);
-      c.fillRect(ox + km.x[i] + km.dx[i] * q + Math.sin(km.ph[i] + q * 5) * 6 * d * q, km.y[i] + km.fall[i] * qq, s2, s2);
+  function resizeOrigin() { if (og.el && og.el.classList.contains('is-live')) buildOrigin(); }
+  function drawOrigin() {
+    var c = og.ctx; if (!c || !og.n) return;
+    var r = og.el.getBoundingClientRect();
+    var target = clamp(-r.top / Math.max(1, r.height - S.vh), 0, 1);
+    og.p = og.p < 0 ? target : lerp(og.p, target, 0.14);
+    if (Math.abs(og.p - target) < 0.0004) og.p = target;
+    var p = og.p;
+    // stages: 0–.12 emblem · .12–.72 the pour · .72–.9 the face resolves into the photograph
+    var Q = clamp((p - 0.12) / 0.6, 0, 1), photo = clamp((p - 0.74) / 0.16, 0, 1);
+    photo = photo * photo * (3 - 2 * photo);
+    og.box.style.setProperty('--photo', photo.toFixed(3));
+    og.el.classList.toggle('is-told', p > 0.8);
+    var key = (Q * 1000 | 0) + ':' + (photo * 100 | 0) + ':' + (S.beat > 0.05 ? (S.beat * 20 | 0) : 0);
+    if (key === og.last) return;
+    og.last = key;
+    c.clearRect(0, 0, og.cvs.width, og.cvs.height);
+    if (Q <= 0) { c.globalAlpha = 1; c.drawImage(og.tint, og.bx, og.by); return; }
+    var whole = clamp(1 - Q * 10, 0, 1);
+    if (whole > 0) { c.globalAlpha = whole; c.drawImage(og.tint, og.bx, og.by); }
+    var dots = 1 - photo, kick = 1 + S.beat * 0.04;
+    if (dots <= 0.01) { c.globalAlpha = 1; return; }
+    var cx = og.bx + og.bw / 2, cy = og.by + og.bh / 2, es = og.step * 0.8;
+    for (var pass = 0; pass < 2; pass++) {
+      c.fillStyle = pass ? '#e4e418' : '#e9e7df';
+      for (var k = 0; k < og.n; k++) {
+        if (og.hot[k] !== pass) continue;
+        var q = clamp((Q - og.del[k]) / 0.52, 0, 1);
+        var e = q * q * (3 - 2 * q), arc = Math.sin(q * Math.PI);
+        var x = og.ex[k] + (og.tx[k] - og.ex[k]) * e + og.sw[k] * arc;
+        var y = og.ey[k] + (og.ty[k] - og.ey[k]) * e + og.drop[k] * arc;
+        if (q >= 1 && kick !== 1) { x = cx + (x - cx) * kick; y = cy + (y - cy) * kick; }
+        var sz = es + (og.ts[k] - es) * e;
+        c.globalAlpha = dots * (0.55 + 0.45 * (1 - arc * 0.6));
+        c.fillRect(x - sz / 2, y - sz / 2, sz, sz);
+      }
     }
     c.globalAlpha = 1;
   }
@@ -2119,7 +2172,7 @@
   function resizeAll() {
     S.vw = innerWidth; S.vh = innerHeight; S.sy = scrollY;
     fitTitles(); resizeScope(); resizeRail(); measureCarrier(); resizeRoster();
-    resizeTx(); resizeFeedback(); resizeKeyvMark(); resizeEvents(); measureOutput();
+    resizeTx(); resizeFeedback(); resizeOrigin(); resizeEvents(); measureOutput();
     if (pf.open) { sizeProfileCanvases(); fitProfileName(); }
   }
 
@@ -2175,7 +2228,7 @@
     drawRail();
     if (vis.roster) drawRoster();
     if (vis.feedback) drawFeedback();
-    if (vis.keyv) drawKeyvMark();
+    if (vis.origin) drawOrigin();
     if (vis.events) drawEvents();
   }
 
@@ -2187,7 +2240,7 @@
   initRoster();
   initTransmissions();
   initFeedback();
-  initKeyvMark();
+  initOrigin();
   initEvents();
   initOutput();
   initClock();

@@ -1838,26 +1838,7 @@ body { font-size: 16px; }
 @media (max-width: 860px) { .sec__sub.tape { justify-self: start; margin-bottom: 0; } }
 @media (prefers-reduced-motion: reduce) { .tape { transition: none; } }
 
-/* Keyv's logo: its own block between the room and the photos — large, still, bone white */
-.keyv-mark {
-  display: flex; flex-direction: column; align-items: center; gap: clamp(16px, 2vw, 24px);
-  margin: 0; padding: clamp(72px, 10vw, 150px) var(--gutter) 0;
-}
-.keyv-mark__img {
-  display: block; width: min(440px, 34vw); aspect-ratio: 840 / 918;
-  background: var(--bone);
-  -webkit-mask: url('../img/keyv-emblem.png') center / contain no-repeat;
-  mask: url('../img/keyv-emblem.png') center / contain no-repeat;
-}
-.keyv-mark figcaption { color: var(--bone-3); letter-spacing: .32em; text-transform: uppercase; font-size: 11px; }
-.feedback .keyv-mark + .sheet { padding-top: clamp(64px, 8vw, 120px); }
-@media (max-width: 860px) { .keyv-mark__img { width: 72vw; } }
 
-/* the particle canvas hangs below the logo so the pieces can fall over the photos */
-.keyv-mark { position: relative; z-index: 2; }
-.keyv-mark__stage { position: relative; }
-.keyv-mark__cvs { position: absolute; top: 0; max-width: none; max-height: none; pointer-events: none; }
-.keyv-mark__stage.is-live .keyv-mark__img { visibility: hidden; }
 
 /* feedback photos: black & white at rest, colour on tap (and on hover with a mouse) */
 .feedback .sheet .frame { cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -1870,7 +1851,6 @@ body { font-size: 16px; }
 .nosignal__row .cta { align-self: center; margin-top: clamp(20px, 3vw, 40px); }
 
 /* nothing may widen the page: the particle canvas spills downward only */
-.keyv-mark { overflow-x: clip; overflow-y: visible; }
 html, body { overflow-x: clip; }
 
 /* ==========================================================================
@@ -2127,22 +2107,60 @@ html, body { overflow-x: clip; }
 }
 
 /* ==========================================================================
-   04 Feedback — one line on the founder, one photo
+   02 Voices — cards that have the artist's series poster show it as-is
    ========================================================================== */
-.founder {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); align-items: center;
-  gap: clamp(24px, 5vw, 80px); padding: clamp(64px, 9vw, 130px) var(--gutter) 0;
+.roster .pc--poster .pc__link { aspect-ratio: 1 / 1; background: #000; }
+.pc__poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; -webkit-user-drag: none; transition: transform .6s var(--ease-out, ease); }
+.pc--poster .pc__link:hover .pc__poster, .pc--poster .pc__link:focus-visible .pc__poster { transform: scale(1.015); }
+.pf__portrait--poster { aspect-ratio: 1 / 1; background: #000; }
+.pf__portrait--poster img { filter: none !important; transform: none !important; }
+.pf__portrait--poster::after { display: none; }
+
+/* ==========================================================================
+   04 Feedback — the origin: Keyv's emblem pours down into the founder's face
+   ========================================================================== */
+.origin { position: relative; height: 260vh; margin-top: clamp(40px, 6vw, 90px); }
+.origin[hidden] { display: none; }
+.origin__pin {
+  position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center;
+  gap: clamp(24px, 5vw, 80px); padding: calc(var(--nav-h) + 16px) var(--gutter) 24px;
 }
-.founder[hidden] { display: none; }
-.founder__photo { position: relative; margin: 0; aspect-ratio: 4 / 5; overflow: hidden; background: var(--ink-2); cursor: pointer; }
-.founder__photo img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.08); transition: filter .7s cubic-bezier(.2, .7, .2, 1); }
-.founder__photo.is-colour img { filter: none; }
-@media (hover: hover) { .founder__photo:hover img { filter: none; } }
-.founder__photo .brk { --l: clamp(16px, 2vw, 26px); }
-.founder__line { font-family: var(--f-display); text-transform: uppercase; font-size: clamp(34px, 5vw, 84px); line-height: .95; max-width: 12ch; }
-.founder__line em { font-style: normal; color: var(--acid); }
+.origin__cvs { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+.origin__box {
+  --photo: 0;
+  position: relative; margin: 0; justify-self: end;
+  height: min(70vh, 640px); height: min(70svh, 640px); aspect-ratio: 0.9; max-width: 100%;
+}
+.origin__mark, .origin__photo { position: absolute; inset: 0; width: 100%; height: 100%; }
+.origin__mark {   /* the crisp emblem: shown until the particles take over (and when motion is reduced) */
+  background: var(--bone); opacity: 0;
+  -webkit-mask: var(--mark) center / 92% no-repeat; mask: var(--mark) center / 92% no-repeat;
+}
+.origin__photo { object-fit: cover; object-position: 50% 35%; filter: grayscale(1) contrast(1.1); opacity: var(--photo); }
+.origin__box .brk { z-index: 3; --l: clamp(18px, 2.2vw, 30px); opacity: calc(.25 + var(--photo) * .75); }
+.origin__box::after {   /* scanlines over the photograph */
+  content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: var(--photo);
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,.2) 0 1px, transparent 1px 3px);
+}
+.origin__tag { position: absolute; left: 0; bottom: -30px; display: flex; gap: 12px; color: var(--bone-3); letter-spacing: .28em; text-transform: uppercase; font-size: 11px; }
+.origin__tag b { color: var(--acid); font-weight: 400; }
+.origin__line {
+  position: relative; z-index: 3; justify-self: start; max-width: 11ch;
+  font-family: var(--f-display); text-transform: uppercase; font-size: clamp(40px, 5.6vw, 96px); line-height: .92;
+  opacity: 0; transform: translateY(24px); transition: opacity .7s, transform .9s var(--ease-out, ease);
+}
+.origin__line em { font-style: normal; color: var(--acid); }
+.origin.is-told .origin__line { opacity: 1; transform: none; }
+.origin.is-static { height: auto; }
+.origin.is-static .origin__pin { position: relative; height: auto; }
+.origin.is-static .origin__line { opacity: 1; transform: none; }
+.origin.is-static .origin__box { --photo: 1; }
+.origin:not(.is-live):not(.is-static) .origin__mark { opacity: 1; }
 @media (max-width: 860px) {
-  .founder { grid-template-columns: 1fr; gap: 22px; }
-  .founder__photo { width: 78%; justify-self: center; }
-  .founder__line { text-align: center; justify-self: center; font-size: clamp(30px, 9vw, 44px); }
+  .origin { height: 240vh; }
+  .origin__pin { grid-template-columns: 1fr; grid-template-rows: auto auto; align-content: center; gap: 44px; }
+  .origin__box { justify-self: center; height: auto; width: min(82vw, 52svh); }
+  .origin__line { justify-self: center; text-align: center; max-width: 13ch; font-size: clamp(30px, 9vw, 46px); }
+  .origin__tag { left: 50%; transform: translateX(-50%); white-space: nowrap; }
 }

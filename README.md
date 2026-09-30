@@ -8,9 +8,9 @@ The site is built as an instrument. Every section is a waveform:
 |---|---------|------|------------|
 | 00 | Power | — | Intro plays the label's "Oscillator Rises" reel (muted, Sound on button, tap to skip, once per session; a drawn version runs if autoplay is blocked; skipped for reduced motion). Hero: neon logo in a rotating OSCILLATOR/ ring, yellow strobe cuts, faint live oscilloscope |
 | 01 | Carrier | sine | The label manifesto |
-| 02 | Voices | square | The roster as a swipeable reel of cards that also advances by itself every 2 s (pauses on touch, drag or hover), rebuilt from the label's Instagram artist posters (torn-edge photo in hook brackets, stretched vertical name in Rajdhani, symbol + number boxes, logotype); each opens a profile (`#/artist/<slug>`) |
+| 02 | Voices | square | The roster as a swipeable reel that also advances by itself every 2 s (pauses on touch, drag or hover). Each card is the artist's own series poster, shown as-is (`poster` in data.js); an artist without a poster gets a card rebuilt in the poster language from their photo. Each opens a profile (`#/artist/<slug>`) |
 | 03 | Transmissions | saw | A featured video from the label's YouTube channel (`video` in data.js; the player loads only when pressed), a featured mix as a big card (`transmissions`), then **The Oscillator Series**: the label's numbered mixes (#001–#031 from soundcloud.com/oscillatorr, `series`) as a compact archive, with video links where a mix is on YouTube; each roster artist's mix also appears on their profile. Play opens the stage: a full-screen now-playing page. Audio via hidden SoundCloud widgets |
-| 04 | Feedback | noise | The room: the crowd panorama pinned to the screen, panning sideways as you scroll (strips shear with scroll speed), with a running REC timecode; 'the room is THE INSTRUMENT'. Then Keyv's emblem (particles on scroll) and one line on the founder with one photo (`feedback.founder`); photos in `feedback.media` appear as a grid underneath |
+| 04 | Feedback | noise | The room: the crowd panorama pinned to the screen, panning sideways as you scroll (strips shear with scroll speed), with a running REC timecode; 'the room is THE INSTRUMENT'. Then the origin: pinned while you scroll, Keyv's emblem pours down in particles and settles into a dot portrait of the founder, which resolves into his photograph beside the line 'Oscillator was founded by Keyvan, aka Keyv' (`feedback.founder`); photos in `feedback.media` appear as a grid underneath |
 | 05 | Next signal | triangle | Events (shows a "no signal" state when nothing is upcoming); past dates with a `poster` form the "Past signals" archive |
 | 06 | Output | pulse | Contact: 'Send a signal' opens a full-screen form (Demo / Booking / Collaboration / Other, fields follow the choice; an artist's profile opens it as a booking for that artist). Submissions go through FormSubmit (`label.form` in data.js) to the label's inbox |
 
@@ -36,7 +36,7 @@ to touch the HTML, CSS or other scripts to update the site.
 
 - **Artists** — add an object to `artists`. Put photos in `assets/img/` (black & white
   works best). An artist without a photo automatically gets a generated contour "sigil".
-  Roster photos are cropped from the label's artist posters (the series artwork), graded black & white.
+  Roster cards show the artists' series posters as-is (`assets/img/posters/`); the black & white photo crops are the fallback.
 - **Transmissions** — mixes/releases. `soundcloud` is the public track URL; `duration`
   is in seconds; `waveform` is optional.
 - **Events** — leave `events: []` for the "no signal" state, or add dates. Past dates with a `poster` appear in the "Past signals" archive.
