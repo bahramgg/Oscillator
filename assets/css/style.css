@@ -2164,3 +2164,19 @@ html, body { overflow-x: clip; }
   .origin__line { justify-self: center; text-align: center; max-width: 13ch; font-size: clamp(30px, 9vw, 46px); }
   .origin__tag { left: 50%; transform: translateX(-50%); white-space: nowrap; }
 }
+
+/* review fixes: video player */
+.tv__mute span { display: contents; }
+.tv__mute .i-mut, .tv__mute.is-muted .i-snd { display: none; }
+.tv__mute.is-muted .i-mut { display: contents; }
+/* hidden controls are not focusable; shown while a control has keyboard focus */
+.tv__bar { visibility: hidden; transition: opacity .3s, transform .3s, visibility 0s .3s; }
+.tv[data-state="playing"] .tv__bar, .tv[data-state="paused"] .tv__bar, .tv[data-state="ended"] .tv__bar { visibility: visible; transition: opacity .3s, transform .3s, visibility 0s; }
+.tv[data-state="playing"] .tv__screen:has(:focus-visible) .tv__bar { opacity: 1 !important; transform: none !important; }
+/* a still pointer (and full screen) lets the bar step back */
+.tv.is-still[data-state="playing"] .tv__bar { opacity: 0; transform: translateY(8px); }
+.tv.is-still[data-state="playing"] .tv__screen { cursor: none; }
+.tv__screen:fullscreen .tv__bar { padding-bottom: 28px; }
+/* series rows: links sit on the date line */
+.tx--row .tx__ext { margin-top: 0; }
+.tx--row .tx__meta { flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }

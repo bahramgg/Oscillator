@@ -1006,7 +1006,7 @@
   function route(pushed) {
     var m = location.hash.match(/^#\/artist\/([\w-]+)$/);
     var moved = { enzo: 'kenzo', el4raa: 'del4raa' };                       // renamed artists keep their old links
-    if (m && moved[m[1]]) { location.replace('#/artist/' + moved[m[1]]); return; }
+    if (m && moved[m[1]]) { history.replaceState(null, '', '#/artist/' + moved[m[1]]); openProfile(moved[m[1]], pushed); return; }
     if (m) openProfile(m[1], pushed);
     else if (pf.open) closeProfile();
   }
@@ -1119,7 +1119,7 @@
           '<button class="tv__pp" type="button" aria-label="Play">' + ICON_PLAY + ICON_PAUSE + '</button>' +
           '<span class="tv__time mono"><b>0:00</b> / <span>--:--</span></span>' +
           '<div class="tv__seek" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="tv__fill"></i><i class="tv__head"></i></div>' +
-          '<button class="tv__mute mono" type="button" aria-label="Mute">' + ICON_SOUND + '</button>' +
+          '<button class="tv__mute" type="button" aria-label="Mute"><span class="i-snd">' + ICON_SOUND + '</span><span class="i-mut">' + ICON_MUTED + '</span></button>' +
           (fsOK ? '<button class="tv__fs" type="button" aria-label="Full screen">' + ICON_FS + '</button>' : '') +
         '</div>' +
       '</div>' +
@@ -1136,6 +1136,7 @@
     var set = function (st) {                          // idle | loading | playing | paused | blocked | ended
       box.dataset.state = st;
       tv.playing = st === 'playing';
+      if (tv.wake) { if (tv.playing) tv.wake(); else box.classList.remove('is-still'); }
       tag.textContent = st === 'playing' ? 'On air' : st === 'loading' ? 'Tuning in' : 'Video';
       pp.setAttribute('aria-label', tv.playing ? 'Pause' : 'Play');
     };
@@ -1149,10 +1150,15 @@
       tNow.textContent = fmt(t);
       seek.setAttribute('aria-valuenow', Math.round(f * 100));
     };
+    // tv.want: the visitor's latest wish for the video. A mix or the synth started while the
+    // video is still loading clears it, so the video must not take over when it finally starts.
     var play = function () {
+      tv.want = true;
       Player.want = null; Player.pauseAll(null);       // one sound at a time
       if (E && E.on) setSignal(false);
-      if (tv.player && tv.player.playVideo) { tv.player.playVideo(); return; }
+      if (tv.player) { if (tv.ready) tv.player.playVideo(); else set('loading'); return; }
+      if (tv.creating) { set('loading'); return; }     // a press while the API is still loading: onReady will start it
+      tv.creating = true;
       set('loading');
       loadYT().then(function () {
         tv.player = new window.YT.Player($('.tv__yt', box), {
@@ -1160,35 +1166,67 @@
           playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, rel: 0 },
           events: {
             onReady: function (e) {
+              tv.ready = true; tv.creating = false;
+              if (!tv.want) { e.target.pauseVideo(); set('idle'); return; }
               e.target.playVideo();
-              // phones may refuse to start a video from outside its frame: then let the tap go to the frame itself
-              setTimeout(function () { if (box.dataset.state === 'loading') set('blocked'); }, 2500);
+              // phones may refuse to start a video from outside its frame: then let the tap go to the frame
+              // itself. Judge by the player's own state, so a slow connection (still buffering) isn't mistaken for it.
+              var waited = 0, check = function () {
+                if (box.dataset.state !== 'loading' || !tv.want) return;
+                var st = e.target.getPlayerState ? e.target.getPlayerState() : -1, Y = window.YT.PlayerState;
+                if (st === Y.BUFFERING && waited < 10000) { waited += 1000; setTimeout(check, 1000); return; }
+                if (st !== Y.PLAYING) set('blocked');
+              };
+              setTimeout(check, 2500);
             },
             onStateChange: function (e) {
               var S = window.YT.PlayerState;
               if (e.data === S.PLAYING) {
+                // started without being wanted (a mix or the synth took over meanwhile): stop it again
+                if (!tv.want && box.dataset.state !== 'blocked') { e.target.pauseVideo(); return; }
+                tv.want = true;
                 Player.want = null; Player.pauseAll(null); if (E && E.on) setSignal(false);
                 set('playing'); clearInterval(tv.timer); tv.timer = setInterval(tick, 250); tick();
               } else if (e.data === S.PAUSED) { set('paused'); clearInterval(tv.timer); tick(); }
               else if (e.data === S.ENDED) { set('ended'); clearInterval(tv.timer); }
               else if (e.data === S.BUFFERING && box.dataset.state !== 'playing') set('loading');
             },
-            onError: function () { set('idle'); window.open('https://www.youtube.com/watch?v=' + V.youtube, '_blank', 'noopener'); }
+            onError: function () { tv.creating = false; tv.want = false; set('idle'); window.open('https://www.youtube.com/watch?v=' + V.youtube, '_blank', 'noopener'); }
           }
         });
-      }).catch(function () { set('idle'); window.open('https://www.youtube.com/watch?v=' + V.youtube, '_blank', 'noopener'); });
+      }).catch(function () { tv.creating = false; tv.want = false; set('idle'); window.open('https://www.youtube.com/watch?v=' + V.youtube, '_blank', 'noopener'); });
     };
-    tv.pause = function () { if (tv.player && tv.playing && tv.player.pauseVideo) tv.player.pauseVideo(); };
+    // another sound starts: pause the video, or cancel it if it is still on its way
+    tv.pause = function () {
+      tv.want = false;
+      var st = box.dataset.state;
+      if (st === 'loading' || st === 'blocked') {
+        if (tv.ready && tv.player.pauseVideo) tv.player.pauseVideo();
+        set(tv.ready ? 'paused' : 'idle');
+      } else if (tv.playing && tv.player && tv.player.pauseVideo) tv.player.pauseVideo();
+    };
     var toggle = function () { if (tv.playing) tv.pause(); else play(); };
     $('.tv__big', box).addEventListener('click', play);
     pp.addEventListener('click', toggle);
     // a tap on the picture itself pauses / plays (the YouTube frame never gets the pointer)
-    scr.addEventListener('click', function (e) { if (e.target.closest('button, .tv__seek')) return; var st = box.dataset.state; if (st === 'idle') play(); else if (st !== 'blocked' && st !== 'loading') toggle(); });
-    mute.addEventListener('click', function () {
-      var P = tv.player; if (!P || !P.isMuted) return;
-      if (P.isMuted()) { P.unMute(); mute.innerHTML = ICON_SOUND; mute.setAttribute('aria-label', 'Mute'); }
-      else { P.mute(); mute.innerHTML = ICON_MUTED; mute.setAttribute('aria-label', 'Sound on'); }
+    scr.addEventListener('click', function (e) {
+      if (!scr.contains(e.target) || e.target.closest('button, .tv__seek, .tv__bar')) return;
+      var st = box.dataset.state; if (st === 'idle') play(); else if (st !== 'blocked' && st !== 'loading') toggle();
     });
+    mute.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var P = tv.player; if (!P || !P.isMuted) return;
+      var m = !P.isMuted();
+      if (m) P.mute(); else P.unMute();
+      mute.classList.toggle('is-muted', m); mute.setAttribute('aria-label', m ? 'Sound on' : 'Mute');
+    });
+    // in full screen (or on a still mouse) the bar steps back after a moment
+    var idleT, wake = function () {
+      box.classList.remove('is-still'); clearTimeout(idleT);
+      idleT = setTimeout(function () { if (tv.playing) box.classList.add('is-still'); }, 2500);
+    };
+    tv.wake = wake;
+    ['pointermove', 'pointerdown', 'keydown'].forEach(function (ev) { scr.addEventListener(ev, wake, { passive: true }); });
     var fsb = $('.tv__fs', box);
     if (fsb) fsb.addEventListener('click', function () {
       var on = document.fullscreenElement || document.webkitFullscreenElement;
@@ -1648,6 +1686,7 @@
     toggle: function (o, frac) {
       if (!o.t.soundcloud) return;
       Player.want = o;
+      if (tv.pause && !o.playing) tv.pause();
       if (E && E.on) setSignal(false);
       this.pauseAll(o);
       if (frac != null) { o.progress = frac; o.sec = frac * o.t.duration; updateTx(o); }
@@ -2130,6 +2169,7 @@
     if (on) {
       Player.want = null;
       Player.pauseAll();
+      if (tv.pause) tv.pause();
       E.start().then(function (ok) {
         if (!ok) return;
         E.setPattern(pf.open ? signature(pf.slug).seed : null);
