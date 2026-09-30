@@ -54,27 +54,7 @@ window.OSCILLATOR = {
                   beatport / spotify / youtube — empty ones are hidden
      ------------------------------------------------------------------------ */
   artists: [
-    {
-      slug: 'keyv',
-      name: 'Keyv',
-      role: 'DJ',
-      city: 'Tehran',
-      photo: 'assets/img/keyv-artist.jpg',
-      bio: [],
-      links: {
-        instagram: 'https://www.instagram.com/keyvdj/',
-        soundcloud: 'https://soundcloud.com/keyvdj',
-        residentadvisor: '',
-        bandcamp: '',
-        beatport: '',
-        spotify: '',
-        youtube: ''
-      },
-      transmissions: ['osc-006'],
-      videos: []
-    },
-
-    // Roster in series order (newest first) — photos cropped from the label's artist posters
+    // Roster in series order (newest first), each with their series poster
     { slug: 'perry', name: 'Perry', poster: 'assets/img/posters/perry.jpg', num: '032', role: '', city: '', photo: 'assets/img/artist-perry.jpg', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
     { slug: 'kenzo', name: 'Kenzo', poster: 'assets/img/posters/kenzo.jpg', role: '', city: '', photo: 'assets/img/artist-kenzo.jpg', bio: [], links: { instagram: 'https://www.instagram.com/shayan.kenzo/', soundcloud: '' }, transmissions: ['osc-031'], videos: [] },
     { slug: 'mahyar-arabiyan', name: 'Mahyar Arabiyan', poster: 'assets/img/posters/mahyar-arabiyan.jpg', role: '', city: '', photo: 'assets/img/artist-mahyar-arabiyan.jpg', bio: [], links: { instagram: 'https://www.instagram.com/mah7arr/', soundcloud: '' }, transmissions: ['osc-030'], videos: [] },

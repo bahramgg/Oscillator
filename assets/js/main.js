@@ -1980,7 +1980,7 @@
     }).join('');
     th.letters = $$('.l', th.el).map(function (el, i) { return { el: el, i: i, x: 0, y: 0, st: -1, wg: -1 }; });
 
-    var L = D.label, keyv = D.artists[0];
+    var L = D.label;
     var follow = ['<li><a href="' + esc(L.instagram) + '" target="_blank" rel="noopener">Instagram ↗︎</a></li>'];
     if (L.soundcloud) follow.push('<li><a href="' + esc(L.soundcloud) + '" target="_blank" rel="noopener">SoundCloud ↗︎</a></li>');
     if (L.youtube) follow.push('<li><a href="' + esc(L.youtube) + '" target="_blank" rel="noopener">YouTube ↗︎</a></li>');
