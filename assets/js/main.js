@@ -671,6 +671,13 @@
     setTimeout(function () { el.classList.remove('is-glitch'); }, 520);
   }
 
+  // the number on an artist's poster is their episode of the Oscillator series:
+  // taken from 'num' in data.js, else from their series mix (osc-031 → 031), else the roster position
+  function artistNo(a, i) {
+    if (a.num) return String(a.num);
+    var t = (a.transmissions || []).filter(function (id) { return /^osc-\d+$/.test(id); })[0];
+    return t ? t.replace('osc-', '') : pad(i + 1, 3);
+  }
   function initRoster() {
     var A = D.artists;
     $('.voices__count').textContent = pad(A.length) + ' channels';
@@ -697,7 +704,7 @@
             '<span class="pc__name">' + lines.map(function (l) { return '<span>' + esc(l) + '</span>'; }).join('') + '</span>' +
           '</span>' +
           '<span class="pc__sym" aria-hidden="true">' + shooks + '<i class="pc__glyph"></i></span>' +
-          '<span class="pc__num" aria-hidden="true">' + shooks + '<span class="pc__no">' + pad(i + 1, 3) + '</span></span>' +
+          '<span class="pc__num" aria-hidden="true">' + shooks + '<span class="pc__no">' + artistNo(a, i) + '</span></span>' +
           '<span class="pc__type" aria-hidden="true"></span>' +
         '</a></li>';
     }).join('');
@@ -1081,39 +1088,136 @@
     return F.concat((D.series || []).filter(function (t) { return !F.some(function (f) { return f.id === t.id; }); }));
   }
 
-  // the featured video: a still with a play button; the YouTube player loads only when pressed
+  // the featured video: a still until pressed, then YouTube with its own chrome hidden
+  // and the site's controls on top (yellow play, a thin timeline, time, sound, fullscreen)
+  var tv = { player: null, playing: false, dur: 0, timer: 0 };
+  var ICON_SOUND = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+  var ICON_MUTED = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+  var ICON_FS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
   function initVideo() {
     var V = D.video, box = $('.tv');
     if (!box) return;
     if (!V || !V.youtube) { box.hidden = true; return; }
     box.hidden = false;
+    var fsOK = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
     box.innerHTML =
-      '<button class="tv__screen" type="button" aria-label="Play video: ' + esc(V.title) + '">' +
-        '<img src="' + esc(V.poster || ('https://i.ytimg.com/vi/' + V.youtube + '/hqdefault.jpg')) + '" alt="" loading="lazy">' +
+      '<div class="tv__screen">' +
+        '<div class="tv__yt"></div>' +
+        '<img class="tv__still" src="' + esc(V.poster || ('https://i.ytimg.com/vi/' + V.youtube + '/hqdefault.jpg')) + '" alt="" loading="lazy">' +
         '<i class="brk" aria-hidden="true"></i>' +
-        '<span class="tv__play" aria-hidden="true">' + ICON_PLAY + '</span>' +
-        '<span class="tv__tag mono" aria-hidden="true"><i></i>Video</span>' +
-      '</button>' +
+        '<span class="tv__tag mono" aria-hidden="true"><i></i><b>Video</b></span>' +
+        '<button class="tv__big" type="button" aria-label="Play video: ' + esc(V.title) + '">' + ICON_PLAY + '</button>' +
+        '<div class="tv__bar">' +
+          '<button class="tv__pp" type="button" aria-label="Play">' + ICON_PLAY + ICON_PAUSE + '</button>' +
+          '<span class="tv__time mono"><b>0:00</b> / <span>--:--</span></span>' +
+          '<div class="tv__seek" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="tv__fill"></i><i class="tv__head"></i></div>' +
+          '<button class="tv__mute mono" type="button" aria-label="Mute">' + ICON_SOUND + '</button>' +
+          (fsOK ? '<button class="tv__fs" type="button" aria-label="Full screen">' + ICON_FS + '</button>' : '') +
+        '</div>' +
+      '</div>' +
       '<figcaption class="tv__cap">' +
         '<p class="tx__meta mono"><span>Video</span>' + (V.date ? '<span>' + fmtDate(V.date) + '</span>' : '') + '</p>' +
         '<h3 class="tx__title">' + esc(V.title) + '</h3>' +
         (V.subtitle ? '<p class="tx__by">' + esc(V.subtitle) + '</p>' : '') +
         (V.channel ? '<a class="tx__ext mono" href="' + esc(V.channel) + '" target="_blank" rel="noopener">All videos on YouTube ↗︎</a>' : '') +
       '</figcaption>';
-    var scr = $('.tv__screen', box);
-    scr.addEventListener('click', function () {
-      // one sound at a time: the video takes over from a mix or the signal
-      Player.want = null; Player.pauseAll(null);
+    var scr = $('.tv__screen', box), seek = $('.tv__seek', box), fill = $('.tv__fill', box), head = $('.tv__head', box);
+    var tNow = $('.tv__time b', box), tAll = $('.tv__time span', box), pp = $('.tv__pp', box), mute = $('.tv__mute', box);
+    var tag = $('.tv__tag b', box);
+    var fmt = function (x) { x = Math.max(0, Math.floor(x || 0)); var h = Math.floor(x / 3600), m = Math.floor(x % 3600 / 60), q = x % 60; return (h ? h + ':' + pad(m) : m) + ':' + pad(q); };
+    var set = function (st) {                          // idle | loading | playing | paused | blocked | ended
+      box.dataset.state = st;
+      tv.playing = st === 'playing';
+      tag.textContent = st === 'playing' ? 'On air' : st === 'loading' ? 'Tuning in' : 'Video';
+      pp.setAttribute('aria-label', tv.playing ? 'Pause' : 'Play');
+    };
+    var tick = function () {
+      var P = tv.player; if (!P || !P.getCurrentTime) return;
+      var t = P.getCurrentTime() || 0, d = tv.dur || P.getDuration() || 0;
+      if (d && !tv.dur) { tv.dur = d; tAll.textContent = fmt(d); }
+      var f = d ? Math.min(1, t / d) : 0;
+      fill.style.transform = 'scaleX(' + f.toFixed(4) + ')';
+      head.style.left = (f * 100).toFixed(3) + '%';
+      tNow.textContent = fmt(t);
+      seek.setAttribute('aria-valuenow', Math.round(f * 100));
+    };
+    var play = function () {
+      Player.want = null; Player.pauseAll(null);       // one sound at a time
       if (E && E.on) setSignal(false);
-      var f = document.createElement('iframe');
-      f.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(V.youtube) + '?autoplay=1&rel=0&playsinline=1&modestbranding=1';
-      f.title = 'YouTube video: ' + V.title;
-      f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
-      f.allowFullscreen = true;
-      f.className = 'tv__frame';
-      scr.replaceWith(f);
-      box.classList.add('is-playing');
+      if (tv.player && tv.player.playVideo) { tv.player.playVideo(); return; }
+      set('loading');
+      loadYT().then(function () {
+        tv.player = new window.YT.Player($('.tv__yt', box), {
+          videoId: V.youtube, host: 'https://www.youtube-nocookie.com',
+          playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, rel: 0 },
+          events: {
+            onReady: function (e) {
+              e.target.playVideo();
+              // phones may refuse to start a video from outside its frame: then let the tap go to the frame itself
+              setTimeout(function () { if (box.dataset.state === 'loading') set('blocked'); }, 2500);
+            },
+            onStateChange: function (e) {
+              var S = window.YT.PlayerState;
+              if (e.data === S.PLAYING) {
+                Player.want = null; Player.pauseAll(null); if (E && E.on) setSignal(false);
+                set('playing'); clearInterval(tv.timer); tv.timer = setInterval(tick, 250); tick();
+              } else if (e.data === S.PAUSED) { set('paused'); clearInterval(tv.timer); tick(); }
+              else if (e.data === S.ENDED) { set('ended'); clearInterval(tv.timer); }
+              else if (e.data === S.BUFFERING && box.dataset.state !== 'playing') set('loading');
+            },
+            onError: function () { set('idle'); window.open('https://www.youtube.com/watch?v=' + V.youtube, '_blank', 'noopener'); }
+          }
+        });
+      }).catch(function () { set('idle'); window.open('https://www.youtube.com/watch?v=' + V.youtube, '_blank', 'noopener'); });
+    };
+    tv.pause = function () { if (tv.player && tv.playing && tv.player.pauseVideo) tv.player.pauseVideo(); };
+    var toggle = function () { if (tv.playing) tv.pause(); else play(); };
+    $('.tv__big', box).addEventListener('click', play);
+    pp.addEventListener('click', toggle);
+    // a tap on the picture itself pauses / plays (the YouTube frame never gets the pointer)
+    scr.addEventListener('click', function (e) { if (e.target.closest('button, .tv__seek')) return; var st = box.dataset.state; if (st === 'idle') play(); else if (st !== 'blocked' && st !== 'loading') toggle(); });
+    mute.addEventListener('click', function () {
+      var P = tv.player; if (!P || !P.isMuted) return;
+      if (P.isMuted()) { P.unMute(); mute.innerHTML = ICON_SOUND; mute.setAttribute('aria-label', 'Mute'); }
+      else { P.mute(); mute.innerHTML = ICON_MUTED; mute.setAttribute('aria-label', 'Sound on'); }
     });
+    var fsb = $('.tv__fs', box);
+    if (fsb) fsb.addEventListener('click', function () {
+      var on = document.fullscreenElement || document.webkitFullscreenElement;
+      if (on) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else (scr.requestFullscreen || scr.webkitRequestFullscreen).call(scr);
+    });
+    var seekTo = function (e) {
+      var P = tv.player; if (!P || !P.seekTo || !tv.dur) return;
+      var r = seek.getBoundingClientRect(), f = clamp((e.clientX - r.left) / r.width, 0, 1);
+      P.seekTo(f * tv.dur, true); fill.style.transform = 'scaleX(' + f + ')'; head.style.left = (f * 100) + '%';
+      tNow.textContent = fmt(f * tv.dur); seek.setAttribute('aria-valuenow', Math.round(f * 100));
+    };
+    var drag = false;
+    seek.addEventListener('pointerdown', function (e) { drag = true; seek.setPointerCapture && seek.setPointerCapture(e.pointerId); seekTo(e); });
+    seek.addEventListener('pointermove', function (e) { if (drag) seekTo(e); });
+    seek.addEventListener('pointerup', function () { drag = false; });
+    seek.addEventListener('keydown', function (e) {
+      var P = tv.player; if (!P || !tv.dur) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); P.seekTo(clamp(P.getCurrentTime() + (e.key === 'ArrowRight' ? 30 : -30), 0, tv.dur), true); setTimeout(tick, 60); }
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); }
+    });
+    set('idle');
+  }
+  var ytApi = null;
+  function loadYT() {
+    if (window.YT && window.YT.Player) return Promise.resolve();
+    if (ytApi) return ytApi;
+    ytApi = new Promise(function (resolve, reject) {
+      var prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = function () { if (prev) prev(); resolve(); };
+      var sc = document.createElement('script');
+      sc.src = 'https://www.youtube.com/iframe_api'; sc.async = true;
+      sc.onerror = function () { ytApi = null; reject(new Error('YouTube unavailable')); };
+      document.head.appendChild(sc);
+      setTimeout(function () { if (!(window.YT && window.YT.Player)) { ytApi = null; reject(new Error('timeout')); } }, 12000);
+    });
+    return ytApi;
   }
 
   function initTransmissions() {
@@ -1589,6 +1693,7 @@
         w.bind(EV.PLAY, function () {
           if (o.gen !== gen) return;
           Player.want = o;                     // also counts a tap inside SoundCloud's own player
+          if (tv.pause) tv.pause();
           o.started = true; o.loading = false;
           o.el.classList.remove('is-loading');
           scReveal(o, false);

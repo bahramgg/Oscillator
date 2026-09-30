@@ -2051,31 +2051,80 @@ html, body { overflow-x: clip; }
 .cf__title em { font-family: var(--f-display); }
 
 /* ==========================================================================
-   03 Transmissions — the featured video (a still until pressed)
+   03 Transmissions — the featured video, in the site's own player:
+   a still until pressed, then YouTube with its chrome hidden under our controls
    ========================================================================== */
 .tv { margin: 0 0 clamp(56px, 7vw, 110px); display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: clamp(22px, 3.6vw, 64px); align-items: end; }
 .tv[hidden] { display: none; }
-.tv__screen, .tv__frame { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; padding: 0; background: #000; overflow: hidden; }
-.tv__screen { cursor: pointer; }
-.tv__screen img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.12) brightness(.85); transition: filter .6s, transform 1.2s var(--ease-out, ease); }
-.tv__screen:hover img, .tv__screen:focus-visible img { filter: grayscale(.2) contrast(1.05) brightness(.95); transform: scale(1.02); }
-.tv__screen .brk { --l: clamp(18px, 2.2vw, 30px); }
+.tv__screen { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; overflow: hidden; isolation: isolate; }
+.tv__screen:fullscreen { aspect-ratio: auto; width: 100vw; height: 100vh; }
+.tv__screen:-webkit-full-screen { width: 100vw; height: 100vh; }
+.tv__yt, .tv__yt iframe, .tv__screen iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* YouTube never gets the pointer (so its own overlays stay hidden) — except when a phone insists on a direct tap */
+.tv__screen iframe { pointer-events: none; }
+.tv[data-state="blocked"] .tv__screen iframe { pointer-events: auto; }
+.tv__still { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.12) brightness(.8); transition: opacity .5s, filter .6s, transform 1.2s var(--ease-out, ease); }
+.tv[data-state="idle"] .tv__screen:hover .tv__still { filter: grayscale(.2) contrast(1.05) brightness(.9); transform: scale(1.02); }
+.tv[data-state="playing"] .tv__still, .tv[data-state="blocked"] .tv__still { opacity: 0; pointer-events: none; }
+/* paused / ended: our dark veil over YouTube's own pause screen */
+.tv__screen::before { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: rgba(7,7,7,.72); opacity: 0; transition: opacity .35s; }
+.tv[data-state="paused"] .tv__screen::before, .tv[data-state="ended"] .tv__screen::before, .tv[data-state="loading"] .tv__screen::before { opacity: 1; }
+.tv[data-state="ended"] .tv__still { opacity: 1; }
 .tv__screen::after {   /* scanlines, like the room */
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: repeating-linear-gradient(to bottom, rgba(0,0,0,.28) 0 1px, transparent 1px 3px);
+  content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
 }
-.tv__play {
-  position: absolute; left: 50%; top: 50%; z-index: 2; transform: translate(-50%, -50%);
+.tv__screen .brk { z-index: 4; --l: clamp(18px, 2.2vw, 30px); }
+.tv__big {
+  position: absolute; left: 50%; top: 50%; z-index: 5; transform: translate(-50%, -50%);
   display: grid; place-items: center; width: clamp(64px, 7vw, 96px); aspect-ratio: 1; border-radius: 50%;
-  background: var(--acid); color: #0a0a0a; transition: transform .3s var(--ease-out, ease);
+  background: var(--acid); color: #0a0a0a; transition: transform .3s var(--ease-out, ease), opacity .3s;
 }
-.tv__play svg { width: 34%; height: 34%; margin-left: 6%; }
-.tv__screen:hover .tv__play { transform: translate(-50%, -50%) scale(1.08); }
-.tv__tag { position: absolute; left: 16px; bottom: 14px; z-index: 2; display: inline-flex; align-items: center; gap: 8px; color: var(--bone); }
-.tv__tag i { width: 7px; height: 7px; border-radius: 50%; background: #ff3b2f; animation: blink 1.2s steps(2) infinite; }
+.tv__big svg { width: 34%; height: 34%; margin-left: 6%; fill: currentColor; }
+.tv__big:hover { transform: translate(-50%, -50%) scale(1.08); }
+.tv[data-state="playing"] .tv__big, .tv[data-state="blocked"] .tv__big { opacity: 0; pointer-events: none; }
+.tv[data-state="loading"] .tv__big { animation: tx-pulse 1s var(--ease) infinite; pointer-events: none; }
+.tv__tag { position: absolute; right: 16px; top: 14px; z-index: 5; display: inline-flex; align-items: center; gap: 8px; color: var(--bone); pointer-events: none; }
+.tv__tag b { font-weight: 400; }
+.tv__tag i { width: 7px; height: 7px; border-radius: 50%; background: var(--bone-3); }
+.tv[data-state="playing"] .tv__tag { color: var(--acid); }
+.tv[data-state="playing"] .tv__tag i { background: #ff3b2f; animation: blink 1.2s steps(2) infinite; }
+.tv[data-state="blocked"] .tv__tag { color: var(--acid); }
+.tv[data-state="blocked"] .tv__tag b::after { content: ' · tap the picture'; }
+/* the control bar */
+.tv__bar {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;
+  display: flex; align-items: center; gap: clamp(10px, 1.4vw, 18px);
+  padding: 28px clamp(12px, 1.6vw, 22px) clamp(12px, 1.4vw, 18px);
+  background: linear-gradient(rgba(7,7,7,0), rgba(7,7,7,.85));
+  opacity: 0; transform: translateY(8px); transition: opacity .3s, transform .3s; pointer-events: none;
+}
+.tv[data-state="playing"] .tv__bar, .tv[data-state="paused"] .tv__bar, .tv[data-state="ended"] .tv__bar { opacity: 1; transform: none; pointer-events: auto; }
+@media (hover: hover) { .tv[data-state="playing"] .tv__screen:not(:hover) .tv__bar { opacity: 0; transform: translateY(8px); } }
+.tv__pp { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--acid); color: #0a0a0a; }
+.tv__pp svg { width: 14px; height: 14px; fill: currentColor; }
+.tv__pp .i-pause, .tv[data-state="playing"] .tv__pp .i-play { display: none; }
+.tv[data-state="playing"] .tv__pp .i-pause { display: block; }
+.tv__time { flex: none; color: var(--bone-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tv__time b { color: var(--acid); font-weight: 400; }
+.tv__seek { position: relative; flex: 1; min-width: 60px; height: 22px; cursor: pointer; touch-action: none; }
+.tv__seek::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(233,231,223,.35); }
+.tv__fill { position: absolute; left: 0; right: 0; top: calc(50% - 1px); height: 2px; background: var(--acid); transform: scaleX(0); transform-origin: 0 50%; }
+.tv__head { position: absolute; top: 50%; left: 0; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: var(--acid); }
+.tv__seek:focus-visible { outline: 1px solid var(--acid); outline-offset: 4px; }
+.tv__mute, .tv__fs { flex: none; display: grid; place-items: center; width: 34px; height: 34px; color: var(--bone); border: 1px solid var(--line-2); border-radius: 50%; transition: border-color .25s, color .25s; }
+.tv__mute:hover, .tv__fs:hover { border-color: var(--acid); color: var(--acid); }
+.tv__mute svg, .tv__fs svg { width: 16px; height: 16px; fill: currentColor; }
+.tv__fs svg { fill: none; }
 .tv__cap { display: flex; flex-direction: column; gap: 10px; padding-bottom: 6px; }
 .tv__cap .tx__ext { margin-top: 8px; align-self: flex-start; }
-@media (max-width: 860px) { .tv { grid-template-columns: 1fr; gap: 18px; } }
+@media (max-width: 860px) {
+  .tv { grid-template-columns: 1fr; gap: 18px; }
+  .tv__bar { gap: 10px; padding-top: 22px; }
+  .tv__pp { width: 34px; height: 34px; }
+  .tv__time { font-size: 10px; }
+  .tv__mute, .tv__fs { width: 30px; height: 30px; }
+}
 
 /* ==========================================================================
    04 Feedback — one line on the founder, one photo

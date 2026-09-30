@@ -44,6 +44,8 @@ window.OSCILLATOR = {
   /* ------------------------------------------------------------------------
      ARTISTS — "02 — Voices"
      slug         url id  →  #/artist/<slug>
+     num          the number on the artist's poster (their Oscillator series episode);
+                  optional — taken from their series mix (osc-031 → 031) when left out
      photo        main portrait (black & white works best)
      photos       extra images shown in the profile
      transmissions ids from the list further down
@@ -76,7 +78,7 @@ window.OSCILLATOR = {
     },
 
     // Roster in series order (newest first) — photos cropped from the label's artist posters
-    { slug: 'perry', name: 'Perry', role: '', city: '', photo: 'assets/img/artist-perry.jpg', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'perry', name: 'Perry', num: '032', role: '', city: '', photo: 'assets/img/artist-perry.jpg', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
     { slug: 'kenzo', name: 'Kenzo', role: '', city: '', photo: 'assets/img/artist-kenzo.jpg', bio: [], links: { instagram: 'https://www.instagram.com/shayan.kenzo/', soundcloud: '' }, transmissions: ['osc-031'], videos: [] },
     { slug: 'mahyar-arabiyan', name: 'Mahyar Arabiyan', role: '', city: '', photo: 'assets/img/artist-mahyar-arabiyan.jpg', bio: [], links: { instagram: 'https://www.instagram.com/mah7arr/', soundcloud: '' }, transmissions: ['osc-030'], videos: [] },
     { slug: 'pooyan', name: 'Pooyan', role: '', city: '', photo: 'assets/img/artist-pooyan.jpg', bio: [], links: { instagram: 'https://www.instagram.com/pooyansaadati/', soundcloud: '' }, transmissions: ['osc-029'], videos: [] },
@@ -100,11 +102,11 @@ window.OSCILLATOR = {
             { id, title, artist, type, date, duration (s), cover, soundcloud, tracklist, waveform }
      ------------------------------------------------------------------------ */
   video: {
-    youtube: 'nMfXXrolN6Q',
-    title: 'Armin K',
-    subtitle: 'Oscillator #002 · filmed set',
-    date: '2020-09-12',
-    poster: 'assets/img/video-002.jpg',
+    youtube: 'POCYIXH-Hp4',
+    title: 'Keyv B2B Amiri',
+    subtitle: 'Oscillator #006 · filmed set',
+    date: '2020-11-04',
+    poster: 'assets/img/video-006.jpg',
     channel: 'https://www.youtube.com/@oscillator2510'
   },
   transmissions: [
