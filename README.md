@@ -1,6 +1,6 @@
 # OSCILLATOR
 
-Website for **Oscillator** — a techno label & artist collective curated by Keyv.
+Website for **Oscillator**, a techno label & artist collective.
 
 The site is built as an instrument. Every section is a waveform:
 

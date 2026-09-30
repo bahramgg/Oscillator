@@ -21,18 +21,16 @@ window.OSCILLATOR = {
     email: '',                 // e.g. 'demos@oscillator.xyz' — hidden when empty
     // the contact form posts here (FormSubmit relays each message to this inbox by email)
     form: 'https://formsubmit.co/ajax/monadicart@gmail.com',
-    curator: 'Keyv',
     origin: 'Tehran',
-    tagline: 'a techno label & artist collective, curated by *Keyv*',
+    tagline: 'a techno label & artist collective',
 
     // "01 — Carrier" manifesto. One string per paragraph.
     about: [
-      'Oscillator is a techno label and artist collective curated by Keyv. We don\'t sign sounds. We *tune into them*.',
+      'Oscillator is a techno label and artist collective. We don\'t sign sounds. We *tune into them*.',
       'A home for the artists who live in the low end, in the dark, in the repetition. Each one a different frequency; together, *one signal*.'
     ],
 
     facts: [
-      ['Curator', 'Keyv'],
       ['Sound', 'Techno'],
       ['Signal origin', 'Tehran'],
       ['Transmits on', 'Instagram · SoundCloud · YouTube']
@@ -59,12 +57,10 @@ window.OSCILLATOR = {
     {
       slug: 'keyv',
       name: 'Keyv',
-      role: 'Founder · Curator · DJ',
+      role: 'DJ',
       city: 'Tehran',
       photo: 'assets/img/keyv-artist.jpg',
-      bio: [
-        '*Keyv* (Keyvan) founded Oscillator. The ear that decides which frequencies make it onto the label.'
-      ],
+      bio: [],
       links: {
         instagram: 'https://www.instagram.com/keyvdj/',
         soundcloud: 'https://soundcloud.com/keyvdj',
