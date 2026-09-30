@@ -47,8 +47,9 @@ to touch the HTML, CSS or other scripts to update the site.
 
 ## Deploy
 
-Live: **https://oscillator.onrender.com** — a free Render static site that redeploys
-automatically on every push to `claude/epic-knuth-vwd8m2`.
+Live: **https://bahramgg.github.io/Oscillator/**, served by GitHub Pages straight from the
+`claude/epic-knuth-vwd8m2` branch (root folder); every push redeploys it within a minute or two.
+(It was on Render until the Render workspace was suspended for billing.)
 
 It's a static site — upload the folder to any host (GitHub Pages, Netlify, Cloudflare
 Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a branch*.
