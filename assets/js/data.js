@@ -158,7 +158,13 @@ window.OSCILLATOR = {
     { date: '2026-08-27', title: 'All Night Long', lineup: ['Keyv', 'Msiyan'],
       poster: 'assets/img/events/2026-08-27-all-night-long.jpg' },
     { date: '2026-06-11', title: 'All Night Long', lineup: ['Keyv'],
-      poster: 'assets/img/events/2026-06-11-all-night-long.jpg' }
+      poster: 'assets/img/events/2026-06-11-all-night-long.jpg' },
+    { date: '2023-09-14', title: 'Oscillator', lineup: ['Keyv', 'Hamed', 'Nycto', 'Sosu'],
+      poster: 'assets/img/events/2023-09-14-oscillator.jpg' },
+    { date: '2023-08-17', title: 'Oscillator', lineup: ['Gia', 'Medo', 'Daimonic', 'Hamed', 'Keyv'],
+      poster: 'assets/img/events/2023-08-17-oscillator.jpg' },
+    { date: '2023-08-03', title: 'Oscillator', lineup: ['dynno', 'Nevak', 'Hamed', 'Keyv'],
+      poster: 'assets/img/events/2023-08-03-oscillator.jpg' }
   ],
 
   /* ------------------------------------------------------------------------
