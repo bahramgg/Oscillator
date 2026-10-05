@@ -11,7 +11,7 @@ The site is built as an instrument, and it is laid out as one system:
   number to the label and lights it yellow as it passes; while the synth plays, every kick sends
   another one. At rest it is straight.
 - **Labels** are one style everywhere (small spaced capitals). **Yellow** means signal: numbers,
-  play buttons, the tape, whatever is live. **Text buttons** are hairline rectangles; **play
+  play buttons, the tape, whatever is live. **Text buttons** are hairline pills; **play
   buttons** are yellow circles. External links carry a drawn arrow.
 
 | # | Section | What it is |
