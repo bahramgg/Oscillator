@@ -1493,8 +1493,12 @@
 
   function setState(o, text) {
     o.stateText = text;
-    if (stage.cur === o) stage.state.textContent = text;
+    if (stage.cur === o) paintStageState(text);
   }
+  // the stage says something only when it needs saying (tuning in, offline, a tap needed);
+  // playing / paused already show in the button and the top label
+  var QUIET = { 'On air': 1, 'Paused': 1, 'Ended': 1, 'Standby': 1 };
+  function paintStageState(text) { stage.state.textContent = text; stage.state.hidden = !!QUIET[text]; }
 
   function resizeTx() {
     txs.forEach(function (o) { var s = sizeCanvas(o.cvs, 2); o.ctx = s.ctx; o.w = s.w; o.h = s.h; o.d = s.d; drawLine(o); });
@@ -1615,17 +1619,17 @@
     stage.el.classList.toggle('is-playing', !!o.playing);
     stageBg(t.cover);
     if (stage.disc.getAttribute('src') !== t.cover) stage.disc.setAttribute('src', t.cover);
-    stage.meta.innerHTML = metaline(t, o.i);
+    stage.meta.innerHTML = '<span>' + fmtDate(t.date) + '</span>' + (tl.length ? '<span>' + tl.length + ' tracks</span>' : '');
     stage.title.textContent = t.title;
     stage.by.innerHTML = 'by ' + byline(t);
-    stage.total.textContent = '/ ' + fmtClock(t.duration, t.duration);
+    stage.total.textContent = fmtClock(t.duration, t.duration);
     stage.seek.setAttribute('aria-label', 'Seek ' + t.title);
     stage.tracks.hidden = !tl.length;
     stage.tracks.innerHTML = tl.length ? '<summary class="mono"><span>Tracklist · ' + pad(tl.length) + '</span></summary><ol>' +
       tl.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' : '';
     stage.ext.hidden = !t.soundcloud;
     if (t.soundcloud) stage.ext.setAttribute('href', t.soundcloud);
-    stage.state.textContent = o.stateText;
+    paintStageState(o.stateText);
     stage.update();
   };
   stage.update = function () {

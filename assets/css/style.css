@@ -2220,3 +2220,38 @@ html.tv-fs #nl-badge-frame, html.tv-fs #nl-hud-frame { visibility: hidden !impor
 }
 .tv.is-fs .tv__bar, .tv__screen:fullscreen .tv__bar { padding: 30px 22px 18px; }
 .tv.is-fs .tv__screen .brk, .tv__screen:fullscreen .brk { inset: 14px; }
+
+/* ==========================================================================
+   Stage, tidied: poster and text share one column (centred on phones);
+   times sit at the two ends of the waveform; a centred transport row of
+   matching circles; a status line only when something needs saying
+   ========================================================================== */
+.stage__info { width: 100%; max-width: 560px; }
+.stage__meta { gap: 6px 14px; }
+.stage__title { margin-top: 10px; font-size: clamp(40px, 5vw, 84px); line-height: .9; }
+.stage__by { margin-top: 10px; font-size: 18px; }
+.stage__seek { margin-top: clamp(24px, 3vw, 40px); height: 52px; }
+.stage__readout {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  margin-top: 10px; font-family: var(--f-wide); font-variant-numeric: tabular-nums;
+}
+.stage__now { font-size: 14px; font-weight: 700; letter-spacing: .06em; line-height: 1; color: var(--acid); text-shadow: none; }
+.stage__total { font-size: 14px; letter-spacing: .06em; line-height: 1; color: var(--bone-3); }
+.stage__ctrl { justify-content: center; gap: clamp(26px, 4vw, 44px); margin-top: clamp(20px, 2.6vw, 32px); }
+.stage__toggle { width: 74px; height: 74px; }
+.stage__toggle svg { width: 30%; height: 30%; }
+.stage__skip { display: grid; place-items: center; width: 52px; height: 52px; padding: 0; border-radius: 50%; }
+.stage__skip svg { width: 30px; height: 30px; overflow: visible; }
+.stage__skip text { font: 700 5.4px var(--f-wide); fill: currentColor; }
+.stage__state { display: block; margin: 16px 0 0; text-align: center; color: var(--acid); }
+.stage__state[hidden] { display: none; }
+.stage__ext { display: table; margin: 26px auto 0; }
+.stage__tracks { margin-top: 28px; }
+@media (max-width: 860px) {
+  .stage__main { --col: min(calc(100vw - 2 * var(--gutter) - 20px), 44vh, 420px); justify-items: center; gap: 26px; padding-bottom: 104px; }
+  @supports (height: 1svh) { .stage__main { --col: min(calc(100vw - 2 * var(--gutter) - 20px), 44svh, 420px); } }
+  .stage__platter, .stage__info { width: var(--col); max-width: none; justify-self: center; }
+  .stage__title { font-size: clamp(34px, 10.5vw, 54px); }
+  .stage__by { font-size: 17px; }
+  .stage__seek { height: 44px; margin-top: 22px; }
+}
