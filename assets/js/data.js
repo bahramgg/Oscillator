@@ -149,7 +149,15 @@ window.OSCILLATOR = {
      Dates that have passed move by themselves into the "Past signals" archive on /events.
      Every poster opens full size when tapped.
      ------------------------------------------------------------------------ */
-  events: [],
+  events: [
+    { date: '2026-10-15', title: 'All Night in Hell', lineup: ['Keyv', 'Erfa (opening)'],
+      poster: 'assets/img/events/2026-10-15-all-night-in-hell.jpg' },
+    { date: '2026-09-10', title: 'Tehran Underground x Oscillator',
+      lineup: ['Keyv', 'ronin', 'Nastish', 'Kuttle', 'Neevak', 'dynno', 'Srvsh.iv', 'Therapist', 'Aivy'],
+      poster: 'assets/img/events/2026-09-10-tehran-underground.jpg' },
+    { date: '2026-08-27', title: 'All Night Long', lineup: ['Keyv', 'Msiyan'],
+      poster: 'assets/img/events/2026-08-27-all-night-long.jpg' }
+  ],
 
   /* ------------------------------------------------------------------------
      FEEDBACK — "04" — the visual archive.
