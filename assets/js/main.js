@@ -1046,7 +1046,6 @@
     R.page = page;
     document.body.dataset.page = page;
     document.title = PAGES[page];
-    placeSeries(page === 'mixes');
     $$('.nav__links a, .menu nav a').forEach(function (a) {
       var h = a.getAttribute('href');
       if (page !== 'home') a.classList.toggle('is-active', h === '/' + page);
@@ -1568,45 +1567,74 @@
       return o;
     });
     initStage();
+    initCrate();
   }
 
-  // the series lives on the home page (latest + five rows) and moves whole onto /mixes,
-  // so a mix that is playing keeps its row, its waveform and its place in the bar
-  function placeSeries(onMixes) {
-    var box = $('.series'), tvEl = $('.tv');
-    if (!box) return;
-    if (onMixes) { if (box.parentNode !== $('.mixes__slot')) $('.mixes__slot').appendChild(box); }
-    else if (tvEl && box.previousElementSibling !== tvEl) tvEl.after(box);
-  }
   // the search on /mixes: a name (or part of one), a date, or a number ('7', '#007' and '007' all find #007)
   function initFind() {
     var inp = $('.find__in'), none = $('.find__none');
     if (!inp) return;
     inp.addEventListener('input', function () {
       var q = inp.value.trim().toLowerCase(), n = /^#?\d+$/.test(q) ? parseInt(q.replace('#', ''), 10) : null, shown = 0;
-      $$('.series .tx').forEach(function (el) {
+      $$('.crate__it').forEach(function (el) {
         var hit = !q || (n != null ? parseInt((el.dataset.find.match(/#(\d+)/) || [0, -1])[1], 10) === n : el.dataset.find.indexOf(q) >= 0);
         el.classList.toggle('is-out', !hit);
         if (hit) shown++;
       });
       none.hidden = shown > 0;
-      resizeTx();
     });
   }
 
-  /* the artists page: every poster on one wall */
+  // things pasted up by hand: each gets its own tilt, height and tape angle (the same every visit)
+  function loose(i, seed) {
+    var h = function (k) { return hsh(i + 1, seed + k); };
+    return '--r:' + ((h(1) - 0.5) * 5).toFixed(2) + 'deg;--y:' + Math.round(h(2) * 34) + 'px;--tr:' + ((h(3) - 0.5) * 14).toFixed(1) + 'deg;--tx:' + Math.round((h(4) - 0.5) * 40) + '%';
+  }
+  // they drop onto the wall as they come into view
+  var looseIO = 'IntersectionObserver' in window && !reduced ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-on'); looseIO.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -6% 0px' }) : null;
+  function pasteUp(root) {
+    $$('.loose__it', root).forEach(function (el) { if (looseIO) looseIO.observe(el); else el.classList.add('is-on'); });
+  }
+
+  /* the artists page: every poster pasted on one wall */
   function initArtistsPage() {
     $$('.artists__n').forEach(function (el) { el.textContent = D.artists.length; });
     var wall = $('.wall');
     if (!wall) return;
     wall.innerHTML = D.artists.map(function (a, i) {
       var no = seriesNo(a);
-      return '<li class="wall__it"><a class="wall__link" href="/artists/' + esc(a.slug) + '">' +
+      return '<li class="wall__it loose__it' + (i % 7 === 0 ? ' is-big' : '') + '" style="' + loose(i, 11) + '"><a class="wall__link" href="/artists/' + esc(a.slug) + '">' +
         '<span class="wall__pic">' + (a.poster ? '<img src="' + esc(a.poster) + '" alt="' + esc(a.name) + ' · Oscillator poster" loading="lazy">'
           : a.photo ? '<img class="is-photo" src="' + esc(a.photo) + '" alt="' + esc(a.name) + '" loading="lazy">' : '') + '</span>' +
         '<span class="wall__cap">' + (no ? '<b class="num">' + esc(no) + '</b>' : '<b class="num">' + pad(i + 1) + '</b>') + '<span>' + esc(a.name) + '</span></span>' +
       '</a></li>';
     }).join('');
+    pasteUp(wall);
+  }
+
+  /* the mixes page: every mix of the series as a sleeve on the floor; tap one to play it */
+  function initCrate() {
+    var crate = $('.crate');
+    if (!crate) return;
+    crate.innerHTML = txs.map(function (o, i) {
+      var t = o.t, no = txNo(t), who = t.artist ? artistName(t.artist) : t.title;
+      return '<li class="crate__it loose__it' + (i === 0 ? ' is-big' : '') + '" style="' + loose(i, 23) + '" data-tx="' + esc(t.id) + '" data-find="' + esc([no, who, t.title, fmtDate(t.date)].join(' ').toLowerCase()) + '">' +
+        '<button class="crate__sleeve" type="button" aria-label="Play ' + esc(t.title) + ' by ' + esc(who) + '">' +
+          (t.cover ? '<img src="' + esc(t.cover) + '" alt="" loading="lazy">' : '') +
+          '<span class="crate__play" aria-hidden="true">' + ICON_PLAY + ICON_PAUSE + '</span>' +
+          (i === 0 ? '<span class="crate__new mono">Latest</span>' : '') +
+        '</button>' +
+        '<p class="crate__cap"><b class="num">' + esc(no) + '</b><span>' + esc(who) + '</span></p>' +
+        '<p class="crate__meta num">' + fmtDate(t.date) + ' · ' + fmtClock(t.duration, t.duration) + '</p>' +
+      '</li>';
+    }).join('');
+    $$('.crate__it', crate).forEach(function (li, i) {
+      var o = txs[i];
+      $('.crate__sleeve', li).addEventListener('click', function (e) { if (o.playing) Player.toggle(o); else listen(o, null, e.currentTarget); });
+    });
+    pasteUp(crate);
   }
 
   // start (or seek) a mix and bring up the stage
@@ -1894,6 +1922,7 @@
     setPlaying: function (o, on) {
       o.playing = on;
       o.el.classList.toggle('is-playing', on);
+      $$('.crate__it[data-tx="' + o.t.id + '"]').forEach(function (el) { el.classList.toggle('is-playing', on); });
       o.playBtn.setAttribute('aria-label', (on ? 'Pause ' : 'Play ') + o.t.title);
       if (stage.cur === o) stage.update();
       deck.update(o);
@@ -2127,7 +2156,7 @@
   // a coming night: its poster beside the date, the name, where, who, and the way in
   function evCard(ev) {
     var t = evParts(ev), lineup = lineupOf(ev);
-    return '<article class="ev' + (ev.poster ? '' : ' ev--bare') + '">' +
+    return '<article class="ev' + (ev.poster ? '' : ' ev--bare') + '" style="' + loose(ev.date.length + +ev.date.slice(-2), 37) + '">' +
       (ev.poster ? '<button class="ev__poster" type="button" data-full="' + esc(ev.poster) + '" aria-label="' + esc(ev.title) + ': poster, full size"><img src="' + esc(ev.poster) + '" alt="' + esc(ev.title) + ' poster" loading="lazy"></button>' : '') +
       '<div class="ev__body">' +
         '<p class="ev__date num">' + t.day + '<small>' + t.wd + ' · ' + t.year + '</small></p>' +
@@ -2150,13 +2179,14 @@
     var page = $('.events-page');
     if (page) page.innerHTML = (next.length ? next.map(evCard).join('') : noSignal()) +
       (past.length ? '<div class="past"><header class="past__head"><h2 class="past__title">Past signals</h2><p class="mono"><span class="num">' + pad(past.length) + '</span> nights</p></header>' +
-        '<div class="past__grid">' + past.map(function (ev) {
+        '<div class="past__grid loose">' + past.map(function (ev, i) {
           var t = evParts(ev), lineup = lineupOf(ev);
-          return '<figure class="past__item">' +
+          return '<figure class="past__item loose__it' + (i % 5 === 0 ? ' is-big' : '') + '" style="' + loose(i, 51) + '">' +
             (ev.poster ? '<button class="past__poster" type="button" data-full="' + esc(ev.poster) + '" aria-label="' + esc(ev.title) + ': poster, full size"><img src="' + esc(ev.poster) + '" alt="' + esc(ev.title) + ' poster" loading="lazy"></button>' : '') +
             '<figcaption><b class="num">' + t.full + '</b><span class="past__name">' + esc(ev.title) + '</span>' +
             (lineup ? '<span class="past__lineup">' + lineup + '</span>' : '') + '</figcaption></figure>';
         }).join('') + '</div></div>' : '');
+    if (page) pasteUp(page);
     ns.list = $$('.nosignal__line').map(function (cv, i) { watch(cv, 'events' + i); return { cv: cv, key: 'events' + i }; });
     initPosterView();
   }

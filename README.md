@@ -14,7 +14,7 @@ The site is built as an instrument, and it is laid out as one system:
   play buttons, the tape, whatever is live. **Text buttons** are hairline pills; **play
   buttons** are yellow circles. External links carry a drawn arrow.
 
-**Pages.** Besides the home page there are two pages with their own addresses, all in the same
+**Pages** are laid out loose, not as tables: posters and sleeves pasted up by hand, each a little crooked under a strip of clear tape, some bigger than others; they drop onto the wall as they scroll in and straighten when touched. On `/mixes` every mix is a sleeve on the floor: tap it to play. Besides the home page there are two pages with their own addresses, all in the same
 document so moving between them never reloads (a mix keeps playing in the bar):
 `/artists` (every poster on one wall; each opens `/artists/<slug>`) and `/mixes` (the whole
 Oscillator Series with a search by artist, date or number). `/events`: every coming night with its
