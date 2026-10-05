@@ -55,7 +55,7 @@ window.OSCILLATOR = {
      ------------------------------------------------------------------------ */
   artists: [
     // Roster in series order (newest first), each with their series poster
-    { slug: 'perry', name: 'Perry', poster: 'assets/img/posters/perry.jpg', num: '032', role: '', city: '', photo: 'assets/img/artist-perry.jpg', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: [], videos: [] },
+    { slug: 'la-hera', name: 'La Hera', poster: 'assets/img/posters/la-hera.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/dj_la_hera/', soundcloud: '' }, transmissions: ['osc-019'], videos: [] },
     { slug: 'kenzo', name: 'Kenzo', poster: 'assets/img/posters/kenzo.jpg', role: '', city: '', photo: 'assets/img/artist-kenzo.jpg', bio: [], links: { instagram: 'https://www.instagram.com/shayan.kenzo/', soundcloud: '' }, transmissions: ['osc-031'], videos: [] },
     { slug: 'mahyar-arabiyan', name: 'Mahyar Arabiyan', poster: 'assets/img/posters/mahyar-arabiyan.jpg', role: '', city: '', photo: 'assets/img/artist-mahyar-arabiyan.jpg', bio: [], links: { instagram: 'https://www.instagram.com/mah7arr/', soundcloud: '' }, transmissions: ['osc-030'], videos: [] },
     { slug: 'pooyan', name: 'Pooyan', poster: 'assets/img/posters/pooyan.jpg', role: '', city: '', photo: 'assets/img/artist-pooyan.jpg', bio: [], links: { instagram: 'https://www.instagram.com/pooyansaadati/', soundcloud: '' }, transmissions: ['osc-029'], videos: [] },
@@ -69,7 +69,6 @@ window.OSCILLATOR = {
     { slug: 'dynno', name: 'Dynno', poster: 'assets/img/posters/dynno.jpg', role: 'Resident artist', city: 'Tehran', photo: 'assets/img/artist-dynno.jpg', bio: [], links: { instagram: 'https://www.instagram.com/dynno.music/', soundcloud: '' }, transmissions: ['osc-021'], videos: [] },
     // The Oscillator Series, #020 and earlier — guests, each with their series poster
     { slug: 'shabi-seyf', name: 'Shabi Seyf', poster: 'assets/img/posters/shabi-seyf.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/shabiseyf/', soundcloud: '' }, transmissions: ['osc-020'], videos: [] },
-    { slug: 'la-hera', name: 'La Hera', poster: 'assets/img/posters/la-hera.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/dj_la_hera/', soundcloud: '' }, transmissions: ['osc-019'], videos: [] },
     { slug: 'natalia-zaneti', name: 'Natalia Zaneti', poster: 'assets/img/posters/natalia-zaneti.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/nataliazaneti/', soundcloud: '' }, transmissions: ['osc-018'], videos: [] },
     { slug: 'araam', name: 'Araam', poster: 'assets/img/posters/araam.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/aramdien/', soundcloud: '' }, transmissions: ['osc-017'], videos: [] },
     { slug: 'farnaz', name: 'Farnaz', poster: 'assets/img/posters/farnaz.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: ['osc-016'], videos: [] },
