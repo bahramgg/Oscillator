@@ -140,16 +140,86 @@
     if (io) io.observe(el);
   }
 
-  /* ─── glyphs: tiny looping waveforms ────────────────────────────────── */
-  function initGlyphs() {
-    $$('svg.glyph').forEach(function (svg) {
-      var type = svg.dataset.wave || 'sine', d = '';
-      for (var i = 0; i <= 240; i++) {
-        var y = type === 'noise' ? rand1(Math.floor(i / 3) % 40) * 0.95 : waveAt(type, i / 40);
-        d += (i ? 'L' : 'M') + i + ' ' + (12 - y * 8.5).toFixed(2);
-      }
-      svg.innerHTML = '<g class="glyph__run"><path d="' + d + '"/></g>';
+  /* ─── section lines ────────────────────────────────────────────────────
+     every section opens with a hairline, and the hairline is a wire: when the
+     section arrives a pulse of signal runs along it from the section's number
+     to its name, lighting it yellow as it passes. While the synth plays, every
+     kick sends another one. At rest the line is straight and grey. */
+  var strings = [];
+  function initStrings() {
+    strings = $$('.sec__line').map(function (cv) {
+      var s = { cv: cv, pk: [], vis: !io, flat: false, last: -99 };
+      if (finePointer) cv.parentNode.addEventListener('pointerenter', function () { if (S.t - s.last > 0.6) send(s, 0.7); });
+      return s;
     });
+    if (!io) return;
+    var sio = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        var s = strings.filter(function (x) { return x.cv === e.target; })[0];
+        if (!s) return;
+        s.vis = e.isIntersecting;
+        if (e.isIntersecting && S.t - s.last > 2.5) send(s, 1);
+      });
+    }, { threshold: 1, rootMargin: '0px 0px -10% 0px' });
+    strings.forEach(function (s) { sio.observe(s.cv); });
+  }
+  function send(s, amp) {
+    if (reduced) return;
+    s.pk.push({ t0: S.t, a: amp });
+    if (s.pk.length > 5) s.pk.shift();
+    s.last = S.t; s.flat = false;
+  }
+  function resizeStrings() {
+    strings.forEach(function (s) {
+      var z = sizeCanvas(s.cv, 2);
+      s.ctx = z.ctx; s.w = z.w; s.h = z.h; s.d = z.d; s.flat = false;
+      drawString(s);
+    });
+  }
+  function drawString(s) {
+    var c = s.ctx;
+    if (!c) return;
+    var w = s.w, h = s.h, d = s.d, mid = h / 2, cw = w / d;
+    // a pulse crosses the whole line in a little over a second, whatever its length
+    var T = 0.75 + cw / 2400, SIG = 26 * d, LAM = 13 * d, TRAIL = Math.min(260, cw * 0.4) * d;
+    var live = [];
+    for (var j = 0; j < s.pk.length; j++) {
+      var q = s.pk[j], f = (S.t - q.t0) / T;
+      if (f < 1) live.push({ x: -SIG + f * (w + 2 * SIG), a: q.a * (1 - 0.55 * f) * 7 * d });
+    }
+    s.pk = s.pk.filter(function (q) { return (S.t - q.t0) / T < 1; });
+    if (!live.length) {
+      if (s.flat) return;                                          // straight, and already drawn so
+      s.flat = true;
+      c.clearRect(0, 0, w, h);
+      c.fillStyle = 'rgba(233,231,223,.26)';
+      c.fillRect(0, Math.round(mid - d / 2), w, Math.max(1, Math.round(d)));
+      return;
+    }
+    s.flat = false;
+    c.clearRect(0, 0, w, h);
+    c.beginPath();
+    for (var x = 0; x <= w; x += 2 * d) {
+      var y = 0;
+      for (var k = 0; k < live.length; k++) {
+        var dx = x - live[k].x;
+        if (dx > -3 * SIG && dx < 3 * SIG) y += live[k].a * Math.exp(-(dx * dx) / (SIG * SIG)) * Math.sin(dx / LAM * TAU);
+      }
+      var py = mid - clamp(y, -mid + d, mid - d);
+      if (x) c.lineTo(x, py); else c.moveTo(x, py);
+    }
+    c.lineJoin = 'round'; c.lineWidth = d;
+    c.strokeStyle = 'rgba(233,231,223,.26)';
+    c.stroke();
+    // the part a pulse has just passed glows yellow, fading behind it
+    for (k = 0; k < live.length; k++) {
+      var g = c.createLinearGradient(live[k].x - TRAIL, 0, live[k].x + SIG, 0);
+      g.addColorStop(0, 'rgba(228,228,24,0)');
+      g.addColorStop(0.86, 'rgba(228,228,24,' + (0.95 * Math.min(1, live[k].a / (5 * d))).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(228,228,24,0)');
+      c.strokeStyle = g; c.lineWidth = 1.5 * d;
+      c.stroke();
+    }
   }
 
   /* ─── boot: the "Oscillator Rises" intro ─────────────────────────────
@@ -281,19 +351,6 @@
     setTimeout(function () { hero.el.classList.remove('is-strobe'); strobe.busy = false; }, t);
   }
 
-  /* ─── clock ────────────────────────────────────────────────────────── */
-  function initClock() {
-    var els = $$('.nav__clock, .js-clock');
-    var fmt;
-    try { fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tehran', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }); }
-    catch (e) { fmt = null; }
-    var tick = function () {
-      var s = fmt ? fmt.format(new Date()) : new Date().toTimeString().slice(0, 8);
-      els.forEach(function (el) { el.textContent = (el.classList.contains('nav__clock') ? 'TEH ' : '') + s; });
-    };
-    tick(); setInterval(tick, 1000);
-  }
-
   /* ─── 00 hero: logo halo + oscilloscope ───────────────────────────── */
   var hero = { el: $('.hero'), halo: $('.hero__halo'), fx: 2.5, fy: 2, ph: 0, frame: 0 };
 
@@ -402,42 +459,6 @@
       if (big > 0.9) c.fillRect(sx, sy, (8 + big * 20) * d, 1 * d);      // scratch
       else c.fillRect(sx, sy, (1 + big * 1.5) * d, (1 + big * 1.5) * d);
     }
-  }
-
-  /* ─── rail: the one line that runs down the page ────────────────────── */
-  var rail = { cvs: $('.rail__canvas'), label: $('.rail__label'), amp: 6, type: 'sine' };
-  function resizeRail() {
-    if (!rail.cvs || !rail.cvs.offsetWidth) { rail.ctx = null; return; }
-    var s = sizeCanvas(rail.cvs, 2);
-    rail.ctx = s.ctx; rail.w = s.w; rail.h = s.h; rail.d = s.d;
-  }
-  function drawRail() {
-    var c = rail.ctx;
-    if (!c) return;
-    var w = rail.w, h = rail.h, d = rail.d;
-    c.clearRect(0, 0, w, h);
-    // ruler
-    c.fillStyle = 'rgba(233,231,223,.18)';
-    var step = 24 * d, off = ((S.sy * 0.5 * d) % step + step) % step;
-    for (var y = -off, i = 0; y < h; y += step, i++) {
-      var idx = Math.floor((S.sy * 0.5 * d + y) / step);
-      var long = ((idx % 5) + 5) % 5 === 0;
-      c.fillRect(w - (long ? 14 : 7) * d, y, (long ? 14 : 7) * d, 1 * d);
-    }
-    // waveform
-    var target = 5 + Math.min(Math.abs(S.sv) * 0.012, 14) + S.level * 34 + S.beat * 5;
-    rail.amp = lerp(rail.amp, reduced ? 5 : target, 0.12);
-    var cx = w * 0.42, period = 84 * d, shift = (S.sy * 0.8 + (reduced ? 0 : S.t * 36)) * d;
-    c.beginPath();
-    for (var yy = 0; yy <= h; yy += 2 * d) {
-      var x = cx + rail.amp * d * waveAt(rail.type, (yy + shift) / period);
-      if (yy) c.lineTo(x, yy); else c.moveTo(x, yy);
-    }
-    c.strokeStyle = 'rgba(233,231,223,.62)'; c.lineWidth = 1.1 * d; c.stroke();
-    // position marker
-    var max = Math.max(1, S.docH - S.vh);
-    c.fillStyle = '#e4e418';
-    c.fillRect(w - 18 * d, (S.sy / max) * (h - 3 * d), 18 * d, 3 * d);
   }
 
   /* ─── 01 carrier ───────────────────────────────────────────────────── */
@@ -601,7 +622,7 @@
         $('.cf__again', cf.el).focus({ preventScroll: true });
       })
       .catch(function () {
-        cf.status.innerHTML = 'The signal didn\'t go through. Try again, or <a href="' + esc(D.label.instagram) + '" target="_blank" rel="noopener">DM ' + esc(D.label.handle) + ' ↗︎</a>';
+        cf.status.innerHTML = 'The signal didn\'t go through. Try again, or <a class="ext" href="' + esc(D.label.instagram) + '" target="_blank" rel="noopener">DM ' + esc(D.label.handle) + '</a>';
         cf.status.classList.add('is-err');
       })
       .then(function () { btn.disabled = false; cf.form.classList.remove('is-sending'); });
@@ -680,7 +701,6 @@
   }
   function initRoster() {
     var A = D.artists;
-    $('.voices__count').textContent = pad(A.length) + ' channels';
     // each card is the label's Instagram artist poster: torn-edge photo in
     // hook brackets, the name set vertically in its own bracketed box, a
     // symbol box + series number box, and the logotype underneath
@@ -861,12 +881,19 @@
 
   function bookingHref() { return D.label.email ? 'mailto:' + D.label.email : D.label.instagram; }
 
+  // an artist's number in the Oscillator series ('num' in data.js, else their series mix), or ''
+  function seriesNo(a) {
+    if (a.num) return '#' + a.num;
+    var t = (a.transmissions || []).filter(function (id) { return /^osc-\d+$/.test(id); })[0];
+    return t ? '#' + t.slice(4) : '';
+  }
+
   function profileHTML(a, i) {
-    var n = D.artists.length, next = D.artists[(i + 1) % n], sig = signature(a.slug);
+    var n = D.artists.length, next = D.artists[(i + 1) % n], no = seriesNo(a);
     var allTx = allTransmissions();
     var tx = (a.transmissions || []).map(function (id) { return allTx.filter(function (t) { return t.id === id; })[0]; }).filter(Boolean);
     var links = Object.keys(a.links || {}).filter(function (k) { return a.links[k]; }).map(function (k) {
-      return '<a class="mono" href="' + esc(a.links[k]) + '" target="_blank" rel="noopener">' + esc(LINK_NAMES[k] || k) + ' ↗︎</a>';
+      return '<a class="btn ext" href="' + esc(a.links[k]) + '" target="_blank" rel="noopener">' + esc(LINK_NAMES[k] || k) + '</a>';
     }).join('');
     var videos = (a.videos || []).map(function (v) {
       if (v.youtube) return '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(v.youtube) + '" title="' + esc(v.caption || a.name + ' video') + '" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
@@ -878,44 +905,41 @@
       '<aside class="pf__media">' +
         (a.poster ? '<div class="pf__portrait pf__portrait--poster"><img src="' + esc(a.poster) + '" alt="' + esc(a.name) + ' · Oscillator poster"></div>' :
         '<div class="pf__portrait"' + (a.photo ? ' style="--img:url(\'' + esc(absUrl(a.photo)) + '\')"' : '') + '>' + (a.photo
-          ? '<img src="' + esc(a.photo) + '" alt="' + esc(a.name) + ' portrait"><i class="brk" aria-hidden="true"></i>'
+          ? '<img src="' + esc(a.photo) + '" alt="' + esc(a.name) + ' portrait">'
           : '<canvas class="pf__sigil" aria-hidden="true"></canvas>') + '</div>') +
-        '<div class="pf__sig"><canvas class="pf__sigmini" aria-hidden="true"></canvas>' +
-          '<dl class="mono"><dt>Wave</dt><dd>' + sig.type + '</dd><dt>Ratio</dt><dd>' + sig.a + ':' + sig.b + '</dd>' +
-          '<dt>Phase</dt><dd>' + (sig.phase * 2).toFixed(2) + 'π</dd><dt>Seed</dt><dd>#' + sig.seed.toString(16).toUpperCase().slice(0, 6) + '</dd></dl>' +
-        '</div>' +
       '</aside>' +
       '<div class="pf__content">' +
-        '<p class="pf__role mono">' + ['<b>CH.' + pad(i + 1) + '</b>'].concat([a.role, a.city].filter(Boolean).map(esc)).join(' · ') + '</p>' +
+        '<p class="pf__role mono">' + (no ? '<b class="num">' + esc(no) + '</b><span>Oscillator series</span>' : '') +
+          [a.role, a.city].filter(Boolean).map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</p>' +
         '<h2 class="pf__name" id="pf-name">' + esc(a.name) + '</h2>' +
         (a.placeholder ? '<p class="pf__note mono">Placeholder channel: replace in assets/js/data.js</p>' : '') +
         '<div class="pf__bio">' + (a.bio || []).map(function (p) { return '<p>' + rich(p) + '</p>'; }).join('') + '</div>' +
         (links ? '<div class="pf__links">' + links + '</div>' : '') +
-        (tx.length ? '<section class="pf__block"><h3 class="mono"><span>Transmissions</span><span>' + pad(tx.length) + '</span></h3>' +
+        (tx.length ? '<section class="pf__block"><h3 class="mono"><span>Transmissions</span><span class="num">' + pad(tx.length) + '</span></h3>' +
           tx.map(function (t) {
             return '<div class="pf__tx"><img src="' + esc(t.cover) + '" alt="" loading="lazy"><div><strong>' + esc(t.title) + '</strong>' +
-              '<span class="mono">' + esc(t.type) + ' · ' + fmtDate(t.date) + ' · ' + fmtDur(t.duration) + '</span></div>' +
-              '<a class="mono" href="#tx-' + esc(t.id) + '" data-listen="' + esc(t.id) + '" data-cursor="Play">Listen →</a></div>';
+              '<span class="num">' + fmtDate(t.date) + ' · ' + fmtDur(t.duration) + '</span></div>' +
+              '<a class="mono" href="#tx-' + esc(t.id) + '" data-listen="' + esc(t.id) + '">Listen →</a></div>';
           }).join('') + '</section>' : '') +
-        (videos ? '<section class="pf__block"><h3 class="mono"><span>Video</span><span>' + pad((a.videos || []).length) + '</span></h3><div class="pf__videos">' + videos + '</div></section>' : '') +
-        (gallery ? '<section class="pf__block"><h3 class="mono"><span>Frames</span><span>' + pad(a.photos.length) + '</span></h3><div class="pf__gallery">' + gallery + '</div></section>' : '') +
-        '<button class="cta pf__book" type="button" data-contact="Booking" data-artist="' + esc(a.slug) + '">Booking &amp; inquiries ↗︎</button>' +
+        (videos ? '<section class="pf__block"><h3 class="mono"><span>Video</span><span class="num">' + pad((a.videos || []).length) + '</span></h3><div class="pf__videos">' + videos + '</div></section>' : '') +
+        (gallery ? '<section class="pf__block"><h3 class="mono"><span>Frames</span><span class="num">' + pad(a.photos.length) + '</span></h3><div class="pf__gallery">' + gallery + '</div></section>' : '') +
+        '<button class="cta pf__book" type="button" data-contact="Booking" data-artist="' + esc(a.slug) + '">Booking &amp; inquiries</button>' +
       '</div>' +
     '</div>' +
-    '<a class="pf__next" href="#/artist/' + esc(next.slug) + '" data-swap="' + esc(next.slug) + '" data-cursor="Next channel">' +
-      '<span class="mono">Next channel · CH.' + pad(((i + 1) % n) + 1) + '</span><span class="pf__nextname">' + esc(next.name) + '</span></a>';
+    '<a class="pf__next" href="#/artist/' + esc(next.slug) + '" data-swap="' + esc(next.slug) + '">' +
+      '<span class="mono">Next artist</span><span class="pf__nextname">' + esc(next.name) + '</span></a>';
   }
 
   function renderProfile(slug) {
     var i = artistIndex(slug), a = D.artists[i], n = D.artists.length;
     pf.slug = slug;
     pf.body.innerHTML = profileHTML(a, i);
-    $('.profile__ch').textContent = 'CH.' + pad(i + 1) + ' / ' + pad(n);
+    $('.profile__ch').innerHTML = '<b>' + pad(i + 1) + '</b> / ' + pad(n);
     $('.profile__prev').setAttribute('href', '#/artist/' + D.artists[(i - 1 + n) % n].slug);
     $('.profile__prev').dataset.swap = D.artists[(i - 1 + n) % n].slug;
     $('.profile__next').setAttribute('href', '#/artist/' + D.artists[(i + 1) % n].slug);
     $('.profile__next').dataset.swap = D.artists[(i + 1) % n].slug;
-    pf.canvases = $$('.pf__sigil, .pf__sigmini', pf.body).map(function (cv) { return { cv: cv, sig: signature(slug) }; });
+    pf.canvases = $$('.pf__sigil', pf.body).map(function (cv) { return { cv: cv, sig: signature(slug) }; });
     requestAnimationFrame(sizeProfileCanvases);
     fitProfileName();
     setTimeout(function () { glitch($('.pf__portrait:not(.pf__portrait--poster)', pf.body)); }, 700);
@@ -942,8 +966,9 @@
     }
   }
 
+  // the profile opens out of the band of the poster that was pressed
   function bandFor(slug) {
-    var link = $('.row__link[data-slug="' + slug + '"]');
+    var link = $('.roster .pc__link[data-slug="' + slug + '"]');
     var r = link ? link.getBoundingClientRect() : null;
     if (!r || r.bottom < 0 || r.top > S.vh) r = { top: S.vh / 2 - 1, bottom: S.vh / 2 + 1 };
     pf.el.style.setProperty('--ct', Math.max(0, r.top) + 'px');
@@ -1071,10 +1096,10 @@
       ? '<a href="#/artist/' + esc(t.artist) + '">' + esc(artistName(t.artist)) + '</a>'
       : esc(t.artist || '');
   }
-  function metaline(t, i) {
-    var tl = t.tracklist || [];
-    return '<span>TX-' + pad(i + 1) + '</span><span>' + esc(t.type) + '</span><span>' + fmtDate(t.date) + '</span><span>' + fmtClock(t.duration, t.duration) + '</span>' +
-      (tl.length ? '<span>' + tl.length + ' tracks</span>' : '');
+  // a mix's number in the series: 'Oscillator #031' → '#031'
+  function txNo(t) {
+    var m = String(t.title || '').match(/#\s*\d+/);
+    return m ? m[0].replace(/\s/g, '') : (/^osc-\d+$/.test(t.id) ? '#' + t.id.slice(4) : '');
   }
 
   // the big cards: entries are full objects, series ids ('osc-031') or { ref: 'osc-031', …overrides }
@@ -1112,19 +1137,20 @@
     // phones without the Fullscreen API for page elements (iPhone) get a full-screen layer instead
     var fsReal = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
     var RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
+    var vNo = V.no ? '#' + String(V.no).replace(/^#/, '') : ((V.subtitle || '').match(/#\d+/) || [''])[0];
+    var vKind = V.kind || 'Video';
     box.innerHTML =
       '<div class="tv__screen">' +
         '<div class="tv__yt"></div>' +
         '<img class="tv__still" src="' + esc(V.poster || ('https://i.ytimg.com/vi/' + V.youtube + '/hqdefault.jpg')) + '" alt="" loading="lazy">' +
-        '<i class="brk" aria-hidden="true"></i>' +
-        '<span class="tv__tag mono" aria-hidden="true"><i></i><b>Video</b></span>' +
+        '<span class="tv__tag mono" aria-hidden="true">Tap the picture to start</span>' +
         '<button class="tv__big" type="button" aria-label="Play video: ' + esc(V.title) + '">' + ICON_PLAY + '</button>' +
         '<div class="tv__bar">' +
           '<div class="tv__seek" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="tv__fill"></i><i class="tv__head"></i></div>' +
           '<div class="tv__row">' +
             '<button class="tv__pp" type="button" aria-label="Play">' + ICON_PLAY + ICON_PAUSE + '</button>' +
-            '<span class="tv__time mono"><b>0:00</b> / <span>--:--</span></span>' +
-            '<span class="tv__rate mono" hidden></span>' +
+            '<span class="tv__time num"><b>0:00</b> / <span>--:--</span></span>' +
+            '<span class="tv__rate num" hidden></span>' +
             '<span class="tv__gap"></span>' +
             '<button class="tv__set" type="button" aria-label="Settings: speed and quality" aria-haspopup="true" aria-expanded="false">' + ICON_GEAR + '<b class="tv__hd mono" aria-hidden="true">HD</b></button>' +
             '<div class="tv__menu" hidden>' +
@@ -1142,20 +1168,18 @@
         '</div>' +
       '</div>' +
       '<figcaption class="tv__cap">' +
-        '<p class="tx__meta mono"><span>Video</span>' + (V.date ? '<span>' + fmtDate(V.date) + '</span>' : '') + '</p>' +
+        '<p class="tx__meta mono">' + (vNo ? '<b class="num">' + esc(vNo) + '</b>' : '') + '<span>' + esc(vKind) + '</span>' +
+          (V.date ? '<span class="num">' + fmtDate(V.date) + '</span>' : '') + '</p>' +
         '<h3 class="tx__title">' + esc(V.title) + '</h3>' +
-        (V.subtitle ? '<p class="tx__by">' + esc(V.subtitle) + '</p>' : '') +
-        (V.channel ? '<a class="tx__ext mono" href="' + esc(V.channel) + '" target="_blank" rel="noopener">All videos on YouTube ↗︎</a>' : '') +
+        (V.channel ? '<a class="tx__ext mono ext" href="' + esc(V.channel) + '" target="_blank" rel="noopener">All videos on YouTube</a>' : '') +
       '</figcaption>';
     var scr = $('.tv__screen', box), seek = $('.tv__seek', box), fill = $('.tv__fill', box), head = $('.tv__head', box);
     var tNow = $('.tv__time b', box), tAll = $('.tv__time span', box), pp = $('.tv__pp', box), mute = $('.tv__mute', box);
-    var tag = $('.tv__tag b', box);
     var fmt = function (x) { x = Math.max(0, Math.floor(x || 0)); var h = Math.floor(x / 3600), m = Math.floor(x % 3600 / 60), q = x % 60; return (h ? h + ':' + pad(m) : m) + ':' + pad(q); };
     var set = function (st) {                          // idle | loading | playing | paused | blocked | ended
       box.dataset.state = st;
       tv.playing = st === 'playing';
       if (tv.wake) { if (tv.playing) tv.wake(); else box.classList.remove('is-still'); }
-      tag.textContent = st === 'playing' ? 'On air' : st === 'loading' ? 'Tuning in' : 'Video';
       pp.setAttribute('aria-label', tv.playing ? 'Pause' : 'Play');
     };
     var tick = function () {
@@ -1386,50 +1410,52 @@
   function initTransmissions() {
     var list = $('.tx-list'), F = featuredTx(), SR = (D.series || []).filter(function (t) { return !F.some(function (f) { return f.id === t.id; }); }), T = F.concat(SR);
     initVideo();
-    list.innerHTML = F.map(function (t, i) {
-      var tl = t.tracklist || [];
-      return '<article class="tx" id="tx-' + esc(t.id) + '">' +
+    var latest = (D.series || [])[0];
+    var deckHTML = function (t, pos) {
+      return '<div class="tx__deck">' +
+        '<button class="tx__play" type="button" aria-label="Play ' + esc(t.title) + '">' + ICON_PLAY + ICON_PAUSE + '</button>' +
+        '<div class="tx__wave" role="slider" tabindex="0" aria-label="Seek ' + esc(t.title) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><canvas aria-hidden="true"></canvas></div>' +
+        (pos ? '<span class="tx__pos num">' + fmtClock(0, t.duration) + '</span>' : '') +
+      '</div>';
+    };
+    // the latest mix, large: its number, the artist's name, the waveform to play
+    list.innerHTML = F.map(function (t) {
+      var tl = t.tracklist || [], no = txNo(t);
+      return '<article class="tx tx--feature" id="tx-' + esc(t.id) + '">' +
         '<button class="tx__cover" type="button" aria-label="Play ' + esc(t.title) + '">' +
-          '<img src="' + esc(t.cover) + '" alt="" loading="lazy"><i class="brk" aria-hidden="true"></i>' +
+          '<img src="' + esc(t.cover) + '" alt="" loading="lazy">' +
         '</button>' +
         '<div class="tx__body">' +
-          '<p class="tx__meta mono">' + metaline(t, i) + '</p>' +
-          '<h3 class="tx__title">' + esc(t.title) + '</h3>' +
-          '<p class="tx__by">by ' + byline(t) + '</p>' +
-          '<div class="tx__deck">' +
-            '<button class="tx__play" type="button" aria-label="Play ' + esc(t.title) + '">' + ICON_PLAY + ICON_PAUSE + '</button>' +
-            '<div class="tx__wave" role="slider" tabindex="0" aria-label="Seek ' + esc(t.title) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><canvas aria-hidden="true"></canvas></div>' +
-          '</div>' +
-          '<div class="tx__dur mono"><span class="tx__pos">' + fmtClock(0, t.duration) + '</span><span>' + fmtClock(t.duration, t.duration) + '</span></div>' +
+          '<p class="tx__meta mono">' + (no ? '<b class="num">' + esc(no) + '</b>' : '') +
+            (latest && latest.id === t.id ? '<span>Latest</span>' : '<span>' + esc(t.type || '') + '</span>') +
+            '<span class="num">' + fmtDate(t.date) + '</span>' + (tl.length ? '<span>' + tl.length + ' tracks</span>' : '') + '</p>' +
+          '<h3 class="tx__title">' + (t.artist ? byline(t) : esc(t.title)) + '</h3>' +
+          deckHTML(t, false) +
+          '<div class="tx__dur num"><span class="tx__pos">' + fmtClock(0, t.duration) + '</span><span>' + fmtClock(t.duration, t.duration) + '</span></div>' +
           (tl.length ? '<details class="tx__tracks"><summary class="mono"><span>Tracklist · ' + pad(tl.length) + '</span></summary><ol>' +
             tl.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol></details>' : '') +
-          (t.soundcloud ? '<a class="tx__ext mono" href="' + esc(t.soundcloud) + '" target="_blank" rel="noopener">Open on SoundCloud ↗︎</a>' : '') +
+          (t.soundcloud ? '<a class="tx__ext mono ext" href="' + esc(t.soundcloud) + '" target="_blank" rel="noopener">SoundCloud</a>' : '') +
         '</div></article>';
     }).join('');
 
-    // the label's numbered series: compact rows, same player
+    // the label's numbered series: one row per mix (number, the artist, the waveform);
+    // the links to SoundCloud and YouTube live on the now-playing page
     var box = $('.series'), SHOW = 5;
-    if (SR.length) {
+    if (SR.length || F.length) {
       box.hidden = false;
       $('.series__count').textContent = (D.series || []).length;
       $('.series__list').innerHTML = SR.map(function (t, i) {
         var who = artistIndex(t.artist) >= 0
           ? '<a href="#/artist/' + esc(t.artist) + '">' + esc(artistName(t.artist)) + '</a>'
-          : esc(t.artist);
+          : esc(t.artist || t.title);
         return '<article class="tx tx--row" id="tx-' + esc(t.id) + '"' + (i >= SHOW ? ' hidden' : '') + '>' +
           '<button class="tx__cover" type="button" aria-label="Play ' + esc(t.title) + '">' +
             (t.cover ? '<img src="' + esc(t.cover) + '" alt="' + esc(t.title) + ' cover" loading="lazy">' : '') + '</button>' +
-          '<p class="tx__num">' + String(t.title).replace(/^.*#/, '#') + '</p>' +
+          '<p class="tx__num num">' + esc(txNo(t)) + '</p>' +
           '<div class="tx__body">' +
             '<h3 class="tx__who">' + who + '</h3>' +
-            '<p class="tx__meta mono"><span>' + fmtDate(t.date) + '</span><span>' + fmtClock(t.duration, t.duration) + '</span>' +
-              (t.soundcloud ? '<a class="tx__ext" href="' + esc(t.soundcloud) + '" target="_blank" rel="noopener">SoundCloud ↗︎</a>' : '') +
-              (t.youtube ? '<a class="tx__ext" href="https://www.youtube.com/watch?v=' + esc(t.youtube) + '" target="_blank" rel="noopener">Video ↗︎</a>' : '') + '</p>' +
-            '<div class="tx__deck">' +
-              '<button class="tx__play" type="button" aria-label="Play ' + esc(t.title) + '">' + ICON_PLAY + ICON_PAUSE + '</button>' +
-              '<div class="tx__wave" role="slider" tabindex="0" aria-label="Seek ' + esc(t.title) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><canvas aria-hidden="true"></canvas></div>' +
-              '<span class="tx__pos mono">' + fmtClock(0, t.duration) + '</span>' +
-            '</div>' +
+            '<p class="tx__meta mono"><span class="num">' + fmtDate(t.date) + '</span><span class="num">' + fmtClock(t.duration, t.duration) + '</span></p>' +
+            deckHTML(t, true) +
           '</div></article>';
       }).join('');
       var more = $('.series__more'), open = false, extra = SR.length - SHOW;
@@ -1443,7 +1469,7 @@
           label();
           if (open) resizeTx();
           else {                                          // folding up: keep the button where the eye is
-            var head = $('.series__head'), r = head.getBoundingClientRect();
+            var head = $('.series__list'), r = head.getBoundingClientRect();
             if (r.top < 0) window.scrollTo({ top: window.scrollY + r.top - 80, behavior: reduced ? 'auto' : 'smooth' });
           }
         });
@@ -1536,7 +1562,7 @@
     S_.meta = $('.stage__meta', el); S_.title = $('.stage__title', el); S_.by = $('.stage__by', el);
     S_.now = $('.stage__now', el); S_.total = $('.stage__total', el); S_.state = $('.stage__state', el);
     S_.seek = $('.stage__seek', el); S_.toggle = $('.stage__toggle', el); S_.tracks = $('.stage__tracks', el);
-    S_.ext = $('.stage__ext', el); S_.close = $('.stage__close', el);
+    S_.ext = $('.stage__ext', el); S_.yt = $('.stage__yt', el); S_.close = $('.stage__close', el);
 
     var toggleCur = function () { if (S_.cur) Player.toggle(S_.cur); };
     S_.toggle.addEventListener('click', toggleCur);
@@ -1619,7 +1645,7 @@
     stage.el.classList.toggle('is-playing', !!o.playing);
     stageBg(t.cover);
     if (stage.disc.getAttribute('src') !== t.cover) stage.disc.setAttribute('src', t.cover);
-    stage.meta.innerHTML = '<span>' + fmtDate(t.date) + '</span>' + (tl.length ? '<span>' + tl.length + ' tracks</span>' : '');
+    stage.meta.innerHTML = '<span class="num">' + fmtDate(t.date) + '</span>' + (tl.length ? '<span>' + tl.length + ' tracks</span>' : '');
     stage.title.textContent = t.title;
     stage.by.innerHTML = 'by ' + byline(t);
     stage.total.textContent = fmtClock(t.duration, t.duration);
@@ -1629,6 +1655,8 @@
       tl.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' : '';
     stage.ext.hidden = !t.soundcloud;
     if (t.soundcloud) stage.ext.setAttribute('href', t.soundcloud);
+    stage.yt.hidden = !t.youtube;                                  // a mix that was also filmed
+    if (t.youtube) stage.yt.setAttribute('href', 'https://www.youtube.com/watch?v=' + t.youtube);
     paintStageState(o.stateText);
     stage.update();
   };
@@ -1902,7 +1930,7 @@
       if ($('.tx__error', o.el)) return;
       var p = document.createElement('p');
       p.className = 'tx__error mono';
-      p.innerHTML = 'SoundCloud couldn\'t be reached from here. <a href="' + esc(o.t.soundcloud) + '" target="_blank" rel="noopener">Listen on SoundCloud ↗︎</a>';
+      p.innerHTML = 'SoundCloud couldn\'t be reached from here. <a class="ext" href="' + esc(o.t.soundcloud) + '" target="_blank" rel="noopener">Listen on SoundCloud</a>';
       ($('.tx__dur', o.el) || $('.tx__deck', o.el)).after(p);
     }
   };
@@ -1925,11 +1953,11 @@
     var media = F.media || [], sheet = $('.sheet');
     sheet.hidden = !media.length;
     sheet.innerHTML = media.map(function (m, i) {
-      var cap = '<figcaption class="frame__cap mono"><b>FR ' + pad(i + 1) + '</b><i aria-hidden="true"></i><span>' + esc(m.caption || '') + '</span></figcaption>';
+      var cap = '<figcaption class="frame__cap mono"><b class="num">' + pad(i + 1) + '</b><i aria-hidden="true"></i><span>' + esc(m.caption || '') + '</span></figcaption>';
       var inner = m.type === 'video'
         ? '<video src="' + esc(m.src) + '"' + (m.poster ? ' poster="' + esc(m.poster) + '"' : '') + ' muted loop playsinline preload="metadata"></video>'
         : '<img src="' + esc(m.src) + '" alt="' + esc(m.caption || '') + '" loading="lazy">';
-      return '<figure class="frame' + (m.wide ? ' frame--wide' : '') + '"><div class="frame__media"' + (m.type !== 'video' ? ' style="--img:url(\'' + esc(absUrl(m.src)) + '\')"' : '') + '>' + inner + '<i class="brk" aria-hidden="true"></i></div>' + cap + '</figure>';
+      return '<figure class="frame' + (m.wide ? ' frame--wide' : '') + '"><div class="frame__media"' + (m.type !== 'video' ? ' style="--img:url(\'' + esc(absUrl(m.src)) + '\')"' : '') + '>' + inner + '</div>' + cap + '</figure>';
     }).join('');
     $$('.sheet .frame__media').forEach(function (f) { f.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') glitch(f); }); });
     // black & white until tapped: a tap brings the colour in (tap again to take it back)
@@ -1996,27 +2024,27 @@
         '<canvas class="nosignal__line" aria-hidden="true"></canvas>' +
         '<p class="nosignal__big">No signal</p>' +
         '<div class="nosignal__row"><p>Nothing scheduled yet. New dates are announced first on Instagram.</p>' +
-        '<a class="cta" href="' + esc(D.label.instagram) + '" target="_blank" rel="noopener">Follow ' + esc(D.label.handle) + ' ↗︎</a></div></div>';
+        '<a class="cta ext" href="' + esc(D.label.instagram) + '" target="_blank" rel="noopener">Follow ' + esc(D.label.handle) + '</a></div></div>';
     } else {
       html = next.map(function (ev) {
         var parts = ev.date.split('-'), lineup = lineupOf(ev);
         return '<article class="event" data-reveal>' +
-          '<p class="event__date">' + parts[2] + '.' + parts[1] + '<small class="mono">' + parts[0] + '</small></p>' +
+          '<p class="event__date num">' + parts[2] + '.' + parts[1] + '<small>' + parts[0] + '</small></p>' +
           '<div><h3 class="event__title">' + esc(ev.title) + '</h3>' +
           '<p class="event__where mono">' + esc([ev.venue, ev.city].filter(Boolean).join(' · ')) + '</p>' +
           (lineup ? '<p class="event__lineup">' + lineup + '</p>' : '') + '</div>' +
-          (ev.link ? '<a class="cta" href="' + esc(ev.link) + '" target="_blank" rel="noopener">Info ↗︎</a>' : '<span></span>') +
+          (ev.link ? '<a class="cta ext" href="' + esc(ev.link) + '" target="_blank" rel="noopener">Info</a>' : '<span></span>') +
           '</article>';
       }).join('');
     }
     // past nights: the posters as an archive (black & white; colour on hover / tap)
     if (past.length) {
-      html += '<div class="past"><header class="past__head"><h3 class="past__title">Past signals</h3><p class="mono">' + pad(past.length) + ' nights</p></header>' +
+      html += '<div class="past"><header class="past__head"><h3 class="past__title">Past signals</h3><p class="mono"><span class="num">' + pad(past.length) + '</span> nights</p></header>' +
         '<div class="past__grid">' + past.map(function (ev) {
           var parts = ev.date.split('-'), lineup = lineupOf(ev);
           return '<figure class="past__item">' +
-            (ev.poster ? '<div class="past__poster"><img src="' + esc(ev.poster) + '" alt="' + esc(ev.title) + ' poster" loading="lazy"><i class="brk" aria-hidden="true"></i></div>' : '') +
-            '<figcaption><b class="mono">' + parts[2] + '.' + parts[1] + '.' + parts[0] + '</b><span class="past__name">' + esc(ev.title) + '</span>' +
+            (ev.poster ? '<div class="past__poster"><img src="' + esc(ev.poster) + '" alt="' + esc(ev.title) + ' poster" loading="lazy"></div>' : '') +
+            '<figcaption><b class="num">' + parts[2] + '.' + parts[1] + '.' + parts[0] + '</b><span class="past__name">' + esc(ev.title) + '</span>' +
             (lineup ? '<span class="past__lineup">' + lineup + '</span>' : '') + '</figcaption></figure>';
         }).join('') + '</div></div>';
     }
@@ -2059,12 +2087,12 @@
     th.letters = $$('.l', th.el).map(function (el, i) { return { el: el, i: i, x: 0, y: 0, st: -1, wg: -1 }; });
 
     var L = D.label;
-    var follow = ['<li><a href="' + esc(L.instagram) + '" target="_blank" rel="noopener">Instagram ↗︎</a></li>'];
-    if (L.soundcloud) follow.push('<li><a href="' + esc(L.soundcloud) + '" target="_blank" rel="noopener">SoundCloud ↗︎</a></li>');
-    if (L.youtube) follow.push('<li><a href="' + esc(L.youtube) + '" target="_blank" rel="noopener">YouTube ↗︎</a></li>');
+    var follow = ['<li><a class="ext" href="' + esc(L.instagram) + '" target="_blank" rel="noopener">Instagram</a></li>'];
+    if (L.soundcloud) follow.push('<li><a class="ext" href="' + esc(L.soundcloud) + '" target="_blank" rel="noopener">SoundCloud</a></li>');
+    if (L.youtube) follow.push('<li><a class="ext" href="' + esc(L.youtube) + '" target="_blank" rel="noopener">YouTube</a></li>');
     $('.output__grid').innerHTML =
       '<div><h3 class="mono">Demos &amp; bookings</h3><p>' + rich(L.demos) + '</p>' +
-        '<button class="cta" type="button" data-contact="Demo">Send a signal ↗︎</button></div>' +
+        '<button class="cta" type="button" data-contact="Demo">Send a signal</button></div>' +
       '<div><h3 class="mono">Follow the signal</h3><ul>' + follow.join('') + '</ul></div>';
     $('.year').textContent = new Date().getFullYear();
     watch(th.el, 'output');
@@ -2099,7 +2127,7 @@
   var sections = [];
   function initNav() {
     sections = $$('main > section, main > footer').map(function (el) {
-      return { el: el, id: el.id, wave: el.dataset.wave || 'sine', label: el.dataset.label || '', link: $('.nav__links a[href="#' + el.id + '"]') };
+      return { el: el, id: el.id, link: $('.nav__links a[href="#' + el.id + '"]') };
     });
     var menu = $('#menu'), btn = $('.nav__menu');
     var setMenu = function (open) {
@@ -2130,8 +2158,6 @@
     }
     if (cur === currentSection) return;
     currentSection = cur;
-    rail.type = cur.wave;
-    if (rail.label) rail.label.textContent = cur.label;
     sections.forEach(function (s) { if (s.link) s.link.classList.toggle('is-active', s === cur); });
   }
 
@@ -2184,7 +2210,7 @@
 
   // section titles never overflow their row
   function fitTitles() {
-    $$('.sec__title').forEach(function (t) {
+    $$('.sec__title, .nosignal__big').forEach(function (t) {
       t.style.fontSize = '';
       var avail = t.parentNode.clientWidth, w = t.scrollWidth;
       if (w > avail) t.style.fontSize = (parseFloat(getComputedStyle(t).fontSize) * avail / w * 0.98).toFixed(1) + 'px';
@@ -2193,7 +2219,7 @@
 
   function resizeAll() {
     S.vw = innerWidth; S.vh = innerHeight; S.sy = scrollY;
-    fitTitles(); resizeScope(); resizeRail(); measureCarrier(); resizeRoster();
+    fitTitles(); resizeScope(); resizeStrings(); measureCarrier(); resizeRoster();
     resizeTx(); resizeFeedback(); resizeEvents(); measureOutput();
     if (pf.open) { sizeProfileCanvases(); fitProfileName(); }
   }
@@ -2220,6 +2246,7 @@
       var at = E.now();
       while (E.beats.length && E.beats[0] <= at) {
         E.beats.shift(); S.beat = 1;
+        for (var sk = 0; sk < strings.length; sk++) if (strings[sk].vis) send(strings[sk], 0.55);
         if (++S.beatCount % 32 === 0) fireStrobe([80]);   // one cut every 8 bars
       }
       S.level = lerp(S.level, E.level(), 0.35);
@@ -2247,14 +2274,13 @@
     S.docH = document.documentElement.scrollHeight;
     if (vis.feedback) fb.rect = fb.track.getBoundingClientRect();
     if (vis.hero !== false) drawHero();
-    drawRail();
+    for (var si = 0; si < strings.length; si++) if (strings[si].vis) drawString(strings[si]);
     if (vis.roster) drawRoster();
     if (vis.feedback) drawFeedback();
     if (vis.events) drawEvents();
   }
 
   /* ─── go ───────────────────────────────────────────────────────────── */
-  initGlyphs();
   initHero();
   initCarrier();
   initCutLogo();
@@ -2263,10 +2289,10 @@
   initFeedback();
   initEvents();
   initOutput();
-  initClock();
   initContact();
   initTape();
   initNav();
+  initStrings();
   initProfile();
   initSignal();
   initInput();

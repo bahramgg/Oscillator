@@ -2,17 +2,27 @@
 
 Website for **Oscillator**, a techno label & artist collective.
 
-The site is built as an instrument. Every section is a waveform:
+The site is built as an instrument, and it is laid out as one system:
 
-| # | Section | Wave | What it is |
-|---|---------|------|------------|
-| 00 | Power | — | Intro plays the label's "Oscillator Rises" reel (muted, Sound on button, tap to skip, once per session; a drawn version runs if autoplay is blocked; skipped for reduced motion). Hero: neon logo in a rotating OSCILLATOR/ ring, yellow strobe cuts, faint live oscilloscope |
-| 01 | Carrier | sine | The label manifesto |
-| 02 | Voices | square | The roster as a swipeable reel that also advances by itself every 2 s (pauses on touch, drag or hover). Each card is the artist's own series poster, shown as-is (`poster` in data.js) — the current roster plus every guest of the series back to #001, in series order; an artist without a poster gets a card rebuilt in the poster language from their photo. Each opens a profile (`#/artist/<slug>`) |
-| 03 | Transmissions | saw | A featured video from the label's YouTube channel (`video` in data.js; the player loads only when pressed; the site's own controls: timeline, speed 0.5–2×, quality Auto/HD, mute, full screen — on iPhone, where pages can't use the browser's full screen, a full-screen layer that lies the video sideways), a featured mix as a big card (`transmissions`), then **The Oscillator Series**: the label's numbered mixes (#001–#031 from soundcloud.com/oscillatorr, `series`) as a compact archive, with video links where a mix is on YouTube; each roster artist's mix also appears on their profile. Play opens the stage: a full-screen now-playing page. Audio via hidden SoundCloud widgets |
-| 04 | Feedback | noise | The room: a photo of the room pinned to the screen and travelling as you scroll (a tall one tilts from the ceiling to the floor, a wide one pans across; strips shear with scroll speed), with a running REC timecode; 'the room is THE INSTRUMENT'. Photos in `feedback.media` appear as a grid underneath |
-| 05 | Next signal | triangle | Events (shows a "no signal" state when nothing is upcoming); past dates with a `poster` form the "Past signals" archive |
-| 06 | Output | pulse | Contact: 'Send a signal' opens a full-screen form (Demo / Booking / Collaboration / Other, fields follow the choice; an artist's profile opens it as a booking for that artist). Submissions go through FormSubmit (`label.form` in data.js) to the label's inbox |
+- **Type:** Anton for names, Tenor Sans (the KIARASH poster face) for words and labels,
+  Rajdhani (the poster number face) for every number, Orbitron only for the wordmark.
+- **Every section opens the same way:** its number, a hairline, what it holds, then its name.
+  The hairline is a wire: when the section scrolls in, a pulse of signal runs along it from the
+  number to the label and lights it yellow as it passes; while the synth plays, every kick sends
+  another one. At rest it is straight.
+- **Labels** are one style everywhere (small spaced capitals). **Yellow** means signal: numbers,
+  play buttons, the tape, whatever is live. **Text buttons** are hairline rectangles; **play
+  buttons** are yellow circles. External links carry a drawn arrow.
+
+| # | Section | What it is |
+|---|---------|------------|
+| 00 | Power | Intro plays the label's "Oscillator Rises" reel (muted, Sound on button, tap to skip, once per session; a drawn version runs if autoplay is blocked; skipped for reduced motion). Hero: neon logo in a rotating OSCILLATOR/ ring, yellow strobe cuts, faint live oscilloscope |
+| 01 | Carrier | The label manifesto |
+| 02 | Voices | The roster as a swipeable reel that also advances by itself every 2 s (pauses on touch, drag or hover). Each card is the artist's own series poster, shown as-is (`poster` in data.js), in series order; an artist without a poster gets a card rebuilt in the poster language from their photo. Each opens a profile (`#/artist/<slug>`) |
+| 03 | Transmissions | A featured film from the label's YouTube channel (`video` in data.js; the player loads only when pressed; the site's own controls: timeline, speed 0.5–2×, quality Auto/HD, mute, full screen; on iPhone, where pages can't use the browser's full screen, a full-screen layer that lies the video sideways). Then **The Oscillator Series**: the latest mix large (`transmissions`), then one row per mix (#001–#031 from soundcloud.com/oscillatorr, `series`): number, artist, waveform. Play opens the stage, a full-screen now-playing page with the SoundCloud link (and the video, for mixes that were filmed). Audio via hidden SoundCloud widgets |
+| 04 | Feedback | The room: a photo pinned to the screen and travelling as you scroll (a tall one tilts from the ceiling to the floor, a wide one pans across; strips shear with scroll speed), with a running REC timecode; 'the room is THE INSTRUMENT'. Photos in `feedback.media` appear as a grid underneath |
+| 05 | Next signal | Events; when nothing is upcoming, a "no signal" screen (a flat line with a passing blip, NO SIGNAL in outline, the follow button). Past dates with a `poster` form the "Past signals" archive |
+| 06 | Output | Contact, a centred close: 'Send a signal' opens a full-screen form (Demo / Booking / Collaboration / Other, fields follow the choice; an artist's profile opens it as a booking for that artist). Submissions go through FormSubmit (`label.form` in data.js) to the label's inbox |
 
 Press **Turn on the signal** and the site generates a techno loop live in the browser
 with the Web Audio API (kick, hats, clap, acid bassline — no samples). The scope then
@@ -63,7 +73,7 @@ Pages, a plain server). For GitHub Pages: *Settings → Pages → Deploy from a 
 - Logo files (`assets/img/logo-*.png`, favicon, touch icon) are generated from the 2000px originals.
 - Colours: ink `#070707`, bone `#e9e7df`, yellow `#e4e418` (from the label logo).
 - Fonts (matched to the label's posters and the "Oscillator Rises" reel): Anton, Tenor Sans
-  (the KIARASH poster type), Orbitron, Rajdhani (the artist-poster names) — all SIL OFL,
+  (the KIARASH poster type), Rajdhani (the poster numbers), Orbitron (the wordmark), all SIL OFL,
   see [`assets/fonts/LICENSE.md`](assets/fonts/LICENSE.md).
 - Tape: highlighted words (`*asterisks*`) and the footer's SIGNAL sit on yellow tape cut by hand in the logo's geometry (angled end cuts, uneven 45° corners, a stepped notch, each strip different), stuck on crooked as they scroll into view.
 - The footer logo is cut into strips that slip out of register now and then.

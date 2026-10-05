@@ -82,8 +82,9 @@ window.OSCILLATOR = {
   /* ------------------------------------------------------------------------
      TRANSMISSIONS — "03"
      video: the featured video from the label's YouTube channel, shown first
-            (poster = still image; the player loads only when pressed).
-     transmissions: mixes shown as big cards under it. Each entry is either the
+            (poster = still image; the player loads only when pressed;
+            no = its number in the series, kind = what it is).
+     transmissions: the mix shown large at the top of the series. Each entry is either the
             id of a mix in the series below ('osc-031'), optionally with overrides
             ({ ref: 'osc-031', cover: '…' }), or a full object:
             { id, title, artist, type, date, duration (s), cover, soundcloud, tracklist, waveform }
@@ -91,7 +92,7 @@ window.OSCILLATOR = {
   video: {
     youtube: 'POCYIXH-Hp4',
     title: 'Keyv B2B Amiri',
-    subtitle: 'Oscillator #006 · filmed set',
+    no: '006', kind: 'Filmed set',
     date: '2020-11-04',
     poster: 'assets/img/video-006.jpg',
     channel: 'https://www.youtube.com/@oscillator2510'

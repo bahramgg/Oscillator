@@ -24,6 +24,7 @@
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
   <link rel="preload" href="assets/fonts/anton.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/tenor-sans.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/rajdhani-700.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/orbitron-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/style.css">
 
@@ -43,25 +44,25 @@
 <body class="is-booting">
   <a class="skip" href="#main">Skip to content</a>
 
-  <!-- ░░ Boot ░░ -->
+  <!-- intro: the "Oscillator Rises" reel -->
   <div class="boot">
     <video class="boot__video" data-mp4="assets/video/oscillator-rises.mp4" data-webm="assets/video/oscillator-rises.webm" muted playsinline preload="auto" aria-hidden="true"></video>
     <span class="logo logo--icon boot__icon" aria-hidden="true"></span>
     <div class="halo boot__halo" aria-hidden="true">
       <svg class="halo__ring" viewBox="0 0 400 400" aria-hidden="true">
-            <defs><path id="boot-ring" d="M200,200 m-172,0 a172,172 0 1,1 344,0 a172,172 0 1,1 -344,0"/></defs>
-            <text><textPath href="#boot-ring" textLength="1080" lengthAdjust="spacing">OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/</textPath></text>
-          </svg>
+        <defs><path id="boot-ring" d="M200,200 m-172,0 a172,172 0 1,1 344,0 a172,172 0 1,1 -344,0"/></defs>
+        <text><textPath href="#boot-ring" textLength="1080" lengthAdjust="spacing">OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/</textPath></text>
+      </svg>
       <span class="logo logo--outline"></span>
     </div>
     <p class="wearetitle boot__title" aria-hidden="true">We are Oscillator</p>
     <div class="boot__meta mono">
-      <button class="boot__sound mono" type="button" aria-pressed="false" hidden>Sound on</button>
+      <button class="boot__sound btn" type="button" aria-pressed="false" hidden>Sound on</button>
       <span class="boot__skip">Tap to skip · <b class="boot__pct">000</b></span>
     </div>
   </div>
 
-  <!-- ░░ Chrome ░░ -->
+  <!-- chrome -->
   <header class="nav">
     <a class="nav__brand" href="#top" aria-label="Oscillator, back to top">
       <span class="logo nav__logo" aria-hidden="true"></span>
@@ -76,88 +77,79 @@
       <a href="#output"><i>06</i>Output</a>
     </nav>
     <div class="nav__right">
-      <span class="nav__clock mono" aria-label="Local time in Tehran">TEH --:--:--</span>
-      <button class="pwr mono" type="button" aria-pressed="false" data-cursor="Power">
+      <button class="pwr btn" type="button" aria-pressed="false">
         <span class="pwr__led" aria-hidden="true"></span><span class="pwr__label">Signal off</span>
       </button>
-      <button class="nav__menu mono" type="button" aria-expanded="false" aria-controls="menu">Menu</button>
+      <button class="nav__menu btn" type="button" aria-expanded="false" aria-controls="menu">Menu</button>
     </div>
   </header>
 
   <div class="menu" id="menu" hidden>
     <nav aria-label="Menu">
-      <a href="#carrier"><span class="mono">01</span><b>Carrier</b><i aria-hidden="true">→</i></a>
-      <a href="#voices"><span class="mono">02</span><b>Voices</b><i aria-hidden="true">→</i></a>
-      <a href="#transmissions"><span class="mono">03</span><b>Transmissions</b><i aria-hidden="true">→</i></a>
-      <a href="#feedback"><span class="mono">04</span><b>Feedback</b><i aria-hidden="true">→</i></a>
-      <a href="#next"><span class="mono">05</span><b>Next signal</b><i aria-hidden="true">→</i></a>
-      <a href="#output"><span class="mono">06</span><b>Output</b><i aria-hidden="true">→</i></a>
+      <a href="#carrier"><span class="num">01</span><b>Carrier</b><i aria-hidden="true">→</i></a>
+      <a href="#voices"><span class="num">02</span><b>Voices</b><i aria-hidden="true">→</i></a>
+      <a href="#transmissions"><span class="num">03</span><b>Transmissions</b><i aria-hidden="true">→</i></a>
+      <a href="#feedback"><span class="num">04</span><b>Feedback</b><i aria-hidden="true">→</i></a>
+      <a href="#next"><span class="num">05</span><b>Next signal</b><i aria-hidden="true">→</i></a>
+      <a href="#output"><span class="num">06</span><b>Output</b><i aria-hidden="true">→</i></a>
     </nav>
     <div class="menu__foot mono">
-      <a href="https://www.instagram.com/oscillator__/" target="_blank" rel="noopener">Instagram ↗︎</a>
-      <a href="https://on.soundcloud.com/1oNQcz1onDKpvNzims" target="_blank" rel="noopener">SoundCloud ↗︎</a>
-      <a href="https://www.youtube.com/@oscillator2510" target="_blank" rel="noopener">YouTube ↗︎</a>
+      <a class="ext" href="https://www.instagram.com/oscillator__/" target="_blank" rel="noopener">Instagram</a>
+      <a class="ext" href="https://on.soundcloud.com/1oNQcz1onDKpvNzims" target="_blank" rel="noopener">SoundCloud</a>
+      <a class="ext" href="https://www.youtube.com/@oscillator2510" target="_blank" rel="noopener">YouTube</a>
     </div>
   </div>
-
-  <aside class="rail" aria-hidden="true">
-    <canvas class="rail__canvas"></canvas>
-    <span class="rail__label mono">00 / Power</span>
-  </aside>
 
   <div class="grain" aria-hidden="true"></div>
 
   <main id="main">
 
-    <!-- ░░ 00 — Hero / the oscilloscope ░░ -->
-    <section class="hero" id="top" data-wave="sine" data-label="00 / Power">
+    <!-- 00 hero: the logo in its ring over a live trace -->
+    <section class="hero" id="top">
       <canvas class="scope" aria-hidden="true"></canvas>
       <div class="graticule" aria-hidden="true"></div>
 
       <div class="hero__cta">
         <p class="hero__tag"></p>
-        <button class="hero__pwr pwr" type="button" aria-pressed="false" data-cursor="Power">
+        <button class="hero__pwr pwr btn" type="button" aria-pressed="false">
           <span class="pwr__led" aria-hidden="true"></span>
           <span class="pwr__label">Turn on the signal</span>
-          <small class="hero__bpm mono">132 BPM</small>
+          <small class="hero__bpm num">132 BPM</small>
         </button>
       </div>
 
       <div class="halo hero__halo" aria-hidden="true">
         <svg class="halo__ring" viewBox="0 0 400 400" aria-hidden="true">
-            <defs><path id="hero-ring" d="M200,200 m-172,0 a172,172 0 1,1 344,0 a172,172 0 1,1 -344,0"/></defs>
-            <text><textPath href="#hero-ring" textLength="1080" lengthAdjust="spacing">OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/</textPath></text>
-          </svg>
+          <defs><path id="hero-ring" d="M200,200 m-172,0 a172,172 0 1,1 344,0 a172,172 0 1,1 -344,0"/></defs>
+          <text><textPath href="#hero-ring" textLength="1080" lengthAdjust="spacing">OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/OSCILLATOR/</textPath></text>
+        </svg>
         <span class="logo logo--outline"></span>
         <span class="logo logo--fill"></span>
       </div>
       <h1 class="wearetitle hero__title">We are Oscillator</h1>
     </section>
 
-    <!-- ░░ 01 — Carrier / about ░░ -->
-    <section class="sec carrier" id="carrier" data-wave="sine" data-label="01 / Carrier">
-      <header class="sec__head" data-reveal>
-        <span class="sec__num mono">01</span>
-        <svg class="glyph" data-wave="sine" viewBox="0 0 120 24" aria-hidden="true"></svg>
+    <!-- every section opens the same way: number, a line (a string that rings when the
+         section arrives), what it holds, then the name -->
+
+    <!-- 01 carrier: about -->
+    <section class="sec carrier" id="carrier">
+      <header class="sec__head">
+        <div class="sec__bar"><span class="sec__num num">01</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">The label</span></div>
         <h2 class="sec__title">Carrier</h2>
-        <span class="sec__sub">the label</span>
-        <span class="sec__meta mono">Sine / the pure tone</span>
       </header>
       <div class="carrier__text"></div>
     </section>
 
-    <!-- ░░ 02 — Voices / artists ░░ -->
-    <section class="sec voices" id="voices" data-wave="square" data-label="02 / Voices">
-      <header class="sec__head" data-reveal>
-        <span class="sec__num mono">02</span>
-        <svg class="glyph" data-wave="square" viewBox="0 0 120 24" aria-hidden="true"></svg>
+    <!-- 02 voices: artists -->
+    <section class="sec voices" id="voices">
+      <header class="sec__head">
+        <div class="sec__bar"><span class="sec__num num">02</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">The roster</span></div>
         <h2 class="sec__title">Voices</h2>
-        <span class="sec__sub">the roster</span>
-        <span class="sec__meta mono voices__count">channels</span>
       </header>
       <ol class="roster" aria-label="Artists"></ol>
       <div class="reel-nav">
-        <span class="reel-count mono"><b>01</b> / <span class="reel-total">10</span></span>
+        <span class="reel-count num"><b>01</b> / <span class="reel-total">10</span></span>
         <span class="reel-progress" aria-hidden="true"><i></i></span>
         <span class="reel-hint mono">Swipe</span>
         <button class="reel-btn reel-prev" type="button" aria-label="Previous artists">←</button>
@@ -165,65 +157,58 @@
       </div>
     </section>
 
-    <!-- ░░ 03 — Transmissions / mixes & releases ░░ -->
-    <section class="sec transmissions" id="transmissions" data-wave="saw" data-label="03 / Transmissions">
-      <header class="sec__head" data-reveal>
-        <span class="sec__num mono">03</span>
-        <svg class="glyph" data-wave="saw" viewBox="0 0 120 24" aria-hidden="true"></svg>
+    <!-- 03 transmissions: the film, then the series (latest first) -->
+    <section class="sec transmissions" id="transmissions">
+      <header class="sec__head">
+        <div class="sec__bar"><span class="sec__num num">03</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Mixes &amp; releases</span></div>
         <h2 class="sec__title">Transmissions</h2>
-        <span class="sec__sub">mixes &amp; releases</span>
-        <span class="sec__meta mono">Saw / all harmonics</span>
       </header>
       <figure class="tv" hidden></figure>
-      <div class="tx-list"></div>
       <div class="series" hidden>
         <header class="series__head">
           <h3 class="series__title">The Oscillator Series</h3>
           <p class="series__sub mono"><span class="series__count"></span> mixes · one DJ each · since 2020</p>
         </header>
+        <div class="tx-list"></div>
         <div class="series__list"></div>
-        <button class="series__more mono" type="button" hidden></button>
+        <button class="series__more btn" type="button" hidden></button>
       </div>
     </section>
 
-    <!-- ░░ 04 — Feedback / visual archive ░░ -->
-    <section class="feedback" id="feedback" data-wave="noise" data-label="04 / Feedback">
+    <!-- 04 feedback: the room -->
+    <section class="feedback" id="feedback">
       <div class="feedback__track">
         <div class="feedback__pin">
-          <header class="sec__head sec__head--float" data-reveal>
-            <span class="sec__num mono">04</span>
-            <svg class="glyph" data-wave="noise" viewBox="0 0 120 24" aria-hidden="true"></svg>
+          <header class="sec__head">
+            <div class="sec__bar"><span class="sec__num num">04</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">The room</span></div>
             <h2 class="sec__title">Feedback</h2>
-            <span class="sec__sub">the room</span>
           </header>
-          <div class="pano" aria-hidden="true"></div>
-          <p class="feedback__cap"></p>
-          <div class="feedback__rec mono" aria-hidden="true"><i></i>REC <span class="feedback__tc">00:00:00:00</span></div>
+          <div class="feedback__view">
+            <div class="pano" aria-hidden="true"></div>
+            <div class="feedback__foot">
+              <p class="feedback__cap"></p>
+              <p class="feedback__rec" aria-hidden="true"><i></i><span class="mono">REC</span> <span class="feedback__tc num">00:00:00:00</span></p>
+            </div>
+          </div>
         </div>
       </div>
       <div class="sheet"></div>
     </section>
 
-    <!-- ░░ 05 — Next signal / events ░░ -->
-    <section class="sec next" id="next" data-wave="triangle" data-label="05 / Next signal">
-      <header class="sec__head" data-reveal>
-        <span class="sec__num mono">05</span>
-        <svg class="glyph" data-wave="triangle" viewBox="0 0 120 24" aria-hidden="true"></svg>
+    <!-- 05 next signal: events -->
+    <section class="sec next" id="next">
+      <header class="sec__head">
+        <div class="sec__bar"><span class="sec__num num">05</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Dates</span></div>
         <h2 class="sec__title">Next signal</h2>
-        <span class="sec__sub">dates</span>
-        <span class="sec__meta mono">Triangle / soft edges</span>
       </header>
       <div class="events"></div>
     </section>
 
-    <!-- ░░ 06 — Output / contact ░░ -->
-    <footer class="sec output" id="output" data-wave="pulse" data-label="06 / Output">
-      <header class="sec__head" data-reveal>
-        <span class="sec__num mono">06</span>
-        <svg class="glyph" data-wave="pulse" viewBox="0 0 120 24" aria-hidden="true"></svg>
+    <!-- 06 output: contact -->
+    <footer class="sec output" id="output">
+      <header class="sec__head">
+        <div class="sec__bar"><span class="sec__num num">06</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Contact</span></div>
         <h2 class="sec__title">Output</h2>
-        <span class="sec__sub">contact</span>
-        <span class="sec__meta mono">Pulse / on / off</span>
       </header>
       <p class="theremin" aria-label="Send us your signal"></p>
       <div class="output__grid"></div>
@@ -235,32 +220,29 @@
     </footer>
   </main>
 
-  <!-- ░░ Artist profile ░░ -->
+  <!-- artist profile -->
   <div class="profile" id="profile" role="dialog" aria-modal="true" aria-labelledby="pf-name" hidden>
-    <div class="profile__bar mono">
-      <span class="profile__ch"></span>
-      <div class="profile__nav">
-        <a class="profile__prev" href="#" data-cursor="Previous">← Prev</a>
-        <a class="profile__next" href="#" data-cursor="Next">Next →</a>
+    <div class="profile__bar">
+      <span class="profile__ch num"></span>
+      <div class="profile__nav mono">
+        <a class="profile__prev" href="#">← Prev</a>
+        <a class="profile__next" href="#">Next →</a>
       </div>
-      <button class="profile__close" type="button" data-cursor="Close">Close <span aria-hidden="true">✕</span></button>
+      <button class="profile__close btn" type="button">Close <span aria-hidden="true">✕</span></button>
     </div>
     <div class="profile__body"></div>
   </div>
 
-
-  <!-- now-playing deck -->
-  <!-- now playing: full-screen stage -->
-  <!-- ░░ Contact form: demos, bookings, collaborations ░░ -->
+  <!-- contact form: demos, bookings, collaborations -->
   <div class="cf" id="contact" role="dialog" aria-modal="true" aria-labelledby="cf-title" tabindex="-1" hidden>
-    <div class="cf__top mono">
-      <button class="cf__close" type="button"><span aria-hidden="true">✕</span> Close</button>
-      <span class="cf__label"><i aria-hidden="true"></i>Channel open</span>
+    <div class="cf__top">
+      <button class="cf__close btn" type="button"><span aria-hidden="true">✕</span> Close</button>
+      <span class="cf__label mono"><i aria-hidden="true"></i>Channel open</span>
     </div>
     <div class="cf__wrap">
       <form class="cf__form" novalidate>
         <header class="cf__head">
-          <p class="mono">06 / Output</p>
+          <p class="cf__kicker"><span class="num">06</span><span class="mono">Output</span></p>
           <h2 class="cf__title" id="cf-title">Send us your <em>signal</em></h2>
           <p class="cf__intro">Demos, bookings, collaborations. Every signal gets heard.</p>
         </header>
@@ -304,22 +286,22 @@
         <p class="mono">Transmission complete</p>
         <p class="cf__doneTitle">Signal <em>received</em></p>
         <p class="cf__doneText">Thanks. We listen to everything and reply by email.</p>
-        <button class="cf__again mono" type="button">Close ✕</button>
+        <button class="cf__again btn" type="button">Close ✕</button>
       </div>
     </div>
   </div>
 
+  <!-- now playing: full-screen stage -->
   <div class="stage" id="stage" role="dialog" aria-modal="true" aria-labelledby="stage-title" tabindex="-1" hidden>
     <div class="stage__bg" aria-hidden="true"></div>
-    <div class="stage__top mono">
-      <button class="stage__stop" type="button" aria-label="Close the player and stop the music"><span aria-hidden="true">✕</span> Close</button>
-      <span class="stage__label"><i aria-hidden="true"></i>Now playing</span>
-      <button class="stage__close" type="button">Minimise <span aria-hidden="true">↓</span></button>
+    <div class="stage__top">
+      <button class="stage__stop btn" type="button" aria-label="Close the player and stop the music"><span aria-hidden="true">✕</span> Close</button>
+      <span class="stage__label mono"><i aria-hidden="true"></i>Now playing</span>
+      <button class="stage__close btn" type="button">Minimise <span aria-hidden="true">↓</span></button>
     </div>
     <div class="stage__main">
       <div class="stage__platter">
         <div class="stage__cover" aria-hidden="true"><img alt=""></div>
-        <i class="brk" aria-hidden="true"></i>
       </div>
       <div class="stage__info">
         <div class="stage__head">
@@ -327,15 +309,18 @@
           <h2 class="stage__title" id="stage-title"></h2>
           <p class="stage__by"></p>
         </div>
-        <div class="stage__seek" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><canvas class="stage__wave" aria-hidden="true"></canvas><span class="stage__tip mono" aria-hidden="true"></span></div>
-        <div class="stage__readout"><span class="stage__now">0:00</span><span class="stage__total"></span></div>
+        <div class="stage__seek" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><canvas class="stage__wave" aria-hidden="true"></canvas><span class="stage__tip num" aria-hidden="true"></span></div>
+        <div class="stage__readout num"><span class="stage__now">0:00</span><span class="stage__total"></span></div>
         <div class="stage__ctrl">
           <button class="stage__skip" type="button" data-skip="-30" aria-label="Back 30 seconds"><svg viewBox="0 0 24 24" aria-hidden="true"><g transform="matrix(-1 0 0 1 24 0)" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18.93 8A8 8 0 1 1 12 4"/><path d="M9.8 1.6L12.4 4 9.8 6.4"/></g><text x="12" y="14.1" text-anchor="middle">30</text></svg></button>
           <button class="stage__toggle" type="button" aria-label="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg></button>
           <button class="stage__skip" type="button" data-skip="30" aria-label="Forward 30 seconds"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18.93 8A8 8 0 1 1 12 4"/><path d="M9.8 1.6L12.4 4 9.8 6.4"/></g><text x="12" y="14.1" text-anchor="middle">30</text></svg></button>
         </div>
         <p class="stage__state mono" aria-live="polite" hidden></p>
-        <a class="stage__ext mono" href="#" target="_blank" rel="noopener">Open on SoundCloud ↗︎</a>
+        <p class="stage__links mono">
+          <a class="stage__ext ext" href="#" target="_blank" rel="noopener">SoundCloud</a>
+          <a class="stage__yt ext" href="#" target="_blank" rel="noopener" hidden>Watch the video</a>
+        </p>
         <details class="stage__tracks"></details>
       </div>
     </div>
@@ -345,7 +330,7 @@
   <div class="deck" hidden>
     <button class="deck__open" type="button" aria-label="Open now playing">
       <span class="deck__disc" aria-hidden="true"><img alt=""></span>
-      <span class="deck__info"><span class="deck__title"></span><span class="deck__time mono">0:00</span></span>
+      <span class="deck__info"><span class="deck__title"></span><span class="deck__time num">0:00</span></span>
     </button>
     <button class="deck__toggle" type="button" aria-label="Pause"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg></button>
     <i class="deck__bar" aria-hidden="true"></i>
