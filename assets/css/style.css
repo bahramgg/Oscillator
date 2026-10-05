@@ -2149,6 +2149,6 @@ html, body { overflow-x: clip; }
 .deck__disc { border-radius: 0; }
 .deck__disc img, .deck.is-playing .deck__disc img { animation: none; }
 @media (max-width: 860px) {
-  .stage__platter { width: min(78vw, 40svh); justify-self: start; }
+  .stage__platter { width: min(78vw, 40svh); justify-self: center; }
   .stage__seek { height: 48px; }
 }
