@@ -2157,3 +2157,66 @@ html, body { overflow-x: clip; }
 .cf__send { display: inline-flex; align-items: center; justify-content: center; gap: .32em; }
 .cf__arrow { width: .7em; height: .7em; flex: none; fill: none; stroke: currentColor; stroke-width: 3.6; stroke-linecap: square; stroke-linejoin: miter; transition: transform .25s var(--ease-out, ease); }
 .cf__send:hover .cf__arrow, .cf__send:focus-visible .cf__arrow { transform: translate(.08em, -.08em); }
+
+/* ==========================================================================
+   Video player: timeline on its own line, settings (speed · quality),
+   full screen everywhere (a full-screen layer on iPhone)
+   ========================================================================== */
+.tv__bar { flex-direction: column; align-items: stretch; gap: 2px; }
+.tv__seek { flex: none; width: 100%; min-width: 0; }
+.tv__row { position: relative; display: flex; align-items: center; gap: clamp(8px, 1.2vw, 14px); }
+.tv__gap { flex: 1; }
+.tv__rate { flex: none; color: var(--acid); white-space: nowrap; }
+.tv__rate[hidden] { display: none; }
+.tv__set {
+  position: relative; flex: none; display: grid; place-items: center; width: 34px; height: 34px;
+  color: var(--bone); border: 1px solid var(--line-2); border-radius: 50%; transition: border-color .25s, color .25s;
+}
+.tv__set:hover, .tv__set[aria-expanded="true"] { border-color: var(--acid); color: var(--acid); }
+.tv__set svg { width: 18px; height: 18px; transition: transform .45s var(--ease-out, ease); }
+.tv__set[aria-expanded="true"] svg { transform: rotate(45deg); }
+.tv__hd {
+  position: absolute; right: -7px; top: -6px; display: none; padding: 2px 3px 1px;
+  font-size: 8px; line-height: 1; letter-spacing: .06em; font-weight: 700; background: var(--acid); color: #0a0a0a;
+}
+.tv.is-hq .tv__hd { display: block; }
+.tv__menu {
+  position: absolute; right: 0; bottom: calc(100% + 12px); z-index: 7;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px 14px;
+  width: max-content; max-width: min(380px, calc(100vw - 40px)); padding: 12px 14px;
+  background: rgba(10, 10, 10, .95); border: 1px solid var(--line-2);
+}
+.tv__menu[hidden] { display: none; }
+.tv__mh { color: var(--bone-3); font-size: 10px; letter-spacing: .24em; text-transform: uppercase; }
+.tv__chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.tv__chip {
+  padding: 7px 9px 6px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--bone-2);
+  font-size: 11px; letter-spacing: .04em; line-height: 1; white-space: nowrap; transition: border-color .2s, color .2s, background .2s;
+}
+.tv__chip:hover { border-color: var(--acid); color: var(--acid); }
+.tv__chip[aria-pressed="true"] { background: var(--acid); border-color: var(--acid); color: #0a0a0a; }
+.tv__chip:disabled { opacity: .3; pointer-events: none; }
+.tv.is-menu .tv__bar { opacity: 1 !important; transform: none !important; pointer-events: auto !important; }
+.tv__fs span { display: contents; }
+.tv__fs .i-fsx, .tv__fs.is-on .i-fs { display: none; }
+.tv__fs.is-on .i-fsx { display: contents; }
+@media (max-width: 860px) { .tv__set { width: 30px; height: 30px; } .tv__set svg { width: 16px; height: 16px; } }
+
+/* HD: the frame is laid out at 1920×1080 and scaled to fit, so YouTube streams HD */
+.tv.is-hq:not([data-state="blocked"]) .tv__screen iframe {
+  inset: auto; left: 50%; top: 50%; width: 1920px; height: 1080px; max-width: none;
+  transform: translate(-50%, -50%) scale(var(--hq-s, .25)); transform-origin: 50% 50%;
+}
+
+/* full-screen layer (phones whose browser keeps page elements out of full screen) */
+html.tv-fs #nl-badge-frame, html.tv-fs #nl-hud-frame { visibility: hidden !important; }
+.tv.is-fs .tv__screen {
+  position: fixed; z-index: 400; left: 0; top: 0; width: var(--tv-w, 100vw); height: var(--tv-h, 100vh);
+  aspect-ratio: auto; touch-action: none; overscroll-behavior: contain;
+}
+@media (orientation: portrait) {
+  /* held upright: the video lies sideways and fills the screen; turn the phone to watch */
+  .tv.is-fs .tv__screen { left: 50%; top: 50%; width: var(--tv-h, 100vh); height: var(--tv-w, 100vw); transform: translate(-50%, -50%) rotate(90deg); }
+}
+.tv.is-fs .tv__bar, .tv__screen:fullscreen .tv__bar { padding: 30px 22px 18px; }
+.tv.is-fs .tv__screen .brk, .tv__screen:fullscreen .brk { inset: 14px; }

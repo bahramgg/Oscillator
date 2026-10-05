@@ -1102,12 +1102,16 @@
   var ICON_SOUND = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
   var ICON_MUTED = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
   var ICON_FS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+  var ICON_FS_X = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M20 15h-5v5M4 15h5v5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+  var ICON_GEAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.96 4.89 L10.40 1.93 L13.60 1.93 L14.04 4.89 L15.59 5.53 L18.00 3.75 L20.25 6.00 L18.47 8.41 L19.11 9.96 L22.07 10.40 L22.07 13.60 L19.11 14.04 L18.47 15.59 L20.25 18.00 L18.00 20.25 L15.59 18.47 L14.04 19.11 L13.60 22.07 L10.40 22.07 L9.96 19.11 L8.41 18.47 L6.00 20.25 L3.75 18.00 L5.53 15.59 L4.89 14.04 L1.93 13.60 L1.93 10.40 L4.89 9.96 L5.53 8.41 L3.75 6.00 L6.00 3.75 L8.41 5.53Z" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
   function initVideo() {
     var V = D.video, box = $('.tv');
     if (!box) return;
     if (!V || !V.youtube) { box.hidden = true; return; }
     box.hidden = false;
-    var fsOK = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+    // phones without the Fullscreen API for page elements (iPhone) get a full-screen layer instead
+    var fsReal = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+    var RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
     box.innerHTML =
       '<div class="tv__screen">' +
         '<div class="tv__yt"></div>' +
@@ -1116,11 +1120,25 @@
         '<span class="tv__tag mono" aria-hidden="true"><i></i><b>Video</b></span>' +
         '<button class="tv__big" type="button" aria-label="Play video: ' + esc(V.title) + '">' + ICON_PLAY + '</button>' +
         '<div class="tv__bar">' +
-          '<button class="tv__pp" type="button" aria-label="Play">' + ICON_PLAY + ICON_PAUSE + '</button>' +
-          '<span class="tv__time mono"><b>0:00</b> / <span>--:--</span></span>' +
           '<div class="tv__seek" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="tv__fill"></i><i class="tv__head"></i></div>' +
-          '<button class="tv__mute" type="button" aria-label="Mute"><span class="i-snd">' + ICON_SOUND + '</span><span class="i-mut">' + ICON_MUTED + '</span></button>' +
-          (fsOK ? '<button class="tv__fs" type="button" aria-label="Full screen">' + ICON_FS + '</button>' : '') +
+          '<div class="tv__row">' +
+            '<button class="tv__pp" type="button" aria-label="Play">' + ICON_PLAY + ICON_PAUSE + '</button>' +
+            '<span class="tv__time mono"><b>0:00</b> / <span>--:--</span></span>' +
+            '<span class="tv__rate mono" hidden></span>' +
+            '<span class="tv__gap"></span>' +
+            '<button class="tv__set" type="button" aria-label="Settings: speed and quality" aria-haspopup="true" aria-expanded="false">' + ICON_GEAR + '<b class="tv__hd mono" aria-hidden="true">HD</b></button>' +
+            '<div class="tv__menu" hidden>' +
+              '<span class="tv__mh mono">Speed</span><div class="tv__chips" role="group" aria-label="Playback speed">' +
+                RATES.map(function (r) { return '<button type="button" class="tv__chip mono" data-rate="' + r + '" aria-pressed="' + (r === 1) + '">' + r + '×</button>'; }).join('') +
+              '</div>' +
+              '<span class="tv__mh mono">Quality</span><div class="tv__chips" role="group" aria-label="Video quality">' +
+                '<button type="button" class="tv__chip mono" data-q="auto" aria-pressed="true">Auto</button>' +
+                '<button type="button" class="tv__chip mono" data-q="hd" aria-pressed="false">HD</button>' +
+              '</div>' +
+            '</div>' +
+            '<button class="tv__mute" type="button" aria-label="Mute"><span class="i-snd">' + ICON_SOUND + '</span><span class="i-mut">' + ICON_MUTED + '</span></button>' +
+            '<button class="tv__fs" type="button" aria-label="Full screen"><span class="i-fs">' + ICON_FS + '</span><span class="i-fsx">' + ICON_FS_X + '</span></button>' +
+          '</div>' +
         '</div>' +
       '</div>' +
       '<figcaption class="tv__cap">' +
@@ -1187,6 +1205,9 @@
               tv.ready = true; tv.creating = false;
               var f = e.target.getIframe && e.target.getIframe();
               if (f) f.tabIndex = -1;                     // the frame is driven by our controls, not a tab stop
+              if (tv.rate && tv.rate !== 1 && e.target.setPlaybackRate) e.target.setPlaybackRate(tv.rate);
+              var av = e.target.getAvailablePlaybackRates ? e.target.getAvailablePlaybackRates() : null;
+              if (av && av.length) $$('.tv__chip[data-rate]', menu).forEach(function (c) { c.disabled = av.indexOf(+c.dataset.rate) < 0; });
               if (!tv.want) { e.target.pauseVideo(); set('idle'); return; }
               e.target.playVideo();
               arm();
@@ -1205,6 +1226,7 @@
               else if (e.data === S.ENDED) { set('ended'); clearInterval(tv.timer); }
               else if (e.data === S.BUFFERING && tv.want && !tv.started && box.dataset.state !== 'playing') { set('loading'); arm(); }
             },
+            onPlaybackRateChange: function (e) { tv.rate = e.data; paintSet(); },
             onError: function () { tv.creating = false; tv.want = false; set('idle'); window.open('https://www.youtube.com/watch?v=' + V.youtube, '_blank', 'noopener'); }
           }
         });
@@ -1226,6 +1248,7 @@
     scr.addEventListener('click', function (e) {
       if (!scr.contains(e.target) || e.target.closest('button, .tv__seek, .tv__bar')) return;
       if (woke) { woke = false; return; }
+      if (tv.menuShut) { tv.menuShut = false; return; }
       var st = box.dataset.state; if (st === 'idle') play(); else if (st !== 'blocked' && st !== 'loading') toggle();
     });
     mute.addEventListener('click', function (e) {
@@ -1240,7 +1263,7 @@
       box.classList.remove('is-still'); clearTimeout(idleT);
       idleT = setTimeout(function hide() {
         if (!tv.playing) return;
-        if (drag || bar.matches(':hover')) { idleT = setTimeout(hide, 1000); return; }
+        if (drag || bar.matches(':hover') || !menu.hidden) { idleT = setTimeout(hide, 1000); return; }
         box.classList.add('is-still');
       }, 2500);
     };
@@ -1248,15 +1271,87 @@
     // a tap on a picture whose controls had stepped back only brings them back
     scr.addEventListener('pointerdown', function () { woke = box.classList.contains('is-still'); }, true);
     ['pointermove', 'pointerdown', 'keydown', 'focusin'].forEach(function (ev) { scr.addEventListener(ev, wake, { passive: true }); });
-    var fsb = $('.tv__fs', box);
-    if (fsb) fsb.addEventListener('click', function () {
-      var on = document.fullscreenElement || document.webkitFullscreenElement;
-      if (on) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-      else (scr.requestFullscreen || scr.webkitRequestFullscreen).call(scr);
+    // ── settings: speed and quality ──
+    // YouTube no longer takes a quality request from embedded players; it picks by the size of the
+    // player. 'HD' lays the frame out at 1920×1080 and scales it down to fit, so YouTube streams HD
+    // (connection permitting). The choice is remembered on this device.
+    var setb = $('.tv__set', box), menu = $('.tv__menu', box), rateTag = $('.tv__rate', box);
+    try { tv.hq = localStorage.getItem('osc:tv-quality') === 'hd'; } catch (err) {}
+    var fitHQ = function () {
+      var w = scr.clientWidth, h = scr.clientHeight;
+      if (w && h) box.style.setProperty('--hq-s', Math.min(w / 1920, h / 1080).toFixed(4));
+    };
+    var paintSet = function () {
+      var r = tv.rate || 1;
+      $$('.tv__chip[data-rate]', menu).forEach(function (c) { c.setAttribute('aria-pressed', String(+c.dataset.rate === r)); });
+      $$('.tv__chip[data-q]', menu).forEach(function (c) { c.setAttribute('aria-pressed', String((c.dataset.q === 'hd') === !!tv.hq)); });
+      rateTag.hidden = r === 1; rateTag.textContent = r + '×';
+      box.classList.toggle('is-hq', !!tv.hq);
+      fitHQ();
+    };
+    var openMenu = function (on) {
+      menu.hidden = !on; setb.setAttribute('aria-expanded', on ? 'true' : 'false');
+      box.classList.toggle('is-menu', on);
+      wake();
+    };
+    setb.addEventListener('click', function (e) { e.stopPropagation(); openMenu(menu.hidden); });
+    menu.addEventListener('click', function (e) {
+      var c = e.target.closest('.tv__chip'); if (!c || c.disabled) return;
+      e.stopPropagation();
+      if (c.dataset.rate) { tv.rate = +c.dataset.rate; if (tv.player && tv.ready && tv.player.setPlaybackRate) tv.player.setPlaybackRate(tv.rate); }
+      if (c.dataset.q) { tv.hq = c.dataset.q === 'hd'; try { localStorage.setItem('osc:tv-quality', c.dataset.q); } catch (err) {} }
+      paintSet();
+      var kb = menu.contains(document.activeElement);
+      setTimeout(function () { openMenu(false); if (kb) setb.focus({ preventScroll: true }); }, 160);
+    });
+    // a tap anywhere else closes the menu (and only closes it)
+    document.addEventListener('pointerdown', function (e) {
+      if (menu.hidden || e.target.closest('.tv__menu, .tv__set')) return;
+      openMenu(false);
+      tv.menuShut = scr.contains(e.target);
+    }, true);
+    if (window.ResizeObserver) new ResizeObserver(fitHQ).observe(scr); else window.addEventListener('resize', fitHQ);
+
+    // ── full screen ── the real thing where the browser allows it (turning the phone to landscape
+    // on Android); on iPhone, a layer over the whole page that lies the video sideways in portrait
+    var fsb = $('.tv__fs', box), root = document.documentElement;
+    var nativeFs = function () { return document.fullscreenElement || document.webkitFullscreenElement; };
+    var setVp = function () { box.style.setProperty('--tv-w', innerWidth + 'px'); box.style.setProperty('--tv-h', innerHeight + 'px'); };
+    var paintFs = function () {
+      var on = box.classList.contains('is-fs') || nativeFs() === scr;
+      fsb.classList.toggle('is-on', on); fsb.setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen');
+      if (!on) { try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (err) {} }
+      fitHQ(); wake();
+    };
+    var layerFs = function (on) {
+      box.classList.toggle('is-fs', on); root.classList.toggle('tv-fs', on);
+      if (on) { setVp(); root.classList.add('is-locked'); }
+      else if (!pf.open && !stage.isOpen && !cf.open) root.classList.remove('is-locked');
+      paintFs();
+    };
+    fsb.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (box.classList.contains('is-fs')) { layerFs(false); return; }
+      if (nativeFs()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+      var req = fsReal && (scr.requestFullscreen || scr.webkitRequestFullscreen);
+      if (!req) { layerFs(true); return; }
+      var pr;
+      try { pr = req.call(scr); } catch (err) { layerFs(true); return; }
+      var lock = function () { try { var o = screen.orientation; if (o && o.lock) o.lock('landscape').catch(function () {}); } catch (err) {} };
+      if (pr && pr.then) pr.then(lock, function () { layerFs(true); }); else lock();
+    });
+    document.addEventListener('fullscreenchange', paintFs);
+    document.addEventListener('webkitfullscreenchange', paintFs);
+    window.addEventListener('resize', function () { if (box.classList.contains('is-fs')) setVp(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      if (!menu.hidden) { e.preventDefault(); openMenu(false); setb.focus({ preventScroll: true }); }
+      else if (box.classList.contains('is-fs')) { e.preventDefault(); layerFs(false); fsb.focus({ preventScroll: true }); }
     });
     var seekTo = function (e) {
       var P = tv.player; if (!P || !P.seekTo || !tv.dur) return;
-      var r = seek.getBoundingClientRect(), f = clamp((e.clientX - r.left) / r.width, 0, 1);
+      var r = seek.getBoundingClientRect(), side = r.height > r.width;   // sideways full screen: the line runs down
+      var f = clamp(side ? (e.clientY - r.top) / r.height : (e.clientX - r.left) / r.width, 0, 1);
       P.seekTo(f * tv.dur, true); fill.style.transform = 'scaleX(' + f + ')'; head.style.left = (f * 100) + '%';
       tNow.textContent = fmt(f * tv.dur); seek.setAttribute('aria-valuenow', Math.round(f * 100));
     };
@@ -1269,6 +1364,7 @@
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); P.seekTo(clamp(P.getCurrentTime() + (e.key === 'ArrowRight' ? 30 : -30), 0, tv.dur), true); setTimeout(tick, 60); }
       if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); }
     });
+    paintSet();
     set('idle');
   }
   var ytApi = null;
