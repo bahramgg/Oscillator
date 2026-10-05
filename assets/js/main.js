@@ -1431,15 +1431,14 @@
 
   function initStage() {
     var S_ = stage, el = S_.el;
-    S_.bg = $('.stage__bg', el); S_.platter = $('.stage__platter', el); S_.cvs = $('.stage__ring', el);
-    S_.disc = $('.stage__disc img', el); S_.play = $('.stage__play', el); S_.tip = $('.stage__tip', el);
+    S_.bg = $('.stage__bg', el); S_.platter = $('.stage__platter', el); S_.cvs = $('.stage__wave', el);
+    S_.disc = $('.stage__cover img', el); S_.tip = $('.stage__tip', el);
     S_.meta = $('.stage__meta', el); S_.title = $('.stage__title', el); S_.by = $('.stage__by', el);
     S_.now = $('.stage__now', el); S_.total = $('.stage__total', el); S_.state = $('.stage__state', el);
     S_.seek = $('.stage__seek', el); S_.toggle = $('.stage__toggle', el); S_.tracks = $('.stage__tracks', el);
     S_.ext = $('.stage__ext', el); S_.close = $('.stage__close', el);
 
     var toggleCur = function () { if (S_.cur) Player.toggle(S_.cur); };
-    S_.play.addEventListener('click', function (e) { e.stopPropagation(); toggleCur(); });
     S_.toggle.addEventListener('click', toggleCur);
     $$('.stage__skip', el).forEach(function (b) {
       b.addEventListener('click', function () {
@@ -1447,27 +1446,27 @@
         Player.toggle(o, clamp((o.sec + Number(b.dataset.skip)) / o.t.duration, 0, 0.999));
       });
     });
-    S_.platter.addEventListener('pointermove', function (e) {
-      var f = ringFrac(e);
+    // the waveform line: hover shows the time, tap / drag seeks
+    var frac = function (e) { var r = S_.seek.getBoundingClientRect(); return clamp((e.clientX - r.left) / r.width, 0, 0.999); };
+    var dragging = false;
+    S_.seek.addEventListener('pointermove', function (e) {
+      var f = frac(e);
       S_.hover = f; S_.dirty = true;
-      S_.platter.classList.toggle('is-seek', f >= 0);
-      if (f >= 0 && S_.cur) {
-        var r = S_.platter.getBoundingClientRect();
+      if (S_.cur) {
         S_.tip.textContent = fmtClock(f * S_.cur.t.duration, S_.cur.t.duration);
-        S_.tip.style.left = (e.clientX - r.left) + 'px'; S_.tip.style.top = (e.clientY - r.top) + 'px';
+        S_.tip.style.left = (f * 100) + '%';
       }
-      S_.tip.classList.toggle('is-on', f >= 0 && e.pointerType === 'mouse');
+      S_.tip.classList.toggle('is-on', e.pointerType === 'mouse' || dragging);
+      if (dragging && S_.cur) { S_.cur.progress = f; S_.cur.sec = f * S_.cur.t.duration; stage.update(); }
     });
-    S_.platter.addEventListener('pointerleave', function () { S_.hover = -1; S_.dirty = true; S_.tip.classList.remove('is-on'); S_.platter.classList.remove('is-seek'); });
-    S_.platter.addEventListener('click', function (e) {
-      var f = ringFrac(e);
-      if (f >= 0 && S_.cur) Player.toggle(S_.cur, f);
+    S_.seek.addEventListener('pointerleave', function () { if (dragging) return; S_.hover = -1; S_.dirty = true; S_.tip.classList.remove('is-on'); });
+    S_.seek.addEventListener('pointerdown', function (e) { dragging = true; if (S_.seek.setPointerCapture) S_.seek.setPointerCapture(e.pointerId); });
+    S_.seek.addEventListener('pointerup', function (e) {
+      if (!dragging) return;
+      dragging = false; S_.hover = -1; S_.dirty = true; S_.tip.classList.remove('is-on');
+      if (S_.cur) Player.toggle(S_.cur, frac(e));
     });
-    var seekTo = function (e) {
-      var r = S_.seek.getBoundingClientRect();
-      if (S_.cur) Player.toggle(S_.cur, clamp((e.clientX - r.left) / r.width, 0, 0.999));
-    };
-    S_.seek.addEventListener('click', seekTo);
+    S_.seek.addEventListener('pointercancel', function () { dragging = false; S_.hover = -1; S_.dirty = true; S_.tip.classList.remove('is-on'); });
     S_.seek.addEventListener('keydown', function (e) {
       var o = S_.cur; if (!o) return;
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
@@ -1495,17 +1494,6 @@
       // the artist link closes the stage (the profile opens underneath via the hash)
       if (e.target.closest('.stage__by a')) S_.hide();
     });
-  }
-
-  // pointer → position on the ring (0 at 12 o'clock, clockwise), or -1 off the ring
-  function ringFrac(e) {
-    var r = stage.platter.getBoundingClientRect();
-    var x = e.clientX - (r.left + r.width / 2), y = e.clientY - (r.top + r.height / 2);
-    var dist = Math.sqrt(x * x + y * y) / (r.width / 2);
-    if (dist < 0.6 || dist > 1.02) return -1;
-    var a = Math.atan2(y, x) + Math.PI / 2;
-    if (a < 0) a += TAU;
-    return a / TAU;
   }
 
   // the stage's blurred backdrop, baked once per cover into a tiny image: scaling it up
@@ -1547,10 +1535,8 @@
   stage.update = function () {
     var o = stage.cur; if (!o) return;
     stage.now.textContent = fmtClock(o.sec, o.t.duration);
-    stage.seek.style.setProperty('--p', o.progress.toFixed(4));
     stage.seek.setAttribute('aria-valuenow', Math.round(o.progress * 100));
     var label = (o.playing ? 'Pause ' : 'Play ') + o.t.title;
-    stage.play.setAttribute('aria-label', label);
     stage.toggle.setAttribute('aria-label', label);
     stage.el.classList.toggle('is-playing', !!o.playing);
     stage.el.classList.toggle('is-loading', !!o.loading);
@@ -1603,36 +1589,23 @@
     }, reduced ? 0 : 700);
   };
 
+  // the mix's waveform as one straight line of bars: played part yellow, a thin playhead
   function drawStage() {
     var o = stage.cur, c = stage.ctx;
     if (!o || !c) return;
-    var w = stage.w, h = stage.h, d = stage.d, cx = w / 2, cy = h / 2;
-    var R = Math.min(w, h) / 2 * 0.97, r0 = R * 0.66, span = R - r0, track = r0 - 7 * d;
+    var w = stage.w, h = stage.h, d = stage.d, mid = h / 2;
     c.clearRect(0, 0, w, h);
-    c.lineCap = 'butt';
-    c.lineWidth = 1 * d; c.strokeStyle = 'rgba(233,231,223,.16)';
-    c.beginPath(); c.arc(cx, cy, track, 0, TAU); c.stroke();
-    if (o.progress > 0) {
-      c.lineWidth = 2 * d; c.strokeStyle = '#e4e418';
-      c.beginPath(); c.arc(cx, cy, track, -Math.PI / 2, -Math.PI / 2 + o.progress * TAU); c.stroke();
-    }
-    var N = 160, live = o.playing && !reduced;
-    c.lineCap = 'round';
-    c.lineWidth = Math.max(1.4 * d, (TAU * r0 / N) * 0.42);
+    var gap = 2 * d, bw = 2 * d, N = Math.max(20, Math.floor(w / (bw + gap))), live = o.playing && !reduced;
     for (var i = 0; i < N; i++) {
       var f = i / N, v = o.data[Math.floor(f * o.data.length)] || 0;
-      if (live && Math.abs(f - o.progress) < 0.025) v = Math.min(1, v * (0.7 + 0.4 * Math.abs(Math.sin(S.t * 11 + i * 1.7))));
-      var len = span * (0.12 + 0.86 * v) * 0.9, a = -Math.PI / 2 + f * TAU, ca = Math.cos(a), sa = Math.sin(a);
-      c.strokeStyle = f < o.progress ? '#e4e418'
-        : (stage.hover >= 0 && f < stage.hover ? 'rgba(233,231,223,.62)' : 'rgba(233,231,223,.22)');
-      c.beginPath();
-      c.moveTo(cx + ca * r0, cy + sa * r0);
-      c.lineTo(cx + ca * (r0 + len), cy + sa * (r0 + len));
-      c.stroke();
+      if (live && Math.abs(f - o.progress) < 0.02) v = Math.min(1, v * (0.7 + 0.4 * Math.abs(Math.sin(S.t * 11 + i * 1.7))));
+      var bh = Math.max(2 * d, (h - 4 * d) * (0.12 + 0.88 * v));
+      c.fillStyle = f < o.progress ? '#e4e418'
+        : (stage.hover >= 0 && f < stage.hover ? 'rgba(233,231,223,.62)' : 'rgba(233,231,223,.24)');
+      c.fillRect(Math.round(i * (bw + gap)), Math.round(mid - bh / 2), bw, Math.round(bh));
     }
-    var ha = -Math.PI / 2 + o.progress * TAU;
-    c.fillStyle = '#e4e418';
-    c.beginPath(); c.arc(cx + Math.cos(ha) * track, cy + Math.sin(ha) * track, 3.5 * d, 0, TAU); c.fill();
+    var x = Math.round(o.progress * N) * (bw + gap);
+    c.fillStyle = '#e4e418'; c.fillRect(x, 0, Math.max(1, d), h);
     stage.dirty = false;
   }
 

@@ -2131,3 +2131,24 @@ html, body { overflow-x: clip; }
 /* series rows: links sit on the date line */
 .tx--row .tx__ext { margin-top: 0; }
 .tx--row .tx__meta { flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+
+/* ==========================================================================
+   Stage, simplified: the mix's poster as a plain square (no disc, no ring);
+   the waveform is a straight line of bars under the time, tap / drag to seek
+   ========================================================================== */
+.stage__platter { width: min(100%, 64vh); width: min(100%, 64svh); aspect-ratio: 1; }
+.stage__cover { position: absolute; inset: 0; overflow: hidden; background: var(--ink-2); box-shadow: 0 30px 80px rgba(0, 0, 0, .55); }
+.stage__cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.stage__platter .brk { inset: -10px; }
+.stage__seek { height: 56px; margin-top: 16px; touch-action: none; }
+.stage__seek::before { display: none; }
+.stage__wave { position: absolute; inset: 0; width: 100%; height: 100%; }
+.stage__seek .stage__tip { top: -6px; transform: translate(-50%, -100%); }
+.stage__seek:focus-visible { outline: 1px solid var(--acid); outline-offset: 6px; }
+/* the mini bar's thumbnail: square and still, like the poster */
+.deck__disc { border-radius: 0; }
+.deck__disc img, .deck.is-playing .deck__disc img { animation: none; }
+@media (max-width: 860px) {
+  .stage__platter { width: min(78vw, 40svh); justify-self: start; }
+  .stage__seek { height: 48px; }
+}
