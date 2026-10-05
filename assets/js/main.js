@@ -1605,7 +1605,7 @@
     if (!wall) return;
     wall.innerHTML = D.artists.map(function (a, i) {
       var no = seriesNo(a);
-      return '<li class="wall__it loose__it' + (i % 7 === 0 ? ' is-big' : '') + '" style="' + loose(i, 11) + '"><a class="wall__link" href="/artists/' + esc(a.slug) + '">' +
+      return '<li class="wall__it loose__it" style="' + loose(i, 11) + '"><a class="wall__link" href="/artists/' + esc(a.slug) + '">' +
         '<span class="wall__pic">' + (a.poster ? '<img src="' + esc(a.poster) + '" alt="' + esc(a.name) + ' · Oscillator poster" loading="lazy">'
           : a.photo ? '<img class="is-photo" src="' + esc(a.photo) + '" alt="' + esc(a.name) + '" loading="lazy">' : '') + '</span>' +
         '<span class="wall__cap">' + (no ? '<b class="num">' + esc(no) + '</b>' : '<b class="num">' + pad(i + 1) + '</b>') + '<span>' + esc(a.name) + '</span></span>' +
@@ -1620,7 +1620,7 @@
     if (!crate) return;
     crate.innerHTML = txs.map(function (o, i) {
       var t = o.t, no = txNo(t), who = t.artist ? artistName(t.artist) : t.title;
-      return '<li class="crate__it loose__it' + (i === 0 ? ' is-big' : '') + '" style="' + loose(i, 23) + '" data-tx="' + esc(t.id) + '" data-find="' + esc([no, who, t.title, fmtDate(t.date)].join(' ').toLowerCase()) + '">' +
+      return '<li class="crate__it loose__it" style="' + loose(i, 23) + '" data-tx="' + esc(t.id) + '" data-find="' + esc([no, who, t.title, fmtDate(t.date)].join(' ').toLowerCase()) + '">' +
         '<button class="crate__sleeve" type="button" aria-label="Play ' + esc(t.title) + ' by ' + esc(who) + '">' +
           (t.cover ? '<img src="' + esc(t.cover) + '" alt="" loading="lazy">' : '') +
           '<span class="crate__play" aria-hidden="true">' + ICON_PLAY + ICON_PAUSE + '</span>' +
@@ -2157,7 +2157,7 @@
   function evCard(ev) {
     var t = evParts(ev), lineup = lineupOf(ev);
     return '<article class="ev' + (ev.poster ? '' : ' ev--bare') + '" style="' + loose(ev.date.length + +ev.date.slice(-2), 37) + '">' +
-      (ev.poster ? '<button class="ev__poster" type="button" data-full="' + esc(ev.poster) + '" aria-label="' + esc(ev.title) + ': poster, full size"><img src="' + esc(ev.poster) + '" alt="' + esc(ev.title) + ' poster" loading="lazy"></button>' : '') +
+      (ev.poster ? '<button class="ev__poster" type="button" data-full="' + esc(ev.poster) + '" aria-label="' + esc(ev.title) + ': poster, full size"><span class="lbl num" aria-hidden="true">' + t.full + '</span><img src="' + esc(ev.poster) + '" alt="' + esc(ev.title) + ' poster" loading="lazy"></button>' : '') +
       '<div class="ev__body">' +
         '<p class="ev__date num">' + t.day + '<small>' + t.wd + ' · ' + t.year + '</small></p>' +
         '<h3 class="ev__title">' + esc(ev.title) + '</h3>' +
@@ -2181,9 +2181,10 @@
       (past.length ? '<div class="past"><header class="past__head"><h2 class="past__title">Past signals</h2><p class="mono"><span class="num">' + pad(past.length) + '</span> nights</p></header>' +
         '<div class="past__grid loose">' + past.map(function (ev, i) {
           var t = evParts(ev), lineup = lineupOf(ev);
-          return '<figure class="past__item loose__it' + (i % 5 === 0 ? ' is-big' : '') + '" style="' + loose(i, 51) + '">' +
+          return '<figure class="past__item loose__it has-label" style="' + loose(i, 51) + '">' +
+            '<span class="lbl num" aria-hidden="true">' + t.full + '</span>' +
             (ev.poster ? '<button class="past__poster" type="button" data-full="' + esc(ev.poster) + '" aria-label="' + esc(ev.title) + ': poster, full size"><img src="' + esc(ev.poster) + '" alt="' + esc(ev.title) + ' poster" loading="lazy"></button>' : '') +
-            '<figcaption><b class="num">' + t.full + '</b><span class="past__name">' + esc(ev.title) + '</span>' +
+            '<figcaption><span class="past__name">' + esc(ev.title) + '</span>' +
             (lineup ? '<span class="past__lineup">' + lineup + '</span>' : '') + '</figcaption></figure>';
         }).join('') + '</div></div>' : '');
     if (page) pasteUp(page);

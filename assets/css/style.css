@@ -744,7 +744,6 @@ html.tv-fs #nl-badge-frame, html.tv-fs #nl-hud-frame { visibility: hidden !impor
 .past__item figcaption { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
 .past__item figcaption b { font-size: 14px; color: var(--acid); }
 .past__name { font: 400 22px/1 var(--f-display); text-transform: uppercase; }
-.is-big .past__name { font-size: clamp(26px, 2.6vw, 40px); }
 .past__item figcaption { margin-top: 16px; }
 .past__lineup { color: var(--bone-2); font-size: 14px; }
 
@@ -1068,13 +1067,10 @@ body[data-page="events"] main > :not(.page--events):not(.output) { display: none
   clip-path: polygon(3% 0, 97% 4%, 100% 30%, 96% 55%, 100% 82%, 97% 100%, 2% 96%, 0 70%, 4% 45%, 0 18%);
 }
 .ev__poster img { width: 100%; height: auto; }
-.ev__body { position: relative; z-index: 2; grid-column: 6 / -1; min-width: 0; }
+.ev__body { position: relative; z-index: 2; grid-column: 7 / -1; min-width: 0; }
 .ev--bare .ev__body { grid-column: 1 / -1; }
-.ev__date {
-  margin-left: -.22em; font-size: clamp(90px, 15vw, 260px); line-height: .8; color: var(--acid);
-  -webkit-text-stroke: .045em #070707; paint-order: stroke fill;
-}
-.ev__date small { display: block; margin: 14px 0 0 .25em; font-size: 15px; letter-spacing: .14em; color: var(--bone-3); text-transform: uppercase; -webkit-text-stroke: 0; }
+.ev__date { font-size: clamp(40px, 4.4vw, 72px); line-height: .9; color: var(--acid); }
+.ev__date small { display: block; margin-top: 10px; font-size: 14px; letter-spacing: .14em; color: var(--bone-3); text-transform: uppercase; }
 .ev__title { margin-top: 20px; font: 400 clamp(36px, 4.4vw, 76px)/.92 var(--f-display); text-transform: uppercase; letter-spacing: .005em; }
 .ev__where { margin-top: 12px; color: var(--bone-2); }
 .ev__lineup { margin-top: 14px; font: 400 clamp(20px, 1.9vw, 30px)/1.15 var(--f-display); text-transform: uppercase; letter-spacing: .02em; color: var(--bone-2); }
@@ -1100,7 +1096,6 @@ body[data-page="events"] main > :not(.page--events):not(.output) { display: none
    held by a strip of clear tape; some bigger than others; they straighten when touched ── */
 .loose { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: row dense; gap: clamp(46px, 4.6vw, 76px) clamp(24px, 3vw, 48px); padding: 18px 4px 40px; }
 .loose__it { position: relative; transform: translateY(var(--y, 0)) rotate(var(--r, 0deg)); transition: transform .6s var(--ease-out), opacity .6s; }
-.loose__it.is-big { grid-column: span 2; grid-row: span 2; }
 .loose__it:not(.is-on) { opacity: 0; transform: translateY(calc(var(--y, 0px) + 46px)) rotate(calc(var(--r, 0deg) * 3)); }
 .loose__it::before {
   content: ''; position: absolute; z-index: 4; top: -13px; left: calc(50% + var(--tx, 0%) / 4); width: min(36%, 130px); height: 26px;
@@ -1108,6 +1103,16 @@ body[data-page="events"] main > :not(.page--events):not(.output) { display: none
   background: linear-gradient(rgba(233, 231, 223, .26), rgba(233, 231, 223, .16));
   clip-path: polygon(3% 0, 97% 4%, 100% 30%, 96% 55%, 100% 82%, 97% 100%, 2% 96%, 0 70%, 4% 45%, 0 18%);
 }
+/* where a thing has a date, the date is written on its tape */
+.has-label::before, .ev__poster:has(.lbl)::before { display: none; }
+.lbl {
+  position: absolute; z-index: 4; top: -15px; left: 50%; transform: translateX(-50%) rotate(var(--tr, -4deg));
+  padding: 7px 16px 6px; white-space: nowrap; pointer-events: none;
+  font-size: 15px; line-height: 1; letter-spacing: .08em; color: var(--bone);
+  background: linear-gradient(rgba(233, 231, 223, .24), rgba(233, 231, 223, .14));
+  clip-path: polygon(3% 0, 97% 4%, 100% 30%, 96% 55%, 100% 82%, 97% 100%, 2% 96%, 0 70%, 4% 45%, 0 18%);
+}
+.ev__poster .lbl { top: -16px; font-size: 17px; padding: 8px 20px 7px; }
 @media (hover: hover) {
   .loose__it.is-on:hover { transform: translateY(var(--y, 0)) rotate(0deg) scale(1.035); z-index: 5; }
 }
@@ -1120,7 +1125,6 @@ body[data-page="events"] main > :not(.page--events):not(.output) { display: none
 .wall__cap { display: flex; align-items: baseline; gap: 10px; margin-top: 14px; }
 .wall__cap .num { flex: none; font-size: 14px; color: var(--acid); }
 .wall__cap span { font: 400 clamp(18px, 1.6vw, 26px)/1 var(--f-display); text-transform: uppercase; letter-spacing: .02em; transition: color .25s; }
-.is-big .wall__cap span { font-size: clamp(26px, 2.6vw, 40px); }
 @media (hover: hover) { .wall__link:hover .wall__cap span { color: var(--acid); } }
 
 /* mixes: sleeves on the floor */
@@ -1131,7 +1135,6 @@ body[data-page="events"] main > :not(.page--events):not(.output) { display: none
   display: grid; place-items: center; background: var(--acid); color: var(--ink);
   box-shadow: 0 6px 18px rgba(0, 0, 0, .45); transition: transform .3s var(--ease-out);
 }
-.is-big .crate__play { width: 64px; height: 64px; right: 16px; bottom: 16px; }
 .crate__play svg { width: 34%; height: 34%; fill: currentColor; }
 .crate__play .i-pause, .crate__it.is-playing .crate__play .i-play { display: none; }
 .crate__it.is-playing .crate__play .i-pause { display: block; }
@@ -1140,8 +1143,6 @@ body[data-page="events"] main > :not(.page--events):not(.output) { display: none
 .crate__cap { display: flex; align-items: baseline; gap: 10px; margin-top: 14px; }
 .crate__cap .num { flex: none; font-size: clamp(18px, 1.6vw, 24px); color: var(--acid); }
 .crate__cap span { min-width: 0; font: 400 clamp(18px, 1.6vw, 26px)/1 var(--f-display); text-transform: uppercase; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.is-big .crate__cap .num { font-size: clamp(28px, 3vw, 46px); }
-.is-big .crate__cap span { font-size: clamp(28px, 3vw, 46px); }
 .crate__meta { margin-top: 6px; font-size: 13px; color: var(--bone-3); }
 .crate__it.is-out { display: none; }
 @media (hover: hover) { .crate__sleeve:hover .crate__play { transform: scale(1.1); } }
@@ -1181,15 +1182,13 @@ body[data-page="events"] main > :not(.page--events):not(.output) { display: none
   .ev__poster { margin: 0 6px; }
   .ev .cta { width: 100%; }
   .loose { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 18px; padding: 14px 2px 24px; }
-  .loose__it.is-big { grid-row: auto; }
   .loose__it { --y: 0px !important; }
   .loose__it:nth-child(even) { margin-top: 26px; }
-  .loose__it.is-big { margin-top: 0; }
   .wall__cap, .crate__cap { gap: 8px; margin-top: 10px; }
   .wall__cap span, .crate__cap span { font-size: 17px; }
   .crate__cap .num { font-size: 16px; }
   .crate__play { width: 38px; height: 38px; right: 8px; bottom: 8px; }
-  .ev__date { margin: -.42em 0 0 -.04em; font-size: 31vw; }
+  .ev__body { margin-top: 34px; }
   .find__in { font-size: 16px; }
   .sec__title { font-size: clamp(42px, 13.4vw, 64px); }
 
