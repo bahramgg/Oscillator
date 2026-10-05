@@ -2152,3 +2152,8 @@ html, body { overflow-x: clip; }
   .stage__platter { width: min(78vw, 40svh); justify-self: center; }
   .stage__seek { height: 48px; }
 }
+
+/* the form's send arrow: drawn, not a font glyph (iPhones turn ↗ into an emoji) */
+.cf__send { display: inline-flex; align-items: center; justify-content: center; gap: .32em; }
+.cf__arrow { width: .7em; height: .7em; flex: none; fill: none; stroke: currentColor; stroke-width: 3.6; stroke-linecap: square; stroke-linejoin: miter; transition: transform .25s var(--ease-out, ease); }
+.cf__send:hover .cf__arrow, .cf__send:focus-visible .cf__arrow { transform: translate(.08em, -.08em); }
