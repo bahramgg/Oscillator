@@ -632,8 +632,7 @@ html.tv-fs #nl-badge-frame, html.tv-fs #nl-hud-frame { visibility: hidden !impor
 
 /* the latest mix */
 .tx--feature .tx__cover { grid-column: 1 / span 4; }
-.tx--feature .tx__cover img { filter: grayscale(.2) contrast(1.04); }
-.tx--feature .tx__cover:hover img { transform: scale(1.03); filter: none; }
+.tx--feature .tx__cover:hover img { transform: scale(1.03); }
 .tx--feature .tx__body { grid-column: 5 / -1; min-width: 0; padding-bottom: 4px; }
 .tx--feature .tx__deck { margin-top: clamp(22px, 2.6vw, 36px); }
 .tx__dur { display: flex; justify-content: space-between; margin: 10px 0 0 74px; font-size: 14px; color: var(--bone-3); }
@@ -662,8 +661,6 @@ html.tv-fs #nl-badge-frame, html.tv-fs #nl-hud-frame { visibility: hidden !impor
 }
 .tx--row .tx__body { display: contents; }
 .tx--row .tx__cover { grid-area: cover; width: 64px; }
-.tx--row .tx__cover img { filter: grayscale(1) contrast(1.1); }
-.tx--row:hover .tx__cover img, .tx--row.is-playing .tx__cover img { filter: none; }
 .tx__num { grid-area: num; font: 700 clamp(24px, 2.4vw, 34px)/1 var(--f-num); letter-spacing: .02em; color: var(--acid); }
 .tx__who {
   grid-area: who; align-self: end;
@@ -741,9 +738,9 @@ html.tv-fs #nl-badge-frame, html.tv-fs #nl-hud-frame { visibility: hidden !impor
 .past__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: clamp(16px, 2vw, 28px); }
 .past__item { cursor: pointer; }
 .past__poster { position: relative; aspect-ratio: 5 / 7; overflow: hidden; background: var(--ink-2); }
-.past__poster img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.08); transition: filter .7s cubic-bezier(.2, .7, .2, 1); }
-.past__item.is-colour img { filter: none; }
-@media (hover: hover) { .past__item:hover img { filter: none; } }
+/* posters are shown in their own colours, never filtered */
+.past__poster img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s var(--ease-out); }
+@media (hover: hover) { .past__poster:hover img { transform: scale(1.03); } }
 .past__item figcaption { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
 .past__item figcaption b { font-size: 14px; color: var(--acid); }
 .past__name { font: 400 22px/1 var(--f-display); text-transform: uppercase; }
@@ -944,8 +941,7 @@ html.tv-fs #nl-badge-frame, html.tv-fs #nl-hud-frame { visibility: hidden !impor
 .stage-open .deck { display: none; }
 .deck__open { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; text-align: left; }
 .deck__disc { flex: none; width: 42px; height: 42px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 1px var(--line-2); }
-.deck__disc img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); }
-.deck.is-playing .deck__disc img { filter: none; }
+.deck__disc img { width: 100%; height: 100%; object-fit: cover; }
 .deck__info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .deck__title { font: 400 16px/1.1 var(--f-display); letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .deck__time { font-size: 13px; line-height: 1; color: var(--acid); }
