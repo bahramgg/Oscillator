@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Oscillator | Techno Label &amp; Artist Collective</title>
   <meta name="description" content="Oscillator is a techno label and artist collective. Artists, mixes and transmissions from the low end.">
@@ -64,17 +65,17 @@
 
   <!-- chrome -->
   <header class="nav">
-    <a class="nav__brand" href="#top" aria-label="Oscillator, back to top">
+    <a class="nav__brand" href="/" aria-label="Oscillator, back to top">
       <span class="logo nav__logo" aria-hidden="true"></span>
       <span>Oscillator</span>
     </a>
     <nav class="nav__links mono" aria-label="Sections">
-      <a href="#carrier"><i>01</i>Carrier</a>
-      <a href="#voices"><i>02</i>Voices</a>
-      <a href="#transmissions"><i>03</i>Transmissions</a>
-      <a href="#feedback"><i>04</i>Feedback</a>
-      <a href="#next"><i>05</i>Next signal</a>
-      <a href="#output"><i>06</i>Output</a>
+      <a href="/#carrier"><i>01</i>Carrier</a>
+      <a href="/artists"><i>02</i>Voices</a>
+      <a href="/mixes"><i>03</i>Transmissions</a>
+      <a href="/#feedback"><i>04</i>Feedback</a>
+      <a href="/#next"><i>05</i>Next signal</a>
+      <a href="/#output"><i>06</i>Output</a>
     </nav>
     <div class="nav__right">
       <button class="pwr btn" type="button" aria-pressed="false">
@@ -86,12 +87,12 @@
 
   <div class="menu" id="menu" hidden>
     <nav aria-label="Menu">
-      <a href="#carrier"><span class="num">01</span><b>Carrier</b><i aria-hidden="true">→</i></a>
-      <a href="#voices"><span class="num">02</span><b>Voices</b><i aria-hidden="true">→</i></a>
-      <a href="#transmissions"><span class="num">03</span><b>Transmissions</b><i aria-hidden="true">→</i></a>
-      <a href="#feedback"><span class="num">04</span><b>Feedback</b><i aria-hidden="true">→</i></a>
-      <a href="#next"><span class="num">05</span><b>Next signal</b><i aria-hidden="true">→</i></a>
-      <a href="#output"><span class="num">06</span><b>Output</b><i aria-hidden="true">→</i></a>
+      <a href="/#carrier"><span class="num">01</span><b>Carrier</b><i aria-hidden="true">→</i></a>
+      <a href="/artists"><span class="num">02</span><b>Voices</b><i aria-hidden="true">→</i></a>
+      <a href="/mixes"><span class="num">03</span><b>Transmissions</b><i aria-hidden="true">→</i></a>
+      <a href="/#feedback"><span class="num">04</span><b>Feedback</b><i aria-hidden="true">→</i></a>
+      <a href="/#next"><span class="num">05</span><b>Next signal</b><i aria-hidden="true">→</i></a>
+      <a href="/#output"><span class="num">06</span><b>Output</b><i aria-hidden="true">→</i></a>
     </nav>
     <div class="menu__foot mono">
       <a class="ext" href="https://www.instagram.com/oscillator__/" target="_blank" rel="noopener">Instagram</a>
@@ -155,6 +156,7 @@
         <button class="reel-btn reel-prev" type="button" aria-label="Previous artists">←</button>
         <button class="reel-btn reel-next" type="button" aria-label="Next artists">→</button>
       </div>
+      <a class="sec__more btn" href="/artists">All artists <span class="num artists__n"></span> →</a>
     </section>
 
     <!-- 03 transmissions: the film, then the series (latest first) -->
@@ -171,8 +173,28 @@
         </header>
         <div class="tx-list"></div>
         <div class="series__list"></div>
-        <button class="series__more btn" type="button" hidden></button>
+        <a class="series__more btn" href="/mixes" hidden>All mixes <span class="num series__n"></span> →</a>
       </div>
+    </section>
+
+    <!-- the artists page: every poster -->
+    <section class="sec page page--artists" id="artists">
+      <header class="sec__head">
+        <div class="sec__bar"><span class="sec__num num">02</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono"><span class="num artists__n"></span> artists</span></div>
+        <h1 class="sec__title">Voices</h1>
+      </header>
+      <ol class="wall" aria-label="Artists"></ol>
+    </section>
+
+    <!-- the mixes page: the whole series (the series block moves in here) -->
+    <section class="sec page page--mixes" id="mixes">
+      <header class="sec__head">
+        <div class="sec__bar"><span class="sec__num num">03</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Mixes &amp; releases</span></div>
+        <h1 class="sec__title">Transmissions</h1>
+      </header>
+      <label class="find"><span class="mono">Find</span><input class="find__in" type="search" placeholder="An artist or a number" autocomplete="off"></label>
+      <div class="mixes__slot"></div>
+      <p class="find__none mono" hidden>No mix by that name or number</p>
     </section>
 
     <!-- 04 feedback: the room -->
@@ -215,7 +237,7 @@
       <span class="output__logo cut" role="img" aria-label="Oscillator logo"></span>
       <div class="output__base mono">
         <span>© <span class="year"></span> Oscillator. All frequencies reserved</span>
-        <a href="#top">Back to top ↑</a>
+        <a href="#top" data-top>Back to top ↑</a>
       </div>
     </footer>
   </main>

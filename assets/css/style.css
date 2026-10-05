@@ -1063,6 +1063,45 @@ html.tv-fs #nl-badge-frame, html.tv-fs #nl-hud-frame { visibility: hidden !impor
 .cf__again { margin-top: 32px; }
 
 /* ==========================================================================
+   Pages: /artists and /mixes share the document (and the footer) with the home page
+   ========================================================================== */
+.page { display: none; }
+body[data-page="artists"] .page--artists, body[data-page="mixes"] .page--mixes { display: block; }
+body[data-page="artists"] main > :not(.page--artists):not(.output),
+body[data-page="mixes"] main > :not(.page--mixes):not(.output) { display: none; }
+
+/* the home page shows five rows and a way to the rest; /mixes shows them all */
+body:not([data-page="mixes"]) .tx--row.is-extra:not(.is-playing) { display: none; }
+.page--mixes .series__more { display: none !important; }
+.tx.is-out { display: none; }
+.sec__more { display: flex; width: max-content; margin: 30px auto 0; }
+.sec__more .num, .series__more .num { font-size: 13px; color: var(--acid); }
+.series__more { width: max-content; }
+
+/* every poster on one wall */
+.wall { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(28px, 3vw, 44px) var(--col-gap); }
+.wall__link { display: block; }
+.wall__pic { position: relative; display: block; aspect-ratio: 1; overflow: hidden; background: #000; }
+.wall__pic img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s var(--ease-out); }
+.wall__pic img.is-photo { filter: grayscale(1) contrast(1.1); }
+.wall__cap { display: flex; align-items: baseline; gap: 12px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.wall__cap .num { flex: none; font-size: 14px; color: var(--acid); }
+.wall__cap span { font: 400 clamp(18px, 1.6vw, 24px)/1 var(--f-display); text-transform: uppercase; letter-spacing: .02em; transition: color .25s; }
+@media (hover: hover) {
+  .wall__link:hover .wall__pic img { transform: scale(1.03); }
+  .wall__link:hover .wall__cap span { color: var(--acid); }
+}
+
+/* the search on /mixes */
+.find { display: flex; align-items: center; gap: 16px; max-width: 560px; margin-bottom: clamp(36px, 4vw, 56px); padding-bottom: 10px; border-bottom: 1px solid var(--line-2); transition: border-color .25s; }
+.find:focus-within { border-color: var(--acid); }
+.find .mono { flex: none; color: var(--acid); }
+.find__in { flex: 1; min-width: 0; border: 0; background: none; color: var(--bone); font: inherit; font-size: 17px; outline: none; -webkit-appearance: none; appearance: none; }
+.find__in::placeholder { color: rgba(233, 231, 223, .3); }
+.find__in::-webkit-search-cancel-button { filter: invert(1) brightness(.7); }
+.find__none { margin-top: 28px; color: var(--bone-3); }
+
+/* ==========================================================================
    Narrower screens
    ========================================================================== */
 @media (max-width: 1180px) {
@@ -1072,6 +1111,7 @@ html.tv-fs #nl-badge-frame, html.tv-fs #nl-hud-frame { visibility: hidden !impor
 }
 
 @media (max-width: 1100px) {
+  .wall { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .roster { grid-auto-columns: calc((100% - var(--rg)) / 1.8); }
 }
 
@@ -1082,6 +1122,10 @@ html.tv-fs #nl-badge-frame, html.tv-fs #nl-hud-frame { visibility: hidden !impor
   .nav .pwr { width: 42px; padding: 0; border-radius: 50%; }
 
   .sec__bar { gap: 12px; }
+  .wall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 14px; }
+  .wall__cap { gap: 8px; margin-top: 8px; padding-top: 8px; }
+  .wall__cap span { font-size: 17px; }
+  .find__in { font-size: 16px; }
   .sec__title { font-size: clamp(42px, 13.4vw, 64px); }
 
   /* hero: a bigger ring, a little lower; the signal button at the bottom edge */

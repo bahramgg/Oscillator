@@ -684,7 +684,7 @@
   var roster = { list: $('.roster'), cards: [], next: 0 };
 
   // custom-property urls resolve against the stylesheet, so pass absolute ones
-  function absUrl(u) { try { return new URL(u, location.href).href; } catch (e) { return u; } }
+  function absUrl(u) { try { return new URL(u, document.baseURI).href; } catch (e) { return u; } }
 
   function glitch(el) {
     if (reduced || !el || el.classList.contains('is-glitch')) return;
@@ -709,7 +709,7 @@
     roster.list.innerHTML = A.map(function (a, i) {
       // an artist with a series poster gets the poster itself, untouched
       if (a.poster) return '<li class="pc pc--poster">' +
-        '<a class="pc__link" href="#/artist/' + esc(a.slug) + '" data-slug="' + esc(a.slug) + '" aria-label="' + esc(a.name) + '">' +
+        '<a class="pc__link" href="/artists/' + esc(a.slug) + '" data-slug="' + esc(a.slug) + '" aria-label="' + esc(a.name) + '">' +
           '<img class="pc__poster" src="' + esc(a.poster) + '" alt="' + esc(a.name) + ' · Oscillator ' + esc(artistNo(a, i)) + '" loading="lazy" draggable="false">' +
         '</a></li>';
       var photo = a.photo
@@ -720,7 +720,7 @@
       var full = words.join(' ');
       var lines = a.name.length > 9 ? [full, full] : [full];
       return '<li class="pc">' +
-        '<a class="pc__link" href="#/artist/' + esc(a.slug) + '" data-slug="' + esc(a.slug) + '" aria-label="' + esc(a.name) + '">' +
+        '<a class="pc__link" href="/artists/' + esc(a.slug) + '" data-slug="' + esc(a.slug) + '" aria-label="' + esc(a.name) + '">' +
           '<span class="pc__frame" aria-hidden="true">' + hooks +
             '<span class="pc__torn"></span>' +
             '<span class="pc__photo"' + (a.photo ? ' style="--img:url(\'' + esc(absUrl(a.photo)) + '\')"' : '') + '>' + photo + '</span>' +
@@ -926,7 +926,7 @@
         '<button class="cta pf__book" type="button" data-contact="Booking" data-artist="' + esc(a.slug) + '">Booking &amp; inquiries</button>' +
       '</div>' +
     '</div>' +
-    '<a class="pf__next" href="#/artist/' + esc(next.slug) + '" data-swap="' + esc(next.slug) + '">' +
+    '<a class="pf__next" href="/artists/' + esc(next.slug) + '" data-swap="' + esc(next.slug) + '">' +
       '<span class="mono">Next artist</span><span class="pf__nextname">' + esc(next.name) + '</span></a>';
   }
 
@@ -935,9 +935,9 @@
     pf.slug = slug;
     pf.body.innerHTML = profileHTML(a, i);
     $('.profile__ch').innerHTML = '<b>' + pad(i + 1) + '</b> / ' + pad(n);
-    $('.profile__prev').setAttribute('href', '#/artist/' + D.artists[(i - 1 + n) % n].slug);
+    $('.profile__prev').setAttribute('href', '/artists/' + D.artists[(i - 1 + n) % n].slug);
     $('.profile__prev').dataset.swap = D.artists[(i - 1 + n) % n].slug;
-    $('.profile__next').setAttribute('href', '#/artist/' + D.artists[(i + 1) % n].slug);
+    $('.profile__next').setAttribute('href', '/artists/' + D.artists[(i + 1) % n].slug);
     $('.profile__next').dataset.swap = D.artists[(i + 1) % n].slug;
     pf.canvases = $$('.pf__sigil', pf.body).map(function (cv) { return { cv: cv, sig: signature(slug) }; });
     requestAnimationFrame(sizeProfileCanvases);
@@ -1022,25 +1022,99 @@
     }, 900);
   }
 
+  // closing a profile goes back to the page underneath it
   function requestClose() {
     if (pf.pushed) { history.back(); return; }
-    history.replaceState(null, '', location.pathname + location.search);
-    closeProfile();
+    go(R.under || '/artists', true);
   }
 
-  function route(pushed) {
-    var m = location.hash.match(/^#\/artist\/([\w-]+)$/);
-    var moved = { enzo: 'kenzo', el4raa: 'del4raa' };                       // renamed artists keep their old links
-    if (m && moved[m[1]]) { history.replaceState(null, '', '#/artist/' + moved[m[1]]); openProfile(moved[m[1]], pushed); return; }
-    if (m) openProfile(m[1], pushed);
-    else if (pf.open) closeProfile();
+  /* ─── pages ───────────────────────────────────────────────────────────
+     one document, several addresses: / (the home page), /artists (every poster),
+     /artists/<slug> (a profile over the page underneath), /mixes (the whole series).
+     Moving between them never reloads, so a mix keeps playing in the bar. */
+  var R = { page: null, under: null };
+  var PAGES = { home: 'Oscillator | Techno Label & Artist Collective', artists: 'Voices | Oscillator', mixes: 'Transmissions | Oscillator' };
+  var MOVED = { enzo: 'kenzo', el4raa: 'del4raa' };                        // renamed artists keep their old links
+  function go(url, replace) {
+    try { history.replaceState({ y: scrollY }, '', location.href); } catch (e) {}   // come back to the same spot
+    history[replace ? 'replaceState' : 'pushState']({}, '', url);
+    render(!replace);
+  }
+  function showPage(page) {
+    if (R.page === page) return false;
+    if (R.page === 'home' && tv.pause) tv.pause();                          // the film doesn't play to an empty room
+    R.page = page;
+    document.body.dataset.page = page;
+    document.title = PAGES[page];
+    placeSeries(page === 'mixes');
+    $$('.nav__links a, .menu nav a').forEach(function (a) {
+      var h = a.getAttribute('href');
+      if (page !== 'home') a.classList.toggle('is-active', h === '/' + page);
+    });
+    resizeAll();
+    return true;
+  }
+  function render(pushed, state) {
+    var path = location.pathname.replace(/\/+$/, '') || '/', hash = location.hash;
+    var old = hash.match(/^#\/artist\/([\w-]+)$/);                       // links from before the pages
+    if (old) { history.replaceState({}, '', '/artists/' + old[1]); path = '/artists/' + old[1]; hash = ''; }
+    var m = path.match(/^\/artists\/([\w-]+)$/);
+    if (m && MOVED[m[1]]) { history.replaceState({}, '', '/artists/' + MOVED[m[1]]); m[1] = MOVED[m[1]]; }
+    if (m && artistIndex(m[1]) < 0) { history.replaceState({}, '', '/artists'); path = '/artists'; m = null; }
+    if (m) {
+      // a profile opens over whatever page is showing (the artists page when it is the first stop)
+      if (!R.page) { showPage('artists'); R.under = '/artists'; }
+      else if (!pf.open) R.under = R.page === 'home' ? '/' : '/' + R.page;
+      openProfile(m[1], pushed);
+      document.title = D.artists[artistIndex(m[1])].name + ' | Oscillator';
+      return;
+    }
+    if (pf.open) closeProfile();
+    var page = path === '/artists' ? 'artists' : path === '/mixes' ? 'mixes' : 'home';
+    if (page === 'home' && path !== '/') history.replaceState({}, '', '/' + hash);
+    var changed = showPage(page);
+    document.title = PAGES[page];
+    var y = state && state.y;
+    if (page === 'home' && hash.length > 1 && !(y != null)) {
+      var t = document.getElementById(hash.slice(1));
+      if (t) { requestAnimationFrame(function () { t.scrollIntoView({ behavior: changed || reduced ? 'auto' : 'smooth' }); }); return; }
+    }
+    if (y != null) requestAnimationFrame(function () { scrollTo(0, y); });
+    else if (changed) scrollTo(0, 0);
+  }
+  function initRouter() {
+    // links inside the site move between pages without reloading
+    document.addEventListener('click', function (e) {
+      if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest('a[href]');
+      if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+      var h = a.getAttribute('href');
+      if (h === '#top' || a.hasAttribute('data-top')) { e.preventDefault(); scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }); return; }
+      if (h.charAt(0) === '#') {                                             // an anchor on this page
+        var el = h.length > 1 && document.getElementById(h.slice(1));
+        e.preventDefault();
+        if (el && el.offsetParent) el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+        return;
+      }
+      if (h.charAt(0) !== '/') return;
+      e.preventDefault();
+      var u = new URL(h, location.origin);
+      if (u.pathname === location.pathname && u.hash && R.page === 'home' && !pf.open) {
+        history.replaceState({}, '', u.pathname + u.hash);
+        var t = document.getElementById(u.hash.slice(1));
+        if (t) t.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+        return;
+      }
+      go(u.pathname + u.hash, false);
+    });
+    window.addEventListener('popstate', function (e) { render(true, e.state); });
   }
 
   function initProfile() {
     $('.profile__close').addEventListener('click', requestClose);
     pf.el.addEventListener('click', function (e) {
       var swap = e.target.closest('[data-swap]');
-      if (swap) { e.preventDefault(); location.replace('#/artist/' + swap.dataset.swap); return; }
+      if (swap) { e.preventDefault(); go('/artists/' + swap.dataset.swap, true); return; }
       var lnk = e.target.closest('[data-listen]');
       if (lnk) {
         e.preventDefault();
@@ -1048,8 +1122,7 @@
         requestClose();
         setTimeout(function () {
           var el = document.getElementById('tx-' + id);
-          if (el && el.hidden) { el.hidden = false; resizeTx(); }
-          if (el) el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+          if (el && el.offsetParent) el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
           var o = txs.filter(function (x) { return x.t.id === id; })[0];
           if (o) listen(o, null, el);
         }, 950);
@@ -1061,7 +1134,7 @@
       else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         if (/INPUT|TEXTAREA|VIDEO/.test(document.activeElement.tagName)) return;
         var sel = e.key === 'ArrowRight' ? '.profile__next' : '.profile__prev';
-        location.replace('#/artist/' + $(sel).dataset.swap);
+        go('/artists/' + $(sel).dataset.swap, true);
       } else if (e.key === 'Tab') {
         // keep focus inside the dialog
         var f = $$('a[href], button, video, iframe, [tabindex]:not([tabindex="-1"])', pf.el).filter(function (el) { return el.offsetParent !== null; });
@@ -1071,7 +1144,6 @@
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     });
-    window.addEventListener('hashchange', function () { route(true); });
   }
 
   /* ─── 03 transmissions ─────────────────────────────────────────────────
@@ -1093,7 +1165,7 @@
   }
   function byline(t) {
     return artistIndex(t.artist) >= 0
-      ? '<a href="#/artist/' + esc(t.artist) + '">' + esc(artistName(t.artist)) + '</a>'
+      ? '<a href="/artists/' + esc(t.artist) + '">' + esc(artistName(t.artist)) + '</a>'
       : esc(t.artist || '');
   }
   // a mix's number in the series: 'Oscillator #031' → '#031'
@@ -1446,9 +1518,9 @@
       $('.series__count').textContent = (D.series || []).length;
       $('.series__list').innerHTML = SR.map(function (t, i) {
         var who = artistIndex(t.artist) >= 0
-          ? '<a href="#/artist/' + esc(t.artist) + '">' + esc(artistName(t.artist)) + '</a>'
+          ? '<a href="/artists/' + esc(t.artist) + '">' + esc(artistName(t.artist)) + '</a>'
           : esc(t.artist || t.title);
-        return '<article class="tx tx--row" id="tx-' + esc(t.id) + '"' + (i >= SHOW ? ' hidden' : '') + '>' +
+        return '<article class="tx tx--row' + (i >= SHOW ? ' is-extra' : '') + '" id="tx-' + esc(t.id) + '" data-find="' + esc([txNo(t), artistName(t.artist || ''), t.title, fmtDate(t.date)].join(' ').toLowerCase()) + '">' +
           '<button class="tx__cover" type="button" aria-label="Play ' + esc(t.title) + '">' +
             (t.cover ? '<img src="' + esc(t.cover) + '" alt="' + esc(t.title) + ' cover" loading="lazy">' : '') + '</button>' +
           '<p class="tx__num num">' + esc(txNo(t)) + '</p>' +
@@ -1458,23 +1530,11 @@
             deckHTML(t, true) +
           '</div></article>';
       }).join('');
-      var more = $('.series__more'), open = false, extra = SR.length - SHOW;
-      if (extra > 0) {
-        more.hidden = false;
-        var label = function () { more.textContent = open ? 'Show less ↑' : 'Show more · ' + extra + ' ↓'; more.setAttribute('aria-expanded', open ? 'true' : 'false'); };
-        label();
-        more.addEventListener('click', function () {
-          open = !open;
-          $$('.series__list .tx').forEach(function (el, i) { if (i >= SHOW) el.hidden = !open && !el.classList.contains('is-playing'); });
-          label();
-          if (open) resizeTx();
-          else {                                          // folding up: keep the button where the eye is
-            var head = $('.series__list'), r = head.getBoundingClientRect();
-            if (r.top < 0) window.scrollTo({ top: window.scrollY + r.top - 80, behavior: reduced ? 'auto' : 'smooth' });
-          }
-        });
-      }
+      var more = $('.series__more');
+      $('.series__n', more).textContent = (D.series || []).length;
+      more.hidden = SR.length <= SHOW;
     }
+    $$('.tx-list .tx').forEach(function (el, i) { el.dataset.find = [txNo(F[i]), artistName(F[i].artist || ''), F[i].title, fmtDate(F[i].date)].join(' ').toLowerCase(); });
 
     txs = $$('.tx-list .tx, .series__list .tx').map(function (el, i) {
       var o = {
@@ -1508,6 +1568,45 @@
       return o;
     });
     initStage();
+  }
+
+  // the series lives on the home page (latest + five rows) and moves whole onto /mixes,
+  // so a mix that is playing keeps its row, its waveform and its place in the bar
+  function placeSeries(onMixes) {
+    var box = $('.series'), tvEl = $('.tv');
+    if (!box) return;
+    if (onMixes) { if (box.parentNode !== $('.mixes__slot')) $('.mixes__slot').appendChild(box); }
+    else if (tvEl && box.previousElementSibling !== tvEl) tvEl.after(box);
+  }
+  // the search on /mixes: a name (or part of one), a date, or a number ('7', '#007' and '007' all find #007)
+  function initFind() {
+    var inp = $('.find__in'), none = $('.find__none');
+    if (!inp) return;
+    inp.addEventListener('input', function () {
+      var q = inp.value.trim().toLowerCase(), n = /^#?\d+$/.test(q) ? parseInt(q.replace('#', ''), 10) : null, shown = 0;
+      $$('.series .tx').forEach(function (el) {
+        var hit = !q || (n != null ? parseInt((el.dataset.find.match(/#(\d+)/) || [0, -1])[1], 10) === n : el.dataset.find.indexOf(q) >= 0);
+        el.classList.toggle('is-out', !hit);
+        if (hit) shown++;
+      });
+      none.hidden = shown > 0;
+      resizeTx();
+    });
+  }
+
+  /* the artists page: every poster on one wall */
+  function initArtistsPage() {
+    $$('.artists__n').forEach(function (el) { el.textContent = D.artists.length; });
+    var wall = $('.wall');
+    if (!wall) return;
+    wall.innerHTML = D.artists.map(function (a, i) {
+      var no = seriesNo(a);
+      return '<li class="wall__it"><a class="wall__link" href="/artists/' + esc(a.slug) + '">' +
+        '<span class="wall__pic">' + (a.poster ? '<img src="' + esc(a.poster) + '" alt="' + esc(a.name) + ' · Oscillator poster" loading="lazy">'
+          : a.photo ? '<img class="is-photo" src="' + esc(a.photo) + '" alt="' + esc(a.name) + '" loading="lazy">' : '') + '</span>' +
+        '<span class="wall__cap">' + (no ? '<b class="num">' + esc(no) + '</b>' : '<b class="num">' + pad(i + 1) + '</b>') + '<span>' + esc(a.name) + '</span></span>' +
+      '</a></li>';
+    }).join('');
   }
 
   // start (or seek) a mix and bring up the stage
@@ -2015,7 +2114,7 @@
     var past = E_.filter(function (ev) { return ev.date < today; }).reverse();
     var lineupOf = function (ev) {
       return (ev.lineup || []).map(function (x) {
-        return artistIndex(x) >= 0 ? '<a href="#/artist/' + esc(x) + '">' + esc(artistName(x)) + '</a>' : esc(x);
+        return artistIndex(x) >= 0 ? '<a href="/artists/' + esc(x) + '">' + esc(artistName(x)) + '</a>' : esc(x);
       }).join(', ');
     };
     var html = '';
@@ -2127,7 +2226,8 @@
   var sections = [];
   function initNav() {
     sections = $$('main > section, main > footer').map(function (el) {
-      return { el: el, id: el.id, link: $('.nav__links a[href="#' + el.id + '"]') };
+      var to = { voices: '/artists', transmissions: '/mixes' }[el.id] || '/#' + el.id;
+      return { el: el, id: el.id, link: $('.nav__links a[href="' + to + '"]') };
     });
     var menu = $('#menu'), btn = $('.nav__menu');
     var setMenu = function (open) {
@@ -2151,6 +2251,7 @@
   }
   var currentSection = null;
   function updateSection() {
+    if (R.page !== 'home') { currentSection = null; return; }
     var mid = S.vh * 0.45, cur = sections[0];
     for (var i = 0; i < sections.length; i++) {
       var r = sections[i].el.getBoundingClientRect();
@@ -2292,18 +2393,22 @@
   initContact();
   initTape();
   initNav();
+  initArtistsPage();
+  initFind();
   initStrings();
+  initRouter();
   initProfile();
   initSignal();
   initInput();
   applySignalUI();
+  showPage(/^\/artists(\/|$)/.test(location.pathname) ? 'artists' : /^\/mixes\/?$/.test(location.pathname) ? 'mixes' : 'home');
   resizeAll();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(resizeAll);
   window.addEventListener('load', resizeAll);
 
   boot().then(function () {
     resizeAll();
-    route(false);
+    render(false, history.state);
   });
   requestAnimationFrame(frame);
 })();

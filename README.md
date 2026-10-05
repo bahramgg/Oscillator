@@ -14,6 +14,12 @@ The site is built as an instrument, and it is laid out as one system:
   play buttons, the tape, whatever is live. **Text buttons** are hairline pills; **play
   buttons** are yellow circles. External links carry a drawn arrow.
 
+**Pages.** Besides the home page there are two pages with their own addresses, all in the same
+document so moving between them never reloads (a mix keeps playing in the bar):
+`/artists` (every poster on one wall; each opens `/artists/<slug>`) and `/mixes` (the whole
+Oscillator Series with a search by artist, date or number). The home page shows the reel and the
+latest five mixes with links to them. Netlify serves `index.html` for these paths (`_redirects`).
+
 | # | Section | What it is |
 |---|---------|------------|
 | 00 | Power | Intro plays the label's "Oscillator Rises" reel (muted, Sound on button, tap to skip, once per session; a drawn version runs if autoplay is blocked; skipped for reduced motion). Hero: neon logo in a rotating OSCILLATOR/ ring, yellow strobe cuts, faint live oscilloscope |
