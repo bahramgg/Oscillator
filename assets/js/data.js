@@ -156,7 +156,9 @@ window.OSCILLATOR = {
       lineup: ['Keyv', 'ronin', 'Nastish', 'Kuttle', 'Neevak', 'dynno', 'Srvsh.iv', 'Therapist', 'Aivy'],
       poster: 'assets/img/events/2026-09-10-tehran-underground.jpg' },
     { date: '2026-08-27', title: 'All Night Long', lineup: ['Keyv', 'Msiyan'],
-      poster: 'assets/img/events/2026-08-27-all-night-long.jpg' }
+      poster: 'assets/img/events/2026-08-27-all-night-long.jpg' },
+    { date: '2026-06-11', title: 'All Night Long', lineup: ['Keyv'],
+      poster: 'assets/img/events/2026-06-11-all-night-long.jpg' }
   ],
 
   /* ------------------------------------------------------------------------
