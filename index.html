@@ -74,7 +74,7 @@
       <a href="/artists"><i>02</i>Voices</a>
       <a href="/mixes"><i>03</i>Transmissions</a>
       <a href="/#feedback"><i>04</i>Feedback</a>
-      <a href="/#next"><i>05</i>Next signal</a>
+      <a href="/events"><i>05</i>Next signal</a>
       <a href="/#output"><i>06</i>Output</a>
     </nav>
     <div class="nav__right">
@@ -91,7 +91,7 @@
       <a href="/artists"><span class="num">02</span><b>Voices</b><i aria-hidden="true">→</i></a>
       <a href="/mixes"><span class="num">03</span><b>Transmissions</b><i aria-hidden="true">→</i></a>
       <a href="/#feedback"><span class="num">04</span><b>Feedback</b><i aria-hidden="true">→</i></a>
-      <a href="/#next"><span class="num">05</span><b>Next signal</b><i aria-hidden="true">→</i></a>
+      <a href="/events"><span class="num">05</span><b>Next signal</b><i aria-hidden="true">→</i></a>
       <a href="/#output"><span class="num">06</span><b>Output</b><i aria-hidden="true">→</i></a>
     </nav>
     <div class="menu__foot mono">
@@ -224,6 +224,16 @@
         <h2 class="sec__title">Next signal</h2>
       </header>
       <div class="events"></div>
+      <a class="sec__more btn events__all" href="/events" hidden>All events →</a>
+    </section>
+
+    <!-- the events page: every coming night, then the archive of past ones -->
+    <section class="sec page page--events" id="events">
+      <header class="sec__head">
+        <div class="sec__bar"><span class="sec__num num">05</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Dates</span></div>
+        <h1 class="sec__title">Next signal</h1>
+      </header>
+      <div class="events-page"></div>
     </section>
 
     <!-- 06 output: contact -->
@@ -311,6 +321,12 @@
         <button class="cf__again btn" type="button">Close ✕</button>
       </div>
     </div>
+  </div>
+
+  <!-- a poster, full size -->
+  <div class="lb" role="dialog" aria-modal="true" aria-label="Poster" hidden>
+    <img class="lb__img" alt="">
+    <button class="lb__close btn" type="button">Close <span aria-hidden="true">✕</span></button>
   </div>
 
   <!-- now playing: full-screen stage -->

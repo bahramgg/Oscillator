@@ -140,13 +140,14 @@ window.OSCILLATOR = {
     { id: 'osc-001', title: 'Oscillator #001', artist: 'Borna Farshid', type: 'Series', date: '2020-09-01', duration: 4443, cover: 'assets/img/series/001.jpg', soundcloud: 'https://soundcloud.com/oscillatorr/borna-farshid', waveform: [0.97,0.96,0.97,0.97,0.96,0.96,0.97,0.95,0.93,0.95,0.86,0.88,0.86,0.89,0.94,0.86,0.89,0.79,0.84,0.84,0.89,0.95,0.95,0.98,0.93,0.94,0.94,0.96,0.96,0.99,0.98,0.98,0.98,0.98,0.98,0.97,0.96,0.96,0.98,1.0,0.96,0.94,0.98,0.98,0.96,0.97,0.96,0.96,0.96,0.96,0.94,0.94,0.95,0.96,0.94,0.95,0.94,0.94,0.95,0.84,0.85,0.84,0.89,0.86,0.94,0.95,0.94,0.94,0.94,0.95,0.95,0.95,0.95,0.96,0.96,0.96,0.96,0.92,0.96,0.96,0.96,0.97,0.96,0.95,0.96,0.94,0.95,0.94,0.94,0.94,0.94,0.92,0.97,0.95,0.96,0.97,0.96,0.95,0.96,0.97,0.96,0.96,0.94,0.92,0.94,0.94,0.94,0.96,0.96,0.94,0.89,0.91,0.88,0.89,0.91,0.92,0.94,0.89,0.85,0.78] }
   ],
   /* ------------------------------------------------------------------------
-     EVENTS — "05 — Next signal". Leave empty to show the "no signal" state.
-     { date: '2026-11-14', title: 'Oscillator Night 01', venue: 'Secret location',
-       city: 'Tehran', lineup: ['keyv', 'artist-02'], link: 'https://…' }
-     lineup accepts artist slugs (linked) or plain names.
-     Past dates move to the "Past signals" archive; give them a poster:
-     { date: '2025-06-20', title: 'Oscillator Night', poster: 'assets/img/events/2025-06-20.jpg',
-       lineup: ['keyv', 'dynno'] }
+     EVENTS — "05 Next signal" (on the home page: the next two; all of them on /events).
+     Leave empty to show the "no signal" state. Posters go in assets/img/events/.
+     { date: '2026-11-14', title: 'Oscillator Night 01', venue: 'Secret location', city: 'Tehran',
+       lineup: ['kenzo', 'pooyan', 'Guest Name'], poster: 'assets/img/events/2026-11-14.jpg',
+       link: 'https://…', linkLabel: 'Tickets' }
+     lineup takes artist slugs (they link to the artist) or plain names; link / linkLabel are optional.
+     Dates that have passed move by themselves into the "Past signals" archive on /events.
+     Every poster opens full size when tapped.
      ------------------------------------------------------------------------ */
   events: [],
 

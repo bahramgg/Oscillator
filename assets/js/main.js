@@ -1033,7 +1033,7 @@
      /artists/<slug> (a profile over the page underneath), /mixes (the whole series).
      Moving between them never reloads, so a mix keeps playing in the bar. */
   var R = { page: null, under: null };
-  var PAGES = { home: 'Oscillator | Techno Label & Artist Collective', artists: 'Voices | Oscillator', mixes: 'Transmissions | Oscillator' };
+  var PAGES = { home: 'Oscillator | Techno Label & Artist Collective', artists: 'Voices | Oscillator', mixes: 'Transmissions | Oscillator', events: 'Next signal | Oscillator' };
   var MOVED = { enzo: 'kenzo', el4raa: 'del4raa' };                        // renamed artists keep their old links
   function go(url, replace) {
     try { history.replaceState({ y: scrollY }, '', location.href); } catch (e) {}   // come back to the same spot
@@ -1070,7 +1070,7 @@
       return;
     }
     if (pf.open) closeProfile();
-    var page = path === '/artists' ? 'artists' : path === '/mixes' ? 'mixes' : 'home';
+    var page = path === '/artists' ? 'artists' : path === '/mixes' ? 'mixes' : path === '/events' ? 'events' : 'home';
     if (page === 'home' && path !== '/') history.replaceState({}, '', '/' + hash);
     var changed = showPage(page);
     document.title = PAGES[page];
@@ -2106,69 +2106,106 @@
   }
 
   /* ─── 05 next signal ───────────────────────────────────────────────── */
-  var ns = { cvs: null };
+  var ns = { list: [] };
+  var WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  function evParts(ev) {
+    var p = ev.date.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]);
+    return { day: p[2] + '.' + p[1], year: p[0], wd: WD[d.getDay()], full: p[2] + '.' + p[1] + '.' + p[0] };
+  }
+  function lineupOf(ev) {
+    return (ev.lineup || []).map(function (x) {
+      return artistIndex(x) >= 0 ? '<a href="/artists/' + esc(x) + '">' + esc(artistName(x)) + '</a>' : esc(x);
+    }).join(' · ');
+  }
+  function noSignal() {
+    return '<div class="nosignal">' +
+      '<canvas class="nosignal__line" aria-hidden="true"></canvas>' +
+      '<p class="nosignal__big">No signal</p>' +
+      '<div class="nosignal__row"><p>Nothing scheduled yet. New dates are announced first on Instagram.</p>' +
+      '<a class="cta ext" href="' + esc(D.label.instagram) + '" target="_blank" rel="noopener">Follow ' + esc(D.label.handle) + '</a></div></div>';
+  }
+  // a coming night: its poster beside the date, the name, where, who, and the way in
+  function evCard(ev) {
+    var t = evParts(ev), lineup = lineupOf(ev);
+    return '<article class="ev' + (ev.poster ? '' : ' ev--bare') + '">' +
+      (ev.poster ? '<button class="ev__poster" type="button" data-full="' + esc(ev.poster) + '" aria-label="' + esc(ev.title) + ': poster, full size"><img src="' + esc(ev.poster) + '" alt="' + esc(ev.title) + ' poster" loading="lazy"></button>' : '') +
+      '<div class="ev__body">' +
+        '<p class="ev__date num">' + t.day + '<small>' + t.wd + ' · ' + t.year + '</small></p>' +
+        '<h3 class="ev__title">' + esc(ev.title) + '</h3>' +
+        ([ev.venue, ev.city].filter(Boolean).length ? '<p class="ev__where mono">' + esc([ev.venue, ev.city].filter(Boolean).join(' · ')) + '</p>' : '') +
+        (lineup ? '<p class="ev__lineup">' + lineup + '</p>' : '') +
+        (ev.link ? '<a class="cta ext" href="' + esc(ev.link) + '" target="_blank" rel="noopener">' + esc(ev.linkLabel || 'Tickets & info') + '</a>' : '') +
+      '</div></article>';
+  }
   function initEvents() {
-    var box = $('.events'), E_ = (D.events || []).slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    var E_ = (D.events || []).slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
     var today = new Date().toISOString().slice(0, 10);
     var next = E_.filter(function (ev) { return ev.date >= today; });
     var past = E_.filter(function (ev) { return ev.date < today; }).reverse();
-    var lineupOf = function (ev) {
-      return (ev.lineup || []).map(function (x) {
-        return artistIndex(x) >= 0 ? '<a href="/artists/' + esc(x) + '">' + esc(artistName(x)) + '</a>' : esc(x);
-      }).join(', ');
-    };
-    var html = '';
-    if (!next.length) {
-      html = '<div class="nosignal">' +
-        '<canvas class="nosignal__line" aria-hidden="true"></canvas>' +
-        '<p class="nosignal__big">No signal</p>' +
-        '<div class="nosignal__row"><p>Nothing scheduled yet. New dates are announced first on Instagram.</p>' +
-        '<a class="cta ext" href="' + esc(D.label.instagram) + '" target="_blank" rel="noopener">Follow ' + esc(D.label.handle) + '</a></div></div>';
-    } else {
-      html = next.map(function (ev) {
-        var parts = ev.date.split('-'), lineup = lineupOf(ev);
-        return '<article class="event" data-reveal>' +
-          '<p class="event__date num">' + parts[2] + '.' + parts[1] + '<small>' + parts[0] + '</small></p>' +
-          '<div><h3 class="event__title">' + esc(ev.title) + '</h3>' +
-          '<p class="event__where mono">' + esc([ev.venue, ev.city].filter(Boolean).join(' · ')) + '</p>' +
-          (lineup ? '<p class="event__lineup">' + lineup + '</p>' : '') + '</div>' +
-          (ev.link ? '<a class="cta ext" href="' + esc(ev.link) + '" target="_blank" rel="noopener">Info</a>' : '<span></span>') +
-          '</article>';
-      }).join('');
-    }
-    // past nights: the posters as an archive (black & white; colour on hover / tap)
-    if (past.length) {
-      html += '<div class="past"><header class="past__head"><h3 class="past__title">Past signals</h3><p class="mono"><span class="num">' + pad(past.length) + '</span> nights</p></header>' +
+    // home: the next nights (two at most) and the way to the rest
+    var home = $('.events'), all = $('.events__all');
+    home.innerHTML = next.length ? next.slice(0, 2).map(evCard).join('') : noSignal();
+    if (all) all.hidden = !E_.length;
+    // /events: everything coming, then the archive of past nights
+    var page = $('.events-page');
+    if (page) page.innerHTML = (next.length ? next.map(evCard).join('') : noSignal()) +
+      (past.length ? '<div class="past"><header class="past__head"><h2 class="past__title">Past signals</h2><p class="mono"><span class="num">' + pad(past.length) + '</span> nights</p></header>' +
         '<div class="past__grid">' + past.map(function (ev) {
-          var parts = ev.date.split('-'), lineup = lineupOf(ev);
+          var t = evParts(ev), lineup = lineupOf(ev);
           return '<figure class="past__item">' +
-            (ev.poster ? '<div class="past__poster"><img src="' + esc(ev.poster) + '" alt="' + esc(ev.title) + ' poster" loading="lazy"></div>' : '') +
-            '<figcaption><b class="num">' + parts[2] + '.' + parts[1] + '.' + parts[0] + '</b><span class="past__name">' + esc(ev.title) + '</span>' +
+            (ev.poster ? '<button class="past__poster" type="button" data-full="' + esc(ev.poster) + '" aria-label="' + esc(ev.title) + ': poster, full size"><img src="' + esc(ev.poster) + '" alt="' + esc(ev.title) + ' poster" loading="lazy"></button>' : '') +
+            '<figcaption><b class="num">' + t.full + '</b><span class="past__name">' + esc(ev.title) + '</span>' +
             (lineup ? '<span class="past__lineup">' + lineup + '</span>' : '') + '</figcaption></figure>';
-        }).join('') + '</div></div>';
-    }
-    box.innerHTML = html;
-    $$('.past__item', box).forEach(function (f) { f.addEventListener('click', function (e) { if (!e.target.closest('a')) f.classList.toggle('is-colour'); }); });
-    ns.cvs = $('.nosignal__line', box);
-    if (ns.cvs) watch(ns.cvs, 'events');
+        }).join('') + '</div></div>' : '');
+    ns.list = $$('.nosignal__line').map(function (cv, i) { watch(cv, 'events' + i); return { cv: cv, key: 'events' + i }; });
+    initPosterView();
   }
-  function resizeEvents() { if (ns.cvs) { var s = sizeCanvas(ns.cvs, 2); ns.ctx = s.ctx; ns.w = s.w; ns.h = s.h; ns.d = s.d; } }
+  // a poster, full size: tap any event poster; tap again, Esc or Close to put it back
+  function initPosterView() {
+    var lb = $('.lb'), img = $('.lb__img'), last = null;
+    if (!lb || lb.dataset.ready) return;
+    lb.dataset.ready = '1';
+    var close = function () {
+      if (lb.hidden) return;
+      lb.classList.remove('is-open');
+      setTimeout(function () { lb.hidden = true; img.removeAttribute('src'); }, reduced ? 0 : 300);
+      if (!pf.open && !stage.isOpen && !cf.open) document.documentElement.classList.remove('is-locked');
+      if (last && last.focus) last.focus({ preventScroll: true });
+    };
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-full]');
+      if (!b) return;
+      last = b;
+      img.src = b.dataset.full; img.alt = (b.querySelector('img') || {}).alt || '';
+      lb.hidden = false; document.documentElement.classList.add('is-locked');
+      void lb.offsetWidth; lb.classList.add('is-open');
+      $('.lb__close', lb).focus({ preventScroll: true });
+    });
+    lb.addEventListener('click', close);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !lb.hidden) { e.preventDefault(); close(); } });
+  }
+  function resizeEvents() {
+    ns.list.forEach(function (n) { if (!n.cv.offsetWidth) { n.ctx = null; return; } var s = sizeCanvas(n.cv, 2); n.ctx = s.ctx; n.w = s.w; n.h = s.h; n.d = s.d; });
+  }
+  // a flat line with one blip travelling along it: the signal isn't here yet
   function drawEvents() {
-    var c = ns.ctx;
-    if (!c) return;
-    var w = ns.w, h = ns.h, d = ns.d, cy = h / 2;
-    c.clearRect(0, 0, w, h);
-    var period = w * 1.4, head = reduced ? w * 0.6 : ((S.t * w * 0.22) % period);
-    c.beginPath();
-    for (var x = 0; x <= w; x += 2 * d) {
-      var dx = (x - head) / (w * 0.03);
-      var blip = Math.exp(-dx * dx) * Math.sin(dx * 3.2) * h * 0.38;
-      var y = cy + blip + noise1(x * 0.05 + S.t * 3) * 1.2 * d;
-      if (x) c.lineTo(x, y); else c.moveTo(x, y);
-    }
-    c.strokeStyle = 'rgba(233,231,223,.55)'; c.lineWidth = 1.2 * d; c.stroke();
-    c.fillStyle = '#e4e418';
-    c.beginPath(); c.arc(head, cy, 3 * d, 0, TAU); c.fill();
+    ns.list.forEach(function (n) {
+      var c = n.ctx;
+      if (!c || !vis[n.key]) return;
+      var w = n.w, h = n.h, d = n.d, cy = h / 2;
+      c.clearRect(0, 0, w, h);
+      var period = w * 1.4, head = reduced ? w * 0.6 : ((S.t * w * 0.22) % period);
+      c.beginPath();
+      for (var x = 0; x <= w; x += 2 * d) {
+        var dx = (x - head) / (w * 0.03);
+        var blip = Math.exp(-dx * dx) * Math.sin(dx * 3.2) * h * 0.38;
+        var y = cy + blip + noise1(x * 0.05 + S.t * 3) * 1.2 * d;
+        if (x) c.lineTo(x, y); else c.moveTo(x, y);
+      }
+      c.strokeStyle = 'rgba(233,231,223,.55)'; c.lineWidth = 1.2 * d; c.stroke();
+      c.fillStyle = '#e4e418';
+      c.beginPath(); c.arc(head, cy, 3 * d, 0, TAU); c.fill();
+    });
   }
 
   /* ─── 06 output: theremin text ─────────────────────────────────────── */
@@ -2226,7 +2263,7 @@
   var sections = [];
   function initNav() {
     sections = $$('main > section, main > footer').map(function (el) {
-      var to = { voices: '/artists', transmissions: '/mixes' }[el.id] || '/#' + el.id;
+      var to = { voices: '/artists', transmissions: '/mixes', next: '/events' }[el.id] || '/#' + el.id;
       return { el: el, id: el.id, link: $('.nav__links a[href="' + to + '"]') };
     });
     var menu = $('#menu'), btn = $('.nav__menu');
@@ -2378,7 +2415,7 @@
     for (var si = 0; si < strings.length; si++) if (strings[si].vis) drawString(strings[si]);
     if (vis.roster) drawRoster();
     if (vis.feedback) drawFeedback();
-    if (vis.events) drawEvents();
+    drawEvents();
   }
 
   /* ─── go ───────────────────────────────────────────────────────────── */
@@ -2401,7 +2438,7 @@
   initSignal();
   initInput();
   applySignalUI();
-  showPage(/^\/artists(\/|$)/.test(location.pathname) ? 'artists' : /^\/mixes\/?$/.test(location.pathname) ? 'mixes' : 'home');
+  showPage(/^\/artists(\/|$)/.test(location.pathname) ? 'artists' : /^\/mixes\/?$/.test(location.pathname) ? 'mixes' : /^\/events\/?$/.test(location.pathname) ? 'events' : 'home');
   resizeAll();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(resizeAll);
   window.addEventListener('load', resizeAll);

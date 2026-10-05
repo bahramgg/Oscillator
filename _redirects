@@ -1,3 +1,4 @@
 /artists    /index.html  200
 /artists/*  /index.html  200
 /mixes      /index.html  200
+/events     /index.html  200

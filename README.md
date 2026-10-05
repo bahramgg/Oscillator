@@ -17,7 +17,8 @@ The site is built as an instrument, and it is laid out as one system:
 **Pages.** Besides the home page there are two pages with their own addresses, all in the same
 document so moving between them never reloads (a mix keeps playing in the bar):
 `/artists` (every poster on one wall; each opens `/artists/<slug>`) and `/mixes` (the whole
-Oscillator Series with a search by artist, date or number). The home page shows the reel and the
+Oscillator Series with a search by artist, date or number). `/events`: every coming night with its
+poster, then the "Past signals" archive; any event poster opens full size. The home page shows the reel and the
 latest five mixes with links to them. Netlify serves `index.html` for these paths (`_redirects`).
 
 | # | Section | What it is |
@@ -27,7 +28,7 @@ latest five mixes with links to them. Netlify serves `index.html` for these path
 | 02 | Voices | The roster as a swipeable reel that also advances by itself every 2 s (pauses on touch, drag or hover). Each card is the artist's own series poster, shown as-is (`poster` in data.js), in series order; an artist without a poster gets a card rebuilt in the poster language from their photo. Each opens a profile (`#/artist/<slug>`) |
 | 03 | Transmissions | A featured film from the label's YouTube channel (`video` in data.js; the player loads only when pressed; the site's own controls: timeline, speed 0.5–2×, quality Auto/HD, mute, full screen; on iPhone, where pages can't use the browser's full screen, a full-screen layer that lies the video sideways). Then **The Oscillator Series**: the latest mix large (`transmissions`), then one row per mix (#001–#031 from soundcloud.com/oscillatorr, `series`): number, artist, waveform. Play opens the stage, a full-screen now-playing page with the SoundCloud link (and the video, for mixes that were filmed). Audio via hidden SoundCloud widgets |
 | 04 | Feedback | The room: a photo pinned to the screen and travelling as you scroll (a tall one tilts from the ceiling to the floor, a wide one pans across; strips shear with scroll speed), with a running REC timecode; 'the room is THE INSTRUMENT'. Photos in `feedback.media` appear as a grid underneath |
-| 05 | Next signal | Events; when nothing is upcoming, a "no signal" screen (a flat line with a passing blip, NO SIGNAL in outline, the follow button). Past dates with a `poster` form the "Past signals" archive |
+| 05 | Next signal | On the home page the next two nights (and a link to `/events`); when nothing is upcoming, a "no signal" screen (a flat line with a passing blip, NO SIGNAL in outline, the follow button). Past dates with a `poster` form the "Past signals" archive |
 | 06 | Output | Contact, a centred close: 'Send a signal' opens a full-screen form (Demo / Booking / Collaboration / Other, fields follow the choice; an artist's profile opens it as a booking for that artist). Submissions go through FormSubmit (`label.form` in data.js) to the label's inbox |
 
 Press **Turn on the signal** and the site generates a techno loop live in the browser
