@@ -152,13 +152,14 @@ window.OSCILLATOR = {
 
   /* ------------------------------------------------------------------------
      FEEDBACK — "04" — the visual archive.
-     panorama: the wide image the section pans across while scrolling.
+     panorama: the image the section travels across while you scroll — a wide one
+               pans sideways, a tall one tilts from top to bottom.
      media: extra photos / videos shown underneath.
        { type: 'image', src: 'assets/img/x.jpg', caption: '' }
        { type: 'video', src: 'assets/video/x.mp4', poster: 'assets/img/x.jpg', caption: '' }
      ------------------------------------------------------------------------ */
   feedback: {
-    panorama: 'assets/img/crowd-panorama.jpg',
+    panorama: 'assets/img/room.jpg',
     caption: 'the room is *the instrument*',
     // extra photos / videos from the nights (shown as a grid under the room)
     media: []

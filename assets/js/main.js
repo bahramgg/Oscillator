@@ -1810,7 +1810,7 @@
   deck.open.addEventListener('click', function () { if (deck.cur) { deck.el.hidden = true; stage.show(deck.cur, deck.open); } });
 
   /* ─── 04 feedback: panorama + contact sheet ────────────────────────── */
-  var fb = { track: $('.feedback__track'), pano: $('.pano'), img: null, x: 0, lastX: 0, v: 0, strips: reduced ? 1 : 9, tc: $('.feedback__tc') };
+  var fb = { track: $('.feedback__track'), pano: $('.pano'), img: null, x: 0, y: 0, lastX: 0, lastY: 0, v: 0, strips: reduced ? 1 : 9, tc: $('.feedback__tc') };
   function initFeedback() {
     var F = D.feedback || {};
     $('.feedback__cap').innerHTML = rich(F.caption || '');
@@ -1850,24 +1850,29 @@
     fb.ctx = s.ctx; fb.w = s.w; fb.h = s.h; fb.d = s.d;
   }
   // the panorama is cut into horizontal strips that shear apart with scroll speed
+  // the picture covers the frame and travels along its longer side as you scroll:
+  // a wide room pans across, a tall one tilts from the ceiling down to the floor.
+  // Horizontal strips shear apart with scroll speed (and the kick, when the signal is on).
   function drawFeedback() {
     var img = fb.img, c = fb.ctx;
     if (!c || !img || !img.complete || !img.naturalWidth) return;
     var r = fb.rect;
     var p = clamp(-r.top / Math.max(1, r.height - S.vh), 0, 1);
-    var scale = fb.h / img.naturalHeight, dw = img.naturalWidth * scale;
-    // travel only across the lit part of the room (both ends of the panorama are black)
-    var cx = (0.26 + 0.44 * p) * dw;
-    var target = -clamp(cx - fb.w / 2, 0, Math.max(0, dw - fb.w));
-    fb.x = reduced ? target : lerp(fb.x, target, 0.14);
-    fb.v = lerp(fb.v, fb.x - fb.lastX, 0.3);
-    fb.lastX = fb.x;
+    var iw = img.naturalWidth, ih = img.naturalHeight;
+    var scale = Math.max(fb.w / iw, fb.h / ih), dw = iw * scale, dh = ih * scale;
+    var tx = -Math.max(0, dw - fb.w) * p, ty = -Math.max(0, dh - fb.h) * p;
+    fb.x = reduced ? tx : lerp(fb.x, tx, 0.14);
+    fb.y = reduced ? ty : lerp(fb.y, ty, 0.14);
+    fb.v = lerp(fb.v, (fb.x - fb.lastX) + (fb.y - fb.lastY), 0.3);
+    fb.lastX = fb.x; fb.lastY = fb.y;
     var shear = reduced ? 0 : Math.min(Math.abs(fb.v) * 2.2, 70 * fb.d) + S.beat * 8 * fb.d;
-    var n = fb.strips, sh = fb.h / n, srcH = img.naturalHeight / n;
+    var n = fb.strips, sh = fb.h / n;
     c.fillStyle = '#070707'; c.fillRect(0, 0, fb.w, fb.h);
     for (var i = 0; i < n; i++) {
       var off = Math.sin(i * 0.95 + S.t * 5) * shear;
-      c.drawImage(img, 0, i * srcH, img.naturalWidth, srcH, fb.x + off, i * sh, dw, sh + 1);
+      var sy = (i * sh - fb.y) / scale, sH = Math.min((sh + 1) / scale, ih - sy);
+      if (sH <= 0) continue;
+      c.drawImage(img, 0, sy, iw, sH, fb.x + off, i * sh, dw, sH * scale);
     }
     var frames = Math.floor(p * 3 * 60 * 25);
     fb.tc.textContent = '00:' + pad(Math.floor(frames / 1500)) + ':' + pad(Math.floor(frames / 25) % 60) + ':' + pad(frames % 25);
