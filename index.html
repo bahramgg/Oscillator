@@ -23,10 +23,12 @@
 
   <link rel="icon" href="assets/img/favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
-  <link rel="preload" href="assets/fonts/anton.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/tenor-sans.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/fonts/rajdhani-700.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/fonts/orbitron-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/six-caps.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/league-gothic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/teko.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/anton-ring.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/orbitron-title.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/style.css">
 
   <script type="application/ld+json">
@@ -65,9 +67,9 @@
 
   <!-- chrome -->
   <header class="nav">
-    <a class="nav__brand" href="/" aria-label="Oscillator, back to top">
-      <span class="logo nav__logo" aria-hidden="true"></span>
-      <span>Oscillator</span>
+    <a class="nav__brand" href="/" aria-label="Oscillator, home">
+      <span class="logo logo--icon nav__icon" aria-hidden="true"></span>
+      <span class="nav__type" aria-hidden="true"></span>
     </a>
     <nav class="nav__links mono" aria-label="Sections">
       <a href="/#carrier"><i>01</i>Carrier</a>
@@ -87,12 +89,12 @@
 
   <div class="menu" id="menu" hidden>
     <nav aria-label="Menu">
-      <a href="/#carrier"><span class="num">01</span><b>Carrier</b><i aria-hidden="true">→</i></a>
-      <a href="/artists"><span class="num">02</span><b>Voices</b><i aria-hidden="true">→</i></a>
-      <a href="/mixes"><span class="num">03</span><b>Transmissions</b><i aria-hidden="true">→</i></a>
-      <a href="/#feedback"><span class="num">04</span><b>Feedback</b><i aria-hidden="true">→</i></a>
-      <a href="/events"><span class="num">05</span><b>Next signal</b><i aria-hidden="true">→</i></a>
-      <a href="/#output"><span class="num">06</span><b>Output</b><i aria-hidden="true">→</i></a>
+      <a href="/#carrier"><span class="num">01</span><b>Carrier</b><i class="ico ico--r" aria-hidden="true"></i></a>
+      <a href="/artists"><span class="num">02</span><b>Voices</b><i class="ico ico--r" aria-hidden="true"></i></a>
+      <a href="/mixes"><span class="num">03</span><b>Transmissions</b><i class="ico ico--r" aria-hidden="true"></i></a>
+      <a href="/#feedback"><span class="num">04</span><b>Feedback</b><i class="ico ico--r" aria-hidden="true"></i></a>
+      <a href="/events"><span class="num">05</span><b>Next signal</b><i class="ico ico--r" aria-hidden="true"></i></a>
+      <a href="/#output"><span class="num">06</span><b>Output</b><i class="ico ico--r" aria-hidden="true"></i></a>
     </nav>
     <div class="menu__foot mono">
       <a class="ext" href="https://www.instagram.com/oscillator__/" target="_blank" rel="noopener">Instagram</a>
@@ -130,14 +132,15 @@
       <h1 class="wearetitle hero__title">We are Oscillator</h1>
     </section>
 
-    <!-- every section opens the same way: number, a line (a string that rings when the
-         section arrives), what it holds, then the name -->
+    <!-- every section opens the way the posters open: its name in the posters' compressed
+         face, closed by a rule; the rule is a wire (a pulse runs along it when the section
+         arrives) with the section's number at one end and what it holds at the other -->
 
     <!-- 01 carrier: about -->
     <section class="sec carrier" id="carrier">
       <header class="sec__head">
-        <div class="sec__bar"><span class="sec__num num">01</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">The label</span></div>
         <h2 class="sec__title">Carrier</h2>
+        <div class="sec__bar"><span class="sec__num num">01</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">The label</span></div>
       </header>
       <div class="carrier__text"></div>
     </section>
@@ -145,25 +148,25 @@
     <!-- 02 voices: artists -->
     <section class="sec voices" id="voices">
       <header class="sec__head">
-        <div class="sec__bar"><span class="sec__num num">02</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">The roster</span></div>
         <h2 class="sec__title">Voices</h2>
+        <div class="sec__bar"><span class="sec__num num">02</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">The roster</span></div>
       </header>
       <ol class="roster" aria-label="Artists"></ol>
       <div class="reel-nav">
         <span class="reel-count num"><b>01</b> / <span class="reel-total">10</span></span>
         <span class="reel-progress" aria-hidden="true"><i></i></span>
         <span class="reel-hint mono">Swipe</span>
-        <button class="reel-btn reel-prev" type="button" aria-label="Previous artists">←</button>
-        <button class="reel-btn reel-next" type="button" aria-label="Next artists">→</button>
+        <button class="reel-btn reel-prev" type="button" aria-label="Previous artists"><i class="ico ico--l" aria-hidden="true"></i></button>
+        <button class="reel-btn reel-next" type="button" aria-label="Next artists"><i class="ico ico--r" aria-hidden="true"></i></button>
       </div>
-      <a class="sec__more btn" href="/artists">All artists <span class="num artists__n"></span> →</a>
+      <a class="sec__more btn" href="/artists">All <span class="num artists__n"></span> artists <i class="ico ico--r" aria-hidden="true"></i></a>
     </section>
 
     <!-- 03 transmissions: the film, then the series (latest first) -->
     <section class="sec transmissions" id="transmissions">
       <header class="sec__head">
-        <div class="sec__bar"><span class="sec__num num">03</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Mixes &amp; releases</span></div>
         <h2 class="sec__title">Transmissions</h2>
+        <div class="sec__bar"><span class="sec__num num">03</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Mixes &amp; releases</span></div>
       </header>
       <figure class="tv" hidden></figure>
       <div class="series" hidden>
@@ -173,27 +176,28 @@
         </header>
         <div class="tx-list"></div>
         <div class="series__list"></div>
-        <a class="series__more btn" href="/mixes" hidden>All mixes <span class="num series__n"></span> →</a>
+        <a class="series__more btn" href="/mixes" hidden>All <span class="num series__n"></span> mixes <i class="ico ico--r" aria-hidden="true"></i></a>
       </div>
     </section>
 
-    <!-- the artists page: every poster -->
+    <!-- the artists page: the roster as a poster lineup, then every poster -->
     <section class="sec page page--artists" id="artists">
       <header class="sec__head">
-        <div class="sec__bar"><span class="sec__num num">02</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono"><span class="num artists__n"></span> artists</span></div>
         <h1 class="sec__title">Voices</h1>
+        <div class="sec__bar"><span class="sec__num num">02</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono"><span class="num artists__n"></span> artists</span></div>
       </header>
-      <ol class="wall loose" aria-label="Artists"></ol>
+      <p class="lineup"></p>
+      <ol class="wall" aria-label="Artists"></ol>
     </section>
 
-    <!-- the mixes page: the whole series (the series block moves in here) -->
+    <!-- the mixes page: the home page's series, continued (the series block moves in here) -->
     <section class="sec page page--mixes" id="mixes">
       <header class="sec__head">
-        <div class="sec__bar"><span class="sec__num num">03</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Mixes &amp; releases</span></div>
         <h1 class="sec__title">Transmissions</h1>
+        <div class="sec__bar"><span class="sec__num num">03</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Mixes &amp; releases</span></div>
       </header>
       <label class="find"><span class="mono">Find</span><input class="find__in" type="search" placeholder="An artist or a number" autocomplete="off"></label>
-      <ol class="crate loose" aria-label="The Oscillator Series"></ol>
+      <div class="mixes__slot"></div>
       <p class="find__none mono" hidden>No mix by that name or number</p>
     </section>
 
@@ -202,8 +206,8 @@
       <div class="feedback__track">
         <div class="feedback__pin">
           <header class="sec__head">
-            <div class="sec__bar"><span class="sec__num num">04</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">The room</span></div>
             <h2 class="sec__title">Feedback</h2>
+            <div class="sec__bar"><span class="sec__num num">04</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">The room</span></div>
           </header>
           <div class="feedback__view">
             <div class="pano" aria-hidden="true"></div>
@@ -220,18 +224,18 @@
     <!-- 05 next signal: events -->
     <section class="sec next" id="next">
       <header class="sec__head">
-        <div class="sec__bar"><span class="sec__num num">05</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Dates</span></div>
         <h2 class="sec__title">Next signal</h2>
+        <div class="sec__bar"><span class="sec__num num">05</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Dates</span></div>
       </header>
       <div class="events"></div>
-      <a class="sec__more btn events__all" href="/events" hidden>All events →</a>
+      <a class="sec__more btn events__all" href="/events" hidden>All dates <i class="ico ico--r" aria-hidden="true"></i></a>
     </section>
 
     <!-- the events page: every coming night, then the archive of past ones -->
     <section class="sec page page--events" id="events">
       <header class="sec__head">
-        <div class="sec__bar"><span class="sec__num num">05</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Dates</span></div>
         <h1 class="sec__title">Next signal</h1>
+        <div class="sec__bar"><span class="sec__num num">05</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Dates</span></div>
       </header>
       <div class="events-page"></div>
     </section>
@@ -239,15 +243,15 @@
     <!-- 06 output: contact -->
     <footer class="sec output" id="output">
       <header class="sec__head">
-        <div class="sec__bar"><span class="sec__num num">06</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Contact</span></div>
         <h2 class="sec__title">Output</h2>
+        <div class="sec__bar"><span class="sec__num num">06</span><canvas class="sec__line" aria-hidden="true"></canvas><span class="sec__sub mono">Contact</span></div>
       </header>
       <p class="theremin" aria-label="Send us your signal"></p>
       <div class="output__grid"></div>
-      <span class="output__logo cut" role="img" aria-label="Oscillator logo"></span>
+      <span class="output__logo logo" role="img" aria-label="Oscillator logo"></span>
       <div class="output__base mono">
-        <span>© <span class="year"></span> Oscillator. All frequencies reserved</span>
-        <a href="#top" data-top>Back to top ↑</a>
+        <p class="credit"><span>© Oscillator</span> <span class="credit__sl" aria-hidden="true">////</span> <span>All frequencies reserved</span> <span class="credit__sl" aria-hidden="true">///</span> <span class="year num"></span></p>
+        <a href="#top" data-top>Back to top <i class="ico ico--u" aria-hidden="true"></i></a>
       </div>
     </footer>
   </main>
@@ -257,10 +261,10 @@
     <div class="profile__bar">
       <span class="profile__ch num"></span>
       <div class="profile__nav mono">
-        <a class="profile__prev" href="#">← Prev</a>
-        <a class="profile__next" href="#">Next →</a>
+        <a class="profile__prev" href="#"><i class="ico ico--l" aria-hidden="true"></i> Prev</a>
+        <a class="profile__next" href="#">Next <i class="ico ico--r" aria-hidden="true"></i></a>
       </div>
-      <button class="profile__close btn" type="button">Close <span aria-hidden="true">✕</span></button>
+      <button class="profile__close btn" type="button">Close <i class="ico ico--x" aria-hidden="true"></i></button>
     </div>
     <div class="profile__body"></div>
   </div>
@@ -268,7 +272,7 @@
   <!-- contact form: demos, bookings, collaborations -->
   <div class="cf" id="contact" role="dialog" aria-modal="true" aria-labelledby="cf-title" tabindex="-1" hidden>
     <div class="cf__top">
-      <button class="cf__close btn" type="button"><span aria-hidden="true">✕</span> Close</button>
+      <button class="cf__close btn" type="button"><i class="ico ico--x" aria-hidden="true"></i> Close</button>
       <span class="cf__label mono"><i aria-hidden="true"></i>Channel open</span>
     </div>
     <div class="cf__wrap">
@@ -318,7 +322,7 @@
         <p class="mono">Transmission complete</p>
         <p class="cf__doneTitle">Signal <em>received</em></p>
         <p class="cf__doneText">Thanks. We listen to everything and reply by email.</p>
-        <button class="cf__again btn" type="button">Close ✕</button>
+        <button class="cf__again btn" type="button">Close <i class="ico ico--x" aria-hidden="true"></i></button>
       </div>
     </div>
   </div>
@@ -326,16 +330,16 @@
   <!-- a poster, full size -->
   <div class="lb" role="dialog" aria-modal="true" aria-label="Poster" hidden>
     <img class="lb__img" alt="">
-    <button class="lb__close btn" type="button">Close <span aria-hidden="true">✕</span></button>
+    <button class="lb__close btn" type="button">Close <i class="ico ico--x" aria-hidden="true"></i></button>
   </div>
 
   <!-- now playing: full-screen stage -->
   <div class="stage" id="stage" role="dialog" aria-modal="true" aria-labelledby="stage-title" tabindex="-1" hidden>
     <div class="stage__bg" aria-hidden="true"></div>
     <div class="stage__top">
-      <button class="stage__stop btn" type="button" aria-label="Close the player and stop the music"><span aria-hidden="true">✕</span> Close</button>
+      <button class="stage__stop btn" type="button" aria-label="Close the player and stop the music"><i class="ico ico--x" aria-hidden="true"></i> Close</button>
       <span class="stage__label mono"><i aria-hidden="true"></i>Now playing</span>
-      <button class="stage__close btn" type="button">Minimise <span aria-hidden="true">↓</span></button>
+      <button class="stage__close btn" type="button">Minimise <i class="ico ico--d" aria-hidden="true"></i></button>
     </div>
     <div class="stage__main">
       <div class="stage__platter">

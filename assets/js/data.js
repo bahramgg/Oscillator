@@ -144,27 +144,29 @@ window.OSCILLATOR = {
      Leave empty to show the "no signal" state. Posters go in assets/img/events/.
      { date: '2026-11-14', title: 'Oscillator Night 01', venue: 'Secret location', city: 'Tehran',
        lineup: ['kenzo', 'pooyan', 'Guest Name'], poster: 'assets/img/events/2026-11-14.jpg',
-       link: 'https://…', linkLabel: 'Tickets' }
+       link: 'https://…', linkLabel: 'Tickets', designer: 'Erfan Jamshidi' }
      lineup takes artist slugs (they link to the artist) or plain names; link / linkLabel are optional.
+     designer: who made the poster (credited above the archive as on the posters: POSTERS //// NAME).
+     Dates are shown the way the posters write them, OCT.15 . 2026, next to the Persian date.
      Dates that have passed move by themselves into the "Past signals" archive on /events.
      Every poster opens full size when tapped.
      ------------------------------------------------------------------------ */
   events: [
     { date: '2026-10-15', title: 'All Night in Hell', lineup: ['Keyv', 'Erfa (opening)'],
-      poster: 'assets/img/events/2026-10-15-all-night-in-hell.jpg' },
+      poster: 'assets/img/events/2026-10-15-all-night-in-hell.jpg', designer: 'Erfan Jamshidi' },
     { date: '2026-09-10', title: 'Tehran Underground x Oscillator',
       lineup: ['Keyv', 'ronin', 'Nastish', 'Kuttle', 'Neevak', 'dynno', 'Srvsh.iv', 'Therapist', 'Aivy'],
-      poster: 'assets/img/events/2026-09-10-tehran-underground.jpg' },
+      poster: 'assets/img/events/2026-09-10-tehran-underground.jpg', designer: 'Erfan Jamshidi' },
     { date: '2026-08-27', title: 'All Night Long', lineup: ['Keyv', 'Msiyan'],
-      poster: 'assets/img/events/2026-08-27-all-night-long.jpg' },
+      poster: 'assets/img/events/2026-08-27-all-night-long.jpg', designer: 'Erfan Jamshidi' },
     { date: '2026-06-11', title: 'All Night Long', lineup: ['Keyv'],
-      poster: 'assets/img/events/2026-06-11-all-night-long.jpg' },
+      poster: 'assets/img/events/2026-06-11-all-night-long.jpg', designer: 'Erfan Jamshidi' },
     { date: '2023-09-14', title: 'Oscillator', lineup: ['Keyv', 'Hamed', 'Nycto', 'Sosu'],
-      poster: 'assets/img/events/2023-09-14-oscillator.jpg' },
+      poster: 'assets/img/events/2023-09-14-oscillator.jpg', designer: 'Erfan Jamshidi' },
     { date: '2023-08-17', title: 'Oscillator', lineup: ['Gia', 'Medo', 'Daimonic', 'Hamed', 'Keyv'],
-      poster: 'assets/img/events/2023-08-17-oscillator.jpg' },
+      poster: 'assets/img/events/2023-08-17-oscillator.jpg', designer: 'Erfan Jamshidi' },
     { date: '2023-08-03', title: 'Oscillator', lineup: ['dynno', 'Nevak', 'Hamed', 'Keyv'],
-      poster: 'assets/img/events/2023-08-03-oscillator.jpg' }
+      poster: 'assets/img/events/2023-08-03-oscillator.jpg', designer: 'Erfan Jamshidi' }
   ],
 
   /* ------------------------------------------------------------------------
