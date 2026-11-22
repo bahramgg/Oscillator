@@ -57,18 +57,11 @@
   var LINKS = { instagram: 'Instagram', soundcloud: 'SoundCloud', residentadvisor: 'Resident Advisor', bandcamp: 'Bandcamp', beatport: 'Beatport', spotify: 'Spotify', youtube: 'YouTube' };
   function years(list) { var m = {}, out = []; list.forEach(function (x) { var y = String(x.date).slice(0, 4); if (!m[y]) { m[y] = { y: y, n: 0 }; out.push(m[y]); } m[y].n++; }); return out.sort(function (a, b) { return b.y - a.y; }); }
   /* ─── the sections' names ───────────────────────────────────────────── */
-  // Said once, here: the bar at the top, the menu, the foot, the head of each page, the way back and the tab's title take them from N.
-  // The addresses do not change with them (/mixes, /artists, /events). bare: a name that is a verb takes no count beside it.
-  // NAMESETS[0] is what the site says. The others are samples: only a preview can switch to them (Names, below), until one is chosen.
-  var NAMESETS = [
-    { mixes: 'Mixes', artists: 'Artists', events: 'Events', label: 'The label', nav: 'Label', contact: 'Contact', write: 'Write to us' },
-    { mixes: 'Sessions', artists: 'Selectors', events: 'Nights', label: 'The label', nav: 'Label', contact: 'Contact', write: 'Write to us' },
-    { mixes: 'Moves', artists: 'Movers', events: 'Nights', label: 'The label', nav: 'Label', contact: 'Contact', write: 'Write to us' },
-    { mixes: 'Listen', artists: 'Meet', events: 'Dance', label: 'The label', nav: 'Label', contact: 'Write', write: 'Write to us', bare: true },
-    { mixes: 'Seda', artists: 'Bacheha', events: 'Shab', label: 'The label', nav: 'Label', contact: 'Benevis', write: 'Benevis' }
-  ];
-  var N = NAMESETS[0];
-  function cnt(n) { return N.bare ? '' : ' <b>' + n + '</b>'; }
+  // Chosen by the owner on 2026-11-22 from samples shown side by side: Sessions / Crew / Nights (in place of Mixes / Artists / Events).
+  // Said once, here: the bar at the top, the menu, the foot, the head of each page, the way back and the tab's title take them from N,
+  // and the words inside the pages follow them (a session, a night). The addresses stay as they were (/mixes, /artists, /events).
+  var N = { mixes: 'Sessions', artists: 'Crew', events: 'Nights', label: 'The label', nav: 'Label', contact: 'Contact', write: 'Write to us' };
+  function cnt(n) { return ' <b>' + n + '</b>'; }
   // the bar at the top is written in the page itself: its words are set from N
   function names() { $$('.top__nav a').forEach(function (a) { var k = { '/mixes': 'mixes', '/artists': 'artists', '/events': 'events', '/label': 'nav', '/contact': 'contact' }[a.getAttribute('data-route')]; if (k) a.textContent = N[k]; }); }
   // the picture of a mix: its artist's poster where there is one (the same picture, larger), its cover otherwise
@@ -106,12 +99,12 @@
   }
   // a mix as a card: its cover, its number, who
   function mixCard(t) {
-    return '<article class="card card--mix" data-year="' + String(t.date).slice(0, 4) + '">' + link('/mixes/' + mixNo(t), 'card__img', img(t.cover, 360, 360, 'Cover of mix ' + mixNo(t) + ', ' + mixWho(t))) + playBtn(t, 'card__pl') +
+    return '<article class="card card--mix" data-year="' + String(t.date).slice(0, 4) + '">' + link('/mixes/' + mixNo(t), 'card__img', img(t.cover, 360, 360, 'Cover of session ' + mixNo(t) + ', ' + mixWho(t))) + playBtn(t, 'card__pl') +
       '<p class="card__no g">' + mixNo(t) + '</p><h3 class="card__who g">' + link('/mixes/' + mixNo(t), '', esc(mixWho(t))) + '</h3><p class="card__meta g">' + date(t.date) + '<span>' + clock(t.duration) + '</span></p></article>';
   }
   function artistCard(a) {
     var t = mixesOf(a)[0];
-    return link('/artists/' + a.slug, 'card card--artist', img(thumb(a.poster), 640, 640, 'Poster for ' + a.name) + '<span class="card__who g">' + esc(a.name) + '</span>' + (t ? '<span class="card__meta g">Mix ' + mixNo(t) + '</span>' : ''));
+    return link('/artists/' + a.slug, 'card card--artist', img(thumb(a.poster), 640, 640, 'Poster for ' + a.name) + '<span class="card__who g">' + esc(a.name) + '</span>' + (t ? '<span class="card__meta g">Session ' + mixNo(t) + '</span>' : ''));
   }
   function lineup(e) { return (e.lineup || []).map(function (n) { var a = artistByName(n); return a ? link('/artists/' + a.slug, '', esc(n)) : esc(n); }).join(', '); }
   // an event's poster as a short film: the page shows a still of it; the film itself is fetched and sounds only when the visitor
@@ -126,11 +119,11 @@
       '<div class="erow__txt"><p class="erow__when g">' + date(e.date) + '</p><h3 class="erow__title g">' + link('/events/' + e.date, '', esc(e.title)) + '</h3><p class="erow__who">' + lineup(e) + '</p></div></li>';
   }
   function letter() {
-    return '<form class="letter" novalidate><label><span class="g">Event letter</span><input name="contact" type="text" placeholder="Email or Instagram" autocomplete="email" autocapitalize="none" required></label>' +
+    return '<form class="letter" novalidate><label><span class="g">Night letter</span><input name="contact" type="text" placeholder="Email or Instagram" autocomplete="email" autocapitalize="none" required></label>' +
       '<input class="form__hp" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true"><button class="btn" type="submit">Send</button><p class="letter__status" role="status"></p></form>';
   }
   function nums() {
-    return '<ul class="nums">' + [[SERIES.length, 'mixes'], [EVENTS.length, 'events'], [clock(TOTAL), 'of sound']].map(function (q) { return '<li><b class="g">' + q[0] + '</b><span>' + q[1] + '</span></li>'; }).join('') + '</ul>';
+    return '<ul class="nums">' + [[SERIES.length, 'sessions'], [EVENTS.length, 'nights'], [clock(TOTAL), 'of sound']].map(function (q) { return '<li><b class="g">' + q[0] + '</b><span>' + q[1] + '</span></li>'; }).join('') + '</ul>';
   }
   // the foot of every page: the brush's stroke lying across it, the name as the brush writes it, the event letter, what is newest
   // (the latest mix, the next or last event), every page and every place the label lives, and the way back up.
@@ -139,10 +132,10 @@
     var e = home ? null : coming[0] || EVENTS[0], name = esc(L.name || 'Tehran Movement'), t0 = home ? null : SERIES[0];
     return '<footer class="foot">' + fx('bar', 'foot__fx') +
       '<div class="foot__top"><div class="foot__brand">' + link('/', 'foot__name', '<i class="ink ink--name" aria-hidden="true"></i><span class="vh">' + name + ', home</span>') + '<p>' + esc(L.tag || 'Techno label and artist collective. Tehran.') + '</p></div>' +
-      '<div class="foot__letter"><h2 class="g">Event letter</h2><p>Be the first to know the next date.</p>' + letter() + '</div></div>' +
+      '<div class="foot__letter"><h2 class="g">Night letter</h2><p>Be the first to know the next date.</p>' + letter() + '</div></div>' +
       '<div class="foot__cols' + (home ? ' foot__cols--two' : '') + '">' +
-      (t0 ? '<div class="foot__col foot__col--wide"><p class="foot__k g">Latest mix</p><div class="foot__mix">' + playBtn(t0) + '<p class="g">' + link('/mixes/' + mixNo(t0), '', '<b>' + mixNo(t0) + '</b> ' + esc(mixWho(t0))) + '<span>' + date(t0.date) + '&nbsp;&nbsp;' + clock(t0.duration) + '</span></p></div></div>' : '') +
-      (e ? '<div class="foot__col foot__col--wide"><p class="foot__k g">' + (coming.length ? 'Next event' : 'Last event') + '</p>' + link('/events/' + e.date, 'foot__ev g', '<span>' + date(e.date) + '</span>' + esc(e.title)) + '</div>' : '') +
+      (t0 ? '<div class="foot__col foot__col--wide"><p class="foot__k g">Latest session</p><div class="foot__mix">' + playBtn(t0) + '<p class="g">' + link('/mixes/' + mixNo(t0), '', '<b>' + mixNo(t0) + '</b> ' + esc(mixWho(t0))) + '<span>' + date(t0.date) + '&nbsp;&nbsp;' + clock(t0.duration) + '</span></p></div></div>' : '') +
+      (e ? '<div class="foot__col foot__col--wide"><p class="foot__k g">' + (coming.length ? 'Next night' : 'Latest night') + '</p>' + link('/events/' + e.date, 'foot__ev g', '<span>' + date(e.date) + '</span>' + esc(e.title)) + '</div>' : '') +
       '<nav class="foot__col foot__nav g" aria-label="Pages"><p class="foot__k">Site</p>' + link('/mixes', '', esc(N.mixes) + cnt(SERIES.length)) + link('/artists', '', esc(N.artists)) + link('/events', '', esc(N.events) + cnt(EVENTS.length)) + link('/label', '', esc(N.label)) + link('/contact', '', esc(N.contact)) + '</nav>' +
       '<div class="foot__col foot__nav g"><p class="foot__k">Follow</p>' + ['instagram', 'soundcloud', 'youtube'].filter(function (k) { return L[k]; }).map(function (k) { return '<a href="' + esc(L[k]) + '" target="_blank" rel="noopener">' + LINKS[k] + '</a>'; }).join('') + '</div></div>' +
       '<div class="foot__end"><p>&copy; ' + new Date().getFullYear() + ' ' + name + '</p>' + (L.was ? '<p>Formerly ' + esc(L.was) + '</p>' : '') + (L.since ? '<p>Tehran, since ' + esc(L.since) + '</p>' : '') + '<button class="foot__up g" type="button" data-top>Back to the top</button></div></footer>';
@@ -162,23 +155,23 @@
       // data-scene: what moves with the scroll (see Scenes): the logo and the wall fall behind a little as the first screen leaves
       return '<section class="hero" data-scene="lag"><div class="hero__bg">' + fx('wall', 'hero__wall', ' data-wait="1300"') + '</div>' + fx('logo', 'hero__fx', ' data-motion="once"') +
           '<div class="hero__txt"><h1 class="hero__name g"><span>Tehran</span> <span>Movement</span></h1>' +
-          '<p class="hero__what">' + esc('Techno label and artist collective') + '</p>' + (t0 ? '<div class="hero__go">' + playBtn(t0, 'pl--big') + '<p class="g"><b>Latest mix</b><span>' + esc(mixLabel(t0)) + '&nbsp;&nbsp;' + clock(t0.duration) + '</span></p>' + bars(t0, 'hero__bars') + '</div>' : '') + '</div></section>' +
+          '<p class="hero__what">' + esc('Techno label and artist collective') + '</p>' + (t0 ? '<div class="hero__go">' + playBtn(t0, 'pl--big') + '<p class="g"><b>Latest session</b><span>' + esc(mixLabel(t0)) + '&nbsp;&nbsp;' + clock(t0.duration) + '</span></p>' + bars(t0, 'hero__bars') + '</div>' : '') + '</div></section>' +
         // the newest mix, in full; the three before it
-        (t0 ? '<section class="mod mod--latest"><h2 class="mod__h g">Latest mix</h2><div class="latest">' + link('/mixes/' + mixNo(t0), 'latest__img', img(big, 900, 900, 'Cover of mix ' + mixNo(t0) + ', ' + mixWho(t0))) +
+        (t0 ? '<section class="mod mod--latest"><h2 class="mod__h g">Latest session</h2><div class="latest">' + link('/mixes/' + mixNo(t0), 'latest__img', img(big, 900, 900, 'Cover of session ' + mixNo(t0) + ', ' + mixWho(t0))) +
           '<div class="latest__txt"><p class="latest__no g">' + mixNo(t0) + '</p><h3 class="latest__who g">' + link('/mixes/' + mixNo(t0), '', esc(mixWho(t0))) + '</h3><p class="latest__meta g">' + date(t0.date) + '<span>' + clock(t0.duration) + '</span></p>' +
           '<div class="latest__play">' + playBtn(t0, 'pl--big') + bars(t0) + '</div><p class="links">' + (a0 ? link('/artists/' + a0.slug, '', 'The artist') : '') + (t0.soundcloud ? '<a href="' + esc(t0.soundcloud) + '" target="_blank" rel="noopener">SoundCloud</a>' : '') + '</p></div></div>' +
-          '<ul class="rows">' + SERIES.slice(1, 4).map(mixRow).join('') + '</ul>' + link('/mixes', 'more g', 'All ' + SERIES.length + ' mixes') + '</section>' : '') +
+          '<ul class="rows">' + SERIES.slice(1, 4).map(mixRow).join('') + '</ul>' + link('/mixes', 'more g', 'All ' + SERIES.length + ' sessions') + '</section>' : '') +
         // movement: a part that is only paint, held on the screen and moved by the scroll (data-scene="meet"): the logo's five strokes
         // meet, and the name is written beside the logo as on the banner. A reader that does not see the picture is told the name
         '<section class="scene scene--meet" data-scene="meet"><div class="scene__pin"><canvas class="meet__cv" aria-hidden="true"></canvas><p class="vh">' + esc(L.name || 'Tehran Movement') + '</p></div></section>' +
         // the event that is coming, or the last one: its poster whole and still; behind it the event's name, as large as the room, runs one
         // way and the other as the page scrolls (data-scene="runs")
         (e ? '<section class="mod ev" data-scene="runs"><div class="ev__runs g" aria-hidden="true"><p class="ev__run">' + run + '</p><p class="ev__run ev__run--b">' + run + '</p></div>' +
-          '<div class="ev__head"><h2 class="mod__h g">' + (coming.length ? 'Next event' : 'Last event') + '</h2><p class="ev__when g">' + date(e.date) + '</p><h3 class="vh">' + esc(e.title) + '</h3></div>' +
+          '<div class="ev__head"><h2 class="mod__h g">' + (coming.length ? 'Next night' : 'Latest night') + '</h2><p class="ev__when g">' + date(e.date) + '</p><h3 class="vh">' + esc(e.title) + '</h3></div>' +
           link('/events/' + e.date, 'ev__img', img(thumb(e.poster), 760, 1086, 'Poster for ' + e.title + ', ' + date(e.date))) +
-          '<div class="ev__foot"><p class="ev__who">' + lineup(e) + '</p>' + link('/events', 'more g', 'All ' + EVENTS.length + ' events') + '</div></section>' : '') +
+          '<div class="ev__foot"><p class="ev__who">' + lineup(e) + '</p>' + link('/events', 'more g', 'All ' + EVENTS.length + ' nights') + '</div></section>' : '') +
         // the artists
-        '<section class="mod mod--artists"><h2 class="mod__h g">' + esc(N.artists) + '</h2><div class="strip">' + PEOPLE.slice(0, 8).map(artistCard).join('') + '</div>' + link('/artists', 'more g', 'All artists') + '</section>' +
+        '<section class="mod mod--artists"><h2 class="mod__h g">' + esc(N.artists) + '</h2><div class="strip">' + PEOPLE.slice(0, 8).map(artistCard).join('') + '</div>' + link('/artists', 'more g', 'The whole crew') + '</section>' +
         // the room: the old site's scene, as it was there. A photograph of one of the nights in a wide frame, held on the screen; it travels
         // from its ceiling down to the dancer on the floor as the page scrolls, and its strips slip sideways with the speed of the scroll
         '<section class="scene scene--room" data-scene="room"><div class="scene__pin"><h2 class="mod__h g">The room</h2><div class="scene__view">' +
@@ -190,7 +183,7 @@
     mixes: function () {
       var ys = years(SERIES);
       // every mix as a card, the newest first; a year's button shows that year only
-      return head('r', N.mixes, SERIES.length + ' mixes &nbsp; ' + clock(TOTAL)) +
+      return head('r', N.mixes, SERIES.length + ' sessions &nbsp; ' + clock(TOTAL)) +
         '<div class="tools" role="group" aria-label="Year"><button class="chip is-on" type="button" data-year="">All<span>' + SERIES.length + '</span></button>' + ys.map(function (y) { return '<button class="chip" type="button" data-year="' + y.y + '">' + y.y + '<span>' + y.n + '</span></button>'; }).join('') + '</div>' +
         '<div class="grid grid--mix">' + SERIES.map(function (t) { return mixCard(t); }).join('') + '</div>' + foot();
     },
@@ -199,13 +192,13 @@
       var a = artistBySlug(t.artist), i = SERIES.indexOf(t), newer = SERIES[i - 1], older = SERIES[i + 1], list = (EXTRA.tracklists || {})[t.id], art = bigArt(t), w = a ? 1000 : 360;
       var same = SERIES.filter(function (x) { return x !== t && String(x.date).slice(0, 4) === String(t.date).slice(0, 4); }).slice(0, 4);
       return '<article class="detail detail--mix">' + fx('slash', 'detail__slash', ' data-part=".5" data-dir="-1" data-seed="' + (40 + i) + '"') + link('/mixes', 'back g', esc(N.mixes)) +
-        '<div class="detail__grid"><div class="detail__art">' + img(a ? thumb(art) : art, w, w, 'Cover of mix ' + mixNo(t) + ', ' + mixWho(t)) + '</div>' +
+        '<div class="detail__grid"><div class="detail__art">' + img(a ? thumb(art) : art, w, w, 'Cover of session ' + mixNo(t) + ', ' + mixWho(t)) + '</div>' +
         '<div class="detail__txt"><p class="detail__no g">' + mixNo(t) + '</p><h1 class="detail__h g">' + esc(mixWho(t)) + '</h1><p class="detail__meta g">' + date(t.date) + '<span>' + clock(t.duration) + '</span></p>' +
         '<div class="detail__play">' + playBtn(t, 'pl--big') + bars(t) + '</div>' +
         '<p class="links">' + (t.soundcloud ? '<a href="' + esc(t.soundcloud) + '" target="_blank" rel="noopener">SoundCloud</a>' : '') + '<button class="copy" type="button" data-copy>Copy the link</button></p>' +
         (a ? '<div class="who">' + link('/artists/' + a.slug, 'who__img', img(thumb(a.poster), 640, 640, 'Poster for ' + a.name)) + '<p class="g"><span>The artist</span>' + link('/artists/' + a.slug, '', esc(a.name)) + '</p></div>' : '') + '</div></div>' +
         (list && list.length ? '<section class="tl"><h2 class="g">Tracklist</h2><ol>' + list.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol></section>' : '') +
-        '<nav class="pn" aria-label="Other mixes">' + (newer ? link('/mixes/' + mixNo(newer), 'pn__a', '<span class="g">Newer</span><b class="g">' + mixNo(newer) + ' ' + esc(mixWho(newer)) + '</b>') : '<span></span>') + (older ? link('/mixes/' + mixNo(older), 'pn__a pn__a--r', '<span class="g">Older</span><b class="g">' + mixNo(older) + ' ' + esc(mixWho(older)) + '</b>') : '<span></span>') + '</nav>' +
+        '<nav class="pn" aria-label="Other sessions">' + (newer ? link('/mixes/' + mixNo(newer), 'pn__a', '<span class="g">Newer</span><b class="g">' + mixNo(newer) + ' ' + esc(mixWho(newer)) + '</b>') : '<span></span>') + (older ? link('/mixes/' + mixNo(older), 'pn__a pn__a--r', '<span class="g">Older</span><b class="g">' + mixNo(older) + ' ' + esc(mixWho(older)) + '</b>') : '<span></span>') + '</nav>' +
         (same.length ? '<section class="also"><h2 class="g">Also from ' + String(t.date).slice(0, 4) + '</h2><div class="grid grid--mix">' + same.map(function (x) { return mixCard(x); }).join('') + '</div></section>' : '') + '</article>' + foot();
     },
     artists: function () { return head('l', N.artists) + '<div class="grid grid--artist">' + PEOPLE.map(artistCard).join('') + '</div>' + foot(); },
@@ -215,14 +208,14 @@
       return '<article class="detail detail--artist">' + fx('slash', 'detail__slash', ' data-part=".5" data-dir="1" data-seed="' + (60 + i) + '"') + link('/artists', 'back g', esc(N.artists)) +
         '<div class="detail__grid"><a class="detail__art" href="' + esc(PREVIEW ? thumb(a.poster) : a.poster) + '" target="_blank" rel="noopener" aria-label="' + esc(a.name) + ': the poster, whole">' + img(thumb(a.poster), 640, 640, 'Poster for ' + a.name) + '</a>' +
         '<div class="detail__txt"><h1 class="detail__h g">' + esc(a.name) + '</h1>' + ((a.bio || []).length ? '<div class="bio">' + a.bio.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') + '</div>' : '') +
-        (ms.length ? '<section class="sub"><h2 class="g">' + (ms.length > 1 ? 'Mixes' : 'Mix') + '</h2><ul class="rows">' + ms.map(mixRow).join('') + '</ul></section>' : '') +
+        (ms.length ? '<section class="sub"><h2 class="g">' + (ms.length > 1 ? 'Sessions' : 'Session') + '</h2><ul class="rows">' + ms.map(mixRow).join('') + '</ul></section>' : '') +
         (es.length ? '<section class="sub"><h2 class="g">Played at</h2><ul class="plain">' + es.map(function (e) { return '<li>' + link('/events/' + e.date, '', '<span class="g">' + date(e.date) + '</span> ' + esc(e.title)) + '</li>'; }).join('') + '</ul></section>' : '') +
         linkList(a.links || {}, Object.keys(LINKS)) + link('/contact', 'btn btn--line', 'Booking and contact') + '</div></div>' +
         '<nav class="pn" aria-label="Other artists">' + (prev ? link('/artists/' + prev.slug, 'pn__a', '<span class="g">Before</span><b class="g">' + esc(prev.name) + '</b>') : '<span></span>') + (next ? link('/artists/' + next.slug, 'pn__a pn__a--r', '<span class="g">Next</span><b class="g">' + esc(next.name) + '</b>') : '<span></span>') + '</nav></article>' + foot();
     },
     events: function () {
       var past = EVENTS.filter(function (e) { return coming.indexOf(e) < 0; }), ys = years(past);
-      return head('r', N.events, EVENTS.length + ' events since ' + (EVENTS.length ? EVENTS[EVENTS.length - 1].date.slice(0, 4) : '')) +
+      return head('r', N.events, EVENTS.length + ' nights since ' + (EVENTS.length ? EVENTS[EVENTS.length - 1].date.slice(0, 4) : '')) +
         '<section class="sec"><h2 class="sec__h g">Next</h2>' + (coming.length ? '<ul class="erows">' + coming.map(eventRow).join('') + '</ul>' : '<p class="quiet">' + esc(L.quiet || 'No date announced yet. New nights are announced first on Instagram.') + '</p>') + letter() + '</section>' +
         ys.map(function (y) { return '<section class="sec"><h2 class="sec__h g">' + y.y + '</h2><ul class="erows">' + past.filter(function (e) { return e.date.slice(0, 4) === y.y; }).map(eventRow).join('') + '</ul></section>'; }).join('') + foot();
     },
@@ -236,7 +229,7 @@
         (e.motion ? '<section class="sub sub--film"><h2 class="g">The poster in motion</h2>' + film(e) + '</section>' : '') +
         ((e.more || []).length ? '<section class="sub sub--more"><h2 class="g">' + (e.more.length > 1 ? 'More posters' : 'Second poster') + '</h2><div class="more">' + e.more.map(function (p, k) { return '<a href="' + esc(PREVIEW ? thumb(p) : p) + '" target="_blank" rel="noopener" aria-label="' + esc(e.title) + ': poster ' + (k + 2) + ', whole">' + img(thumb(p), 760, 1086, 'Another poster for ' + e.title + ', ' + date(e.date)) + '</a>'; }).join('') + '</div></section>' : '') +
         (e.designer ? '<p class="credit">' + ((e.more || []).length ? 'Posters by ' : 'Poster by ') + esc(e.designer) + '</p>' : '') + letter() + '</div></div>' +
-        '<nav class="pn" aria-label="Other events">' + (newer ? link('/events/' + newer.date, 'pn__a', '<span class="g">Later</span><b class="g">' + esc(newer.title) + '</b>') : '<span></span>') + (older ? link('/events/' + older.date, 'pn__a pn__a--r', '<span class="g">Earlier</span><b class="g">' + esc(older.title) + '</b>') : '<span></span>') + '</nav></article>' + foot();
+        '<nav class="pn" aria-label="Other nights">' + (newer ? link('/events/' + newer.date, 'pn__a', '<span class="g">Later</span><b class="g">' + esc(newer.title) + '</b>') : '<span></span>') + (older ? link('/events/' + older.date, 'pn__a pn__a--r', '<span class="g">Earlier</span><b class="g">' + esc(older.title) + '</b>') : '<span></span>') + '</nav></article>' + foot();
     },
     label: function () {
       var my = years(SERIES), ey = years(EVENTS), all = {}; my.forEach(function (y) { all[y.y] = { m: y.n, e: 0 }; }); ey.forEach(function (y) { (all[y.y] = all[y.y] || { m: 0, e: 0 }).e = y.n; });
@@ -244,17 +237,17 @@
       return '<section class="lhero">' + fx('gesture', 'lhero__fx') + '<div class="plate"><h1 class="vh">' + esc(N.label) + '</h1><i class="ink ink--name" aria-hidden="true"></i><p class="plate__say">' + esc(L.name || 'Tehran Movement') + ' is a techno label and artist collective from Tehran.</p></div></section>' +
         '<section class="sec sec--facts">' + nums() + '<p class="lead">' + esc(L.mixes || '') + '</p>' +
         '<dl class="facts"><div><dt class="g">Since</dt><dd>' + (L.since || '') + '</dd></div>' +
-        (first ? '<div><dt class="g">First mix</dt><dd>' + link('/mixes/' + mixNo(first), '', mixNo(first) + ' ' + esc(mixWho(first))) + ', ' + date(first.date) + '</dd></div>' : '') +
-        (t0 ? '<div><dt class="g">Latest mix</dt><dd>' + link('/mixes/' + mixNo(t0), '', mixNo(t0) + ' ' + esc(mixWho(t0))) + ', ' + date(t0.date) + '</dd></div>' : '') +
-        (longest ? '<div><dt class="g">Longest mix</dt><dd>' + link('/mixes/' + mixNo(longest), '', mixNo(longest) + ' ' + esc(mixWho(longest))) + ', ' + clock(longest.duration) + '</dd></div>' : '') +
+        (first ? '<div><dt class="g">First session</dt><dd>' + link('/mixes/' + mixNo(first), '', mixNo(first) + ' ' + esc(mixWho(first))) + ', ' + date(first.date) + '</dd></div>' : '') +
+        (t0 ? '<div><dt class="g">Latest session</dt><dd>' + link('/mixes/' + mixNo(t0), '', mixNo(t0) + ' ' + esc(mixWho(t0))) + ', ' + date(t0.date) + '</dd></div>' : '') +
+        (longest ? '<div><dt class="g">Longest session</dt><dd>' + link('/mixes/' + mixNo(longest), '', mixNo(longest) + ' ' + esc(mixWho(longest))) + ', ' + clock(longest.duration) + '</dd></div>' : '') +
         (L.was ? '<div><dt class="g">Formerly</dt><dd>' + esc(L.was) + '</dd></div>' : '') + '</dl></section>' +
         '<section class="sec"><h2 class="sec__h g">Year by year</h2><ul class="yrs">' + Object.keys(all).sort().reverse().map(function (y) {
           var ms = SERIES.filter(function (t) { return String(t.date).slice(0, 4) === y; }).reverse(), es = EVENTS.filter(function (e) { return e.date.slice(0, 4) === y; }).reverse();
-          return '<li><b class="g">' + y + '</b><div class="yr"><p class="yr__say">' + [all[y].m ? all[y].m + (all[y].m > 1 ? ' mixes' : ' mix') : '', all[y].e ? all[y].e + (all[y].e > 1 ? ' events' : ' event') : ''].filter(Boolean).join(', ') + '</p><div class="yr__marks">' +
+          return '<li><b class="g">' + y + '</b><div class="yr"><p class="yr__say">' + [all[y].m ? all[y].m + (all[y].m > 1 ? ' sessions' : ' session') : '', all[y].e ? all[y].e + (all[y].e > 1 ? ' nights' : ' night') : ''].filter(Boolean).join(', ') + '</p><div class="yr__marks">' +
             // data-wait: the marks of a year are made one after the other, as a hand makes them
-            ms.map(function (t, i) { return link('/mixes/' + mixNo(t), 'dab', fx('dab', '', ' data-kind="m" data-n="' + (+mixNo(t)) + '" data-wait="' + i * 34 + '"') + '<span class="dab__no g">' + mixNo(t) + '</span>', ' aria-label="Mix ' + esc(mixLabel(t)) + '" title="' + esc(mixLabel(t)) + '"'); }).join('') +
-            es.map(function (e, i) { return link('/events/' + e.date, 'dab dab--n', fx('dab', '', ' data-kind="n" data-n="' + (51 + i) + '" data-wait="' + (ms.length + i) * 34 + '"') + '<span class="dab__no g">' + MON[+e.date.slice(5, 7) - 1] + '.' + e.date.slice(8) + '</span>', ' aria-label="Event ' + esc(e.title + ', ' + date(e.date)) + '" title="' + esc(e.title) + '"'); }).join('') + '</div></div></li>';
-        }).join('') + '</ul><ul class="tally__key g"><li class="k-m">A mix</li><li class="k-n">An event</li></ul></section>' +
+            ms.map(function (t, i) { return link('/mixes/' + mixNo(t), 'dab', fx('dab', '', ' data-kind="m" data-n="' + (+mixNo(t)) + '" data-wait="' + i * 34 + '"') + '<span class="dab__no g">' + mixNo(t) + '</span>', ' aria-label="Session ' + esc(mixLabel(t)) + '" title="' + esc(mixLabel(t)) + '"'); }).join('') +
+            es.map(function (e, i) { return link('/events/' + e.date, 'dab dab--n', fx('dab', '', ' data-kind="n" data-n="' + (51 + i) + '" data-wait="' + (ms.length + i) * 34 + '"') + '<span class="dab__no g">' + MON[+e.date.slice(5, 7) - 1] + '.' + e.date.slice(8) + '</span>', ' aria-label="Night ' + esc(e.title + ', ' + date(e.date)) + '" title="' + esc(e.title) + '"'); }).join('') + '</div></div></li>';
+        }).join('') + '</ul><ul class="tally__key g"><li class="k-m">A session</li><li class="k-n">A night</li></ul></section>' +
         '<section class="sec sec--end">' + linkList(L, ['instagram', 'soundcloud', 'youtube'], 'biglinks g') + link('/contact', 'btn', esc(N.write)) + '</section>' + foot();
     },
     contact: function () {
@@ -743,7 +736,7 @@
         clearInterval(this.sim); this.sim = setInterval(function () { if (!self.cur || self.state !== 'playing') return; self.sec = Math.min(self.cur.duration, self.sec + 0.25); self.frac = self.sec / self.cur.duration; self.paint(true); }, 250);
         this.paint(); return;
       }
-      if (!t.soundcloud) { this.state = 'error'; this.note = 'This mix has no address on SoundCloud yet.'; this.paint(); return; }
+      if (!t.soundcloud) { this.state = 'error'; this.note = 'This session has no address on SoundCloud yet.'; this.paint(); return; }
       var fail = setTimeout(function () { if (self.gen === gen && !self.ready) self.fail(); }, 14000);
       this.loadApi().then(function () {
         if (self.gen !== gen) return;
@@ -866,7 +859,7 @@
         var status = $('.letter__status', F), v = ($('input[name=contact]', F).value || '').trim();
         if (!v) { status.textContent = 'Write an email or an Instagram name.'; $('input[name=contact]', F).focus(); return; }
         if ($('.form__hp', F).value) return;
-        var payload = { _subject: (L.name || 'Tehran Movement') + ', event letter', _template: 'table', _captcha: 'false', Contact: v, Message: 'Add me to the event letter.' };
+        var payload = { _subject: (L.name || 'Tehran Movement') + ', night letter', _template: 'table', _captcha: 'false', Contact: v, Message: 'Add me to the night letter.' };
         if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) payload._replyto = v;
         send(payload, status, $('button', F), 'You are on the letter. Thank you.', F);
       });
@@ -891,28 +884,6 @@
     });
   }
 
-  /* ─── the samples of the sections' names (a preview only) ───────────── */
-  // A small row at the foot of a preview to try each set of names on the whole site. The real site has no such row and says
-  // NAMESETS[0]. When a set is chosen, it becomes NAMESETS[0] and this part, with the other sets, goes.
-  var Names = {
-    init: function () {
-      names();
-      if (!PREVIEW) return;
-      var i = 0; try { i = +(window.localStorage.getItem('tm-names') || 0) || 0; } catch (e) { /* nothing is kept here */ }
-      var bar = this.bar = document.createElement('div'); bar.className = 'pick'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Samples of the sections\' names');
-      bar.innerHTML = '<span class="pick__k">Names</span>' + NAMESETS.map(function (s, k) { return '<button type="button" data-names="' + k + '" aria-label="Names ' + k + ': ' + esc(s.mixes + ', ' + s.artists + ', ' + s.events) + '"><b>' + k + '</b><span>' + esc(s.mixes + ' / ' + s.artists + ' / ' + s.events) + '</span></button>'; }).join('');
-      document.body.appendChild(bar);
-      bar.addEventListener('click', function (e) { var b = e.target.closest('[data-names]'); if (b) Names.set(+b.getAttribute('data-names'), true); });
-      this.set(i >= 0 && i < NAMESETS.length ? i : 0, false);
-    },
-    set: function (i, redraw) {
-      N = NAMESETS[i]; try { window.localStorage.setItem('tm-names', String(i)); } catch (e) { /* nothing is kept here */ }
-      $$('[data-names]', this.bar).forEach(function (b) { var on = +b.getAttribute('data-names') === i; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
-      names(); Menu.fill();
-      if (redraw) show();
-    }
-  };
-
   /* ─── go ─────────────────────────────────────────────────────────────── */
-  Menu.init(); Player.init(); Names.init(); render();
+  names(); Menu.init(); Player.init(); render();
 })();
