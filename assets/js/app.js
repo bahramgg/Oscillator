@@ -61,7 +61,6 @@
   // Said once, here: the bar at the top, the menu, the foot, the head of each page, the way back and the tab's title take them from N,
   // and the words inside the pages follow them (a session, a night). The addresses stay as they were (/mixes, /artists, /events).
   var N = { mixes: 'Sessions', artists: 'Crew', events: 'Nights', label: 'The label', nav: 'Label', contact: 'Contact', write: 'Write to us' };
-  function cnt(n) { return ' <b>' + n + '</b>'; }
   // the bar at the top is written in the page itself: its words are set from N
   function names() { $$('.top__nav a').forEach(function (a) { var k = { '/mixes': 'mixes', '/artists': 'artists', '/events': 'events', '/label': 'nav', '/contact': 'contact' }[a.getAttribute('data-route')]; if (k) a.textContent = N[k]; }); }
   // the picture of a mix: its artist's poster where there is one (the same picture, larger), its cover otherwise
@@ -122,21 +121,16 @@
     return '<form class="letter" novalidate><label><span class="g">Night letter</span><input name="contact" type="text" placeholder="Email or Instagram" autocomplete="email" autocapitalize="none" required></label>' +
       '<input class="form__hp" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true"><button class="btn" type="submit">Send</button><p class="letter__status" role="status"></p></form>';
   }
-  function nums() {
-    return '<ul class="nums">' + [[SERIES.length, 'sessions'], [EVENTS.length, 'nights'], [clock(TOTAL), 'of sound']].map(function (q) { return '<li><b class="g">' + q[0] + '</b><span>' + q[1] + '</span></li>'; }).join('') + '</ul>';
-  }
-  // the foot of every page: the brush's stroke lying across it, the name as the brush writes it, what is newest (the latest session,
-  // the next or latest night), every page and every place the label lives, and the way back up. (The night letter is not here: the
-  // owner found it repeated on every page. It is on the Nights page only, under "Next".)
-  // home: the home page has just shown the latest mix and the event itself, so its foot leaves those two out
-  function foot(home) {
-    var e = home ? null : coming[0] || EVENTS[0], name = esc(L.name || 'Tehran Movement'), t0 = home ? null : SERIES[0];
+  // the foot of every page, the same everywhere: the brush's stroke lying across it, the name as the brush writes it, every page and
+  // every place the label lives, and the way back up. Nothing in it repeats what a page shows: the owner found the night letter and the
+  // latest session repeated on every page (2026-11-22). The night letter is on the Nights page only; the latest session and the latest
+  // night on the home page only. No counts anywhere (no "31 sessions", no "11 nights"): his wish too.
+  function foot() {
+    var name = esc(L.name || 'Tehran Movement');
     return '<footer class="foot">' + fx('bar', 'foot__fx') +
       '<div class="foot__top"><div class="foot__brand">' + link('/', 'foot__name', '<i class="ink ink--name" aria-hidden="true"></i><span class="vh">' + name + ', home</span>') + '<p>' + esc(L.tag || 'Techno label and artist collective. Tehran.') + '</p></div></div>' +
-      '<div class="foot__cols' + (home ? ' foot__cols--two' : '') + '">' +
-      (t0 ? '<div class="foot__col foot__col--wide"><p class="foot__k g">Latest session</p><div class="foot__mix">' + playBtn(t0) + '<p class="g">' + link('/mixes/' + mixNo(t0), '', '<b>' + mixNo(t0) + '</b> ' + esc(mixWho(t0))) + '<span>' + date(t0.date) + '&nbsp;&nbsp;' + clock(t0.duration) + '</span></p></div></div>' : '') +
-      (e ? '<div class="foot__col foot__col--wide"><p class="foot__k g">' + (coming.length ? 'Next night' : 'Latest night') + '</p>' + link('/events/' + e.date, 'foot__ev g', '<span>' + date(e.date) + '</span>' + esc(e.title)) + '</div>' : '') +
-      '<nav class="foot__col foot__nav g" aria-label="Pages"><p class="foot__k">Site</p>' + link('/mixes', '', esc(N.mixes) + cnt(SERIES.length)) + link('/artists', '', esc(N.artists)) + link('/events', '', esc(N.events) + cnt(EVENTS.length)) + link('/label', '', esc(N.label)) + link('/contact', '', esc(N.contact)) + '</nav>' +
+      '<div class="foot__cols foot__cols--two">' +
+      '<nav class="foot__col foot__nav g" aria-label="Pages"><p class="foot__k">Site</p>' + link('/mixes', '', esc(N.mixes)) + link('/artists', '', esc(N.artists)) + link('/events', '', esc(N.events)) + link('/label', '', esc(N.label)) + link('/contact', '', esc(N.contact)) + '</nav>' +
       '<div class="foot__col foot__nav g"><p class="foot__k">Follow</p>' + ['instagram', 'soundcloud', 'youtube'].filter(function (k) { return L[k]; }).map(function (k) { return '<a href="' + esc(L[k]) + '" target="_blank" rel="noopener">' + LINKS[k] + '</a>'; }).join('') + '</div></div>' +
       '<div class="foot__end"><p>&copy; ' + new Date().getFullYear() + ' ' + name + '</p>' + (L.was ? '<p>Formerly ' + esc(L.was) + '</p>' : '') + (L.since ? '<p>Tehran, since ' + esc(L.since) + '</p>' : '') + '<button class="foot__up g" type="button" data-top>Back to the top</button></div></footer>';
   }
@@ -160,7 +154,7 @@
         (t0 ? '<section class="mod mod--latest"><h2 class="mod__h g">Latest session</h2><div class="latest">' + link('/mixes/' + mixNo(t0), 'latest__img', img(big, 900, 900, 'Cover of session ' + mixNo(t0) + ', ' + mixWho(t0))) +
           '<div class="latest__txt"><p class="latest__no g">' + mixNo(t0) + '</p><h3 class="latest__who g">' + link('/mixes/' + mixNo(t0), '', esc(mixWho(t0))) + '</h3><p class="latest__meta g">' + date(t0.date) + '<span>' + clock(t0.duration) + '</span></p>' +
           '<div class="latest__play">' + playBtn(t0, 'pl--big') + bars(t0) + '</div><p class="links">' + (a0 ? link('/artists/' + a0.slug, '', 'The artist') : '') + (t0.soundcloud ? '<a href="' + esc(t0.soundcloud) + '" target="_blank" rel="noopener">SoundCloud</a>' : '') + '</p></div></div>' +
-          '<ul class="rows">' + SERIES.slice(1, 4).map(mixRow).join('') + '</ul>' + link('/mixes', 'more g', 'All ' + SERIES.length + ' sessions') + '</section>' : '') +
+          '<ul class="rows">' + SERIES.slice(1, 4).map(mixRow).join('') + '</ul>' + link('/mixes', 'more g', 'All sessions') + '</section>' : '') +
         // movement: a part that is only paint, held on the screen and moved by the scroll (data-scene="meet"): the logo's five strokes
         // meet, and the name is written beside the logo as on the banner. A reader that does not see the picture is told the name
         '<section class="scene scene--meet" data-scene="meet"><div class="scene__pin"><canvas class="meet__cv" aria-hidden="true"></canvas><p class="vh">' + esc(L.name || 'Tehran Movement') + '</p></div></section>' +
@@ -169,7 +163,7 @@
         (e ? '<section class="mod ev" data-scene="runs"><div class="ev__runs g" aria-hidden="true"><p class="ev__run">' + run + '</p><p class="ev__run ev__run--b">' + run + '</p></div>' +
           '<div class="ev__head"><h2 class="mod__h g">' + (coming.length ? 'Next night' : 'Latest night') + '</h2><p class="ev__when g">' + date(e.date) + '</p><h3 class="vh">' + esc(e.title) + '</h3></div>' +
           link('/events/' + e.date, 'ev__img', img(thumb(e.poster), 760, 1086, 'Poster for ' + e.title + ', ' + date(e.date))) +
-          '<div class="ev__foot"><p class="ev__who">' + lineup(e) + '</p>' + link('/events', 'more g', 'All ' + EVENTS.length + ' nights') + '</div></section>' : '') +
+          '<div class="ev__foot"><p class="ev__who">' + lineup(e) + '</p>' + link('/events', 'more g', 'All nights') + '</div></section>' : '') +
         // the artists
         '<section class="mod mod--artists"><h2 class="mod__h g">' + esc(N.artists) + '</h2><div class="strip">' + PEOPLE.slice(0, 8).map(artistCard).join('') + '</div>' + link('/artists', 'more g', 'The whole crew') + '</section>' +
         // the room: the old site's scene, as it was there. A photograph of one of the nights in a wide frame, held on the screen; it travels
@@ -178,13 +172,13 @@
           '<div class="scene__band room__pano"><canvas aria-hidden="true"></canvas><img class="room__img" src="assets/img/room.webp" width="1720" height="2576" loading="lazy" decoding="async" alt="One of the nights: a room under green light, people dancing, seen from behind"></div>' +
           '<div class="room__foot"><p class="room__cap">The room is the instrument.</p><p class="room__rec g" aria-hidden="true"><i></i>REC <span class="room__tc">00:00:00:00</span></p></div></div></div></section>' +
         // (what the label is and its other pages are in the foot, which follows at once: the home page says each thing once)
-        foot(true);
+        foot();
     },
     mixes: function () {
       var ys = years(SERIES);
       // every mix as a card, the newest first; a year's button shows that year only
-      return head('r', N.mixes, SERIES.length + ' sessions &nbsp; ' + clock(TOTAL)) +
-        '<div class="tools" role="group" aria-label="Year"><button class="chip is-on" type="button" data-year="">All<span>' + SERIES.length + '</span></button>' + ys.map(function (y) { return '<button class="chip" type="button" data-year="' + y.y + '">' + y.y + '<span>' + y.n + '</span></button>'; }).join('') + '</div>' +
+      return head('r', N.mixes) +
+        '<div class="tools" role="group" aria-label="Year"><button class="chip is-on" type="button" data-year="">All</button>' + ys.map(function (y) { return '<button class="chip" type="button" data-year="' + y.y + '">' + y.y + '</button>'; }).join('') + '</div>' +
         '<div class="grid grid--mix">' + SERIES.map(function (t) { return mixCard(t); }).join('') + '</div>' + foot();
     },
     mix: function (no) {
@@ -215,7 +209,7 @@
     },
     events: function () {
       var past = EVENTS.filter(function (e) { return coming.indexOf(e) < 0; }), ys = years(past);
-      return head('r', N.events, EVENTS.length + ' nights since ' + (EVENTS.length ? EVENTS[EVENTS.length - 1].date.slice(0, 4) : '')) +
+      return head('r', N.events) +
         '<section class="sec"><h2 class="sec__h g">Next</h2>' + (coming.length ? '<ul class="erows">' + coming.map(eventRow).join('') + '</ul>' : '<p class="quiet">' + esc(L.quiet || 'No date announced yet. New nights are announced first on Instagram.') + '</p>') + letter() + '</section>' +
         ys.map(function (y) { return '<section class="sec"><h2 class="sec__h g">' + y.y + '</h2><ul class="erows">' + past.filter(function (e) { return e.date.slice(0, 4) === y.y; }).map(eventRow).join('') + '</ul></section>'; }).join('') + foot();
     },
@@ -235,15 +229,14 @@
       var my = years(SERIES), ey = years(EVENTS), all = {}; my.forEach(function (y) { all[y.y] = { m: y.n, e: 0 }; }); ey.forEach(function (y) { (all[y.y] = all[y.y] || { m: 0, e: 0 }).e = y.n; });
       var longest = SERIES.slice().sort(function (a, b) { return b.duration - a.duration; })[0], first = SERIES[SERIES.length - 1];
       return '<section class="lhero">' + fx('gesture', 'lhero__fx') + '<div class="plate"><h1 class="vh">' + esc(N.label) + '</h1><i class="ink ink--name" aria-hidden="true"></i><p class="plate__say">' + esc(L.name || 'Tehran Movement') + ' is a techno label and artist collective from Tehran.</p></div></section>' +
-        '<section class="sec sec--facts">' + nums() + '<p class="lead">' + esc(L.mixes || '') + '</p>' +
+        '<section class="sec sec--facts"><p class="lead">' + esc(L.mixes || '') + '</p>' +
         '<dl class="facts"><div><dt class="g">Since</dt><dd>' + (L.since || '') + '</dd></div>' +
         (first ? '<div><dt class="g">First session</dt><dd>' + link('/mixes/' + mixNo(first), '', mixNo(first) + ' ' + esc(mixWho(first))) + ', ' + date(first.date) + '</dd></div>' : '') +
-        (t0 ? '<div><dt class="g">Latest session</dt><dd>' + link('/mixes/' + mixNo(t0), '', mixNo(t0) + ' ' + esc(mixWho(t0))) + ', ' + date(t0.date) + '</dd></div>' : '') +
         (longest ? '<div><dt class="g">Longest session</dt><dd>' + link('/mixes/' + mixNo(longest), '', mixNo(longest) + ' ' + esc(mixWho(longest))) + ', ' + clock(longest.duration) + '</dd></div>' : '') +
         (L.was ? '<div><dt class="g">Formerly</dt><dd>' + esc(L.was) + '</dd></div>' : '') + '</dl></section>' +
         '<section class="sec"><h2 class="sec__h g">Year by year</h2><ul class="yrs">' + Object.keys(all).sort().reverse().map(function (y) {
           var ms = SERIES.filter(function (t) { return String(t.date).slice(0, 4) === y; }).reverse(), es = EVENTS.filter(function (e) { return e.date.slice(0, 4) === y; }).reverse();
-          return '<li><b class="g">' + y + '</b><div class="yr"><p class="yr__say">' + [all[y].m ? all[y].m + (all[y].m > 1 ? ' sessions' : ' session') : '', all[y].e ? all[y].e + (all[y].e > 1 ? ' nights' : ' night') : ''].filter(Boolean).join(', ') + '</p><div class="yr__marks">' +
+          return '<li><b class="g">' + y + '</b><div class="yr"><div class="yr__marks">' +
             // data-wait: the marks of a year are made one after the other, as a hand makes them
             ms.map(function (t, i) { return link('/mixes/' + mixNo(t), 'dab', fx('dab', '', ' data-kind="m" data-n="' + (+mixNo(t)) + '" data-wait="' + i * 34 + '"') + '<span class="dab__no g">' + mixNo(t) + '</span>', ' aria-label="Session ' + esc(mixLabel(t)) + '" title="' + esc(mixLabel(t)) + '"'); }).join('') +
             es.map(function (e, i) { return link('/events/' + e.date, 'dab dab--n', fx('dab', '', ' data-kind="n" data-n="' + (51 + i) + '" data-wait="' + (ms.length + i) * 34 + '"') + '<span class="dab__no g">' + MON[+e.date.slice(5, 7) - 1] + '.' + e.date.slice(8) + '</span>', ' aria-label="Night ' + esc(e.title + ', ' + date(e.date)) + '" title="' + esc(e.title) + '"'); }).join('') + '</div></div></li>';
@@ -631,8 +624,8 @@
     // the words on the menu's sheet (the sections' names, from N)
     fill: function () {
       $('.menu__nav', this.el).innerHTML = link('/', 'menu__home', '<i class="ink ink--name" aria-hidden="true"></i><span class="vh">Home</span>') +
-        link('/mixes', 'menu__a menu__a--1 g', esc(N.mixes) + cnt(SERIES.length)) + link('/artists', 'menu__a menu__a--2 g', esc(N.artists)) +
-        link('/events', 'menu__a menu__a--3 g', esc(N.events) + cnt(EVENTS.length)) + link('/contact', 'menu__a menu__a--4 g', esc(N.write)) + link('/label', 'menu__a menu__a--5 g', esc(N.label));
+        link('/mixes', 'menu__a menu__a--1 g', esc(N.mixes)) + link('/artists', 'menu__a menu__a--2 g', esc(N.artists)) +
+        link('/events', 'menu__a menu__a--3 g', esc(N.events)) + link('/contact', 'menu__a menu__a--4 g', esc(N.write)) + link('/label', 'menu__a menu__a--5 g', esc(N.label));
     },
     init: function () {
       var self = this;
