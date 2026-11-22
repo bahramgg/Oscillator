@@ -125,14 +125,14 @@
   function nums() {
     return '<ul class="nums">' + [[SERIES.length, 'sessions'], [EVENTS.length, 'nights'], [clock(TOTAL), 'of sound']].map(function (q) { return '<li><b class="g">' + q[0] + '</b><span>' + q[1] + '</span></li>'; }).join('') + '</ul>';
   }
-  // the foot of every page: the brush's stroke lying across it, the name as the brush writes it, the event letter, what is newest
-  // (the latest mix, the next or last event), every page and every place the label lives, and the way back up.
+  // the foot of every page: the brush's stroke lying across it, the name as the brush writes it, what is newest (the latest session,
+  // the next or latest night), every page and every place the label lives, and the way back up. (The night letter is not here: the
+  // owner found it repeated on every page. It is on the Nights page only, under "Next".)
   // home: the home page has just shown the latest mix and the event itself, so its foot leaves those two out
   function foot(home) {
     var e = home ? null : coming[0] || EVENTS[0], name = esc(L.name || 'Tehran Movement'), t0 = home ? null : SERIES[0];
     return '<footer class="foot">' + fx('bar', 'foot__fx') +
-      '<div class="foot__top"><div class="foot__brand">' + link('/', 'foot__name', '<i class="ink ink--name" aria-hidden="true"></i><span class="vh">' + name + ', home</span>') + '<p>' + esc(L.tag || 'Techno label and artist collective. Tehran.') + '</p></div>' +
-      '<div class="foot__letter"><h2 class="g">Night letter</h2><p>Be the first to know the next date.</p>' + letter() + '</div></div>' +
+      '<div class="foot__top"><div class="foot__brand">' + link('/', 'foot__name', '<i class="ink ink--name" aria-hidden="true"></i><span class="vh">' + name + ', home</span>') + '<p>' + esc(L.tag || 'Techno label and artist collective. Tehran.') + '</p></div></div>' +
       '<div class="foot__cols' + (home ? ' foot__cols--two' : '') + '">' +
       (t0 ? '<div class="foot__col foot__col--wide"><p class="foot__k g">Latest session</p><div class="foot__mix">' + playBtn(t0) + '<p class="g">' + link('/mixes/' + mixNo(t0), '', '<b>' + mixNo(t0) + '</b> ' + esc(mixWho(t0))) + '<span>' + date(t0.date) + '&nbsp;&nbsp;' + clock(t0.duration) + '</span></p></div></div>' : '') +
       (e ? '<div class="foot__col foot__col--wide"><p class="foot__k g">' + (coming.length ? 'Next night' : 'Latest night') + '</p>' + link('/events/' + e.date, 'foot__ev g', '<span>' + date(e.date) + '</span>' + esc(e.title)) + '</div>' : '') +
@@ -177,7 +177,7 @@
         '<section class="scene scene--room" data-scene="room"><div class="scene__pin"><h2 class="mod__h g">The room</h2><div class="scene__view">' +
           '<div class="scene__band room__pano"><canvas aria-hidden="true"></canvas><img class="room__img" src="assets/img/room.webp" width="1720" height="2576" loading="lazy" decoding="async" alt="One of the nights: a room under green light, people dancing, seen from behind"></div>' +
           '<div class="room__foot"><p class="room__cap">The room is the instrument.</p><p class="room__rec g" aria-hidden="true"><i></i>REC <span class="room__tc">00:00:00:00</span></p></div></div></div></section>' +
-        // (what the label is, its other pages and the event letter are in the foot, which follows at once: the home page says each thing once)
+        // (what the label is and its other pages are in the foot, which follows at once: the home page says each thing once)
         foot(true);
     },
     mixes: function () {
@@ -228,7 +228,7 @@
         ((e.lineup || []).length ? '<section class="sub"><h2 class="g">Line-up</h2><ul class="lineup g">' + e.lineup.map(function (n) { var a = artistByName(n); return '<li>' + (a ? link('/artists/' + a.slug, '', esc(n)) : esc(n)) + '</li>'; }).join('') + '</ul></section>' : '') +
         (e.motion ? '<section class="sub sub--film"><h2 class="g">The poster in motion</h2>' + film(e) + '</section>' : '') +
         ((e.more || []).length ? '<section class="sub sub--more"><h2 class="g">' + (e.more.length > 1 ? 'More posters' : 'Second poster') + '</h2><div class="more">' + e.more.map(function (p, k) { return '<a href="' + esc(PREVIEW ? thumb(p) : p) + '" target="_blank" rel="noopener" aria-label="' + esc(e.title) + ': poster ' + (k + 2) + ', whole">' + img(thumb(p), 760, 1086, 'Another poster for ' + e.title + ', ' + date(e.date)) + '</a>'; }).join('') + '</div></section>' : '') +
-        (e.designer ? '<p class="credit">' + ((e.more || []).length ? 'Posters by ' : 'Poster by ') + esc(e.designer) + '</p>' : '') + letter() + '</div></div>' +
+        (e.designer ? '<p class="credit">' + ((e.more || []).length ? 'Posters by ' : 'Poster by ') + esc(e.designer) + '</p>' : '') + '</div></div>' +
         '<nav class="pn" aria-label="Other nights">' + (newer ? link('/events/' + newer.date, 'pn__a', '<span class="g">Later</span><b class="g">' + esc(newer.title) + '</b>') : '<span></span>') + (older ? link('/events/' + older.date, 'pn__a pn__a--r', '<span class="g">Earlier</span><b class="g">' + esc(older.title) + '</b>') : '<span></span>') + '</nav></article>' + foot();
     },
     label: function () {

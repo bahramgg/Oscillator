@@ -226,10 +226,6 @@ main { position: relative; display: block; outline: 0; min-height: 100vh; }
 .foot__top { display: grid; gap: 40px; padding-top: 30px; }
 .foot__name { display: block; width: min(100%, 330px); }
 .foot__brand p { margin-top: 16px; font-size: 13.5px; color: var(--dim); }
-.foot__letter h2 { font-size: 36px; }
-.foot__letter > p { margin: 8px 0 16px; font-size: 13.5px; color: var(--dim); }
-.foot__letter .letter { max-width: 460px; }
-.foot__letter .letter label span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .foot__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 36px 20px; margin-top: 46px; }
 .foot__cols::before { content: ''; grid-column: 1 / -1; height: 1px; margin-bottom: -6px; background: var(--hair); }
 .foot__col { min-width: 0; }
@@ -321,7 +317,6 @@ main { position: relative; display: block; outline: 0; min-height: 100vh; }
 .more a { display: block; }
 .more img { width: 100%; }
 .credit { margin-top: 22px; font-size: 12.5px; color: var(--dim); }
-.detail--event .letter { margin-top: 34px; max-width: 460px; }
 .tl { margin-top: 44px; max-width: 760px; }
 .tl ol { counter-reset: t; display: grid; gap: 9px; }
 .tl li { counter-increment: t; display: grid; grid-template-columns: 2.2em minmax(0, 1fr); font-size: 14.5px; }
@@ -477,11 +472,9 @@ main { position: relative; display: block; outline: 0; min-height: 100vh; }
 
   .foot { padding-top: 50px; padding-bottom: 34px; }
   .foot__fx { height: 170px; }
-  .foot__top { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: clamp(40px, 7vw, 130px); align-items: end; padding-top: 44px; }
+  .foot__top { padding-top: 44px; }
   .foot__name { width: min(100%, 540px); }
   .foot__brand p { margin-top: 24px; font-size: 15px; }
-  .foot__letter h2 { font-size: 56px; }
-  .foot__letter > p { margin: 10px 0 22px; font-size: 15px; }
   .foot__cols { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, .8fr) minmax(0, .8fr); gap: 50px 40px; margin-top: 76px; }
   .foot__cols::before { margin-bottom: 0; }
   .foot__col--wide { grid-column: auto; }
@@ -592,7 +585,7 @@ body { font-size: 15px; }
 .hero__what, .plate__say, .quiet { font-size: 16px; }      /* a sentence that says what something is */
 .lead { font-size: 17px; }
 .tl li, .facts dd { font-size: 16px; }      /* running text */
-.phead__say, .foot__brand p, .foot__letter > p, .door__who, .erow__who, .yr__say, .nums span, .f span { font-size: 15px; }      /* a note beside something */
+.phead__say, .foot__brand p, .door__who, .erow__who, .yr__say, .nums span, .f span { font-size: 15px; }      /* a note beside something */
 .credit, .letter__status, .form__status, .player__state { font-size: 14px; }
 .foot__k, .sub > h2, .tl h2, .also h2, .facts dt, .letter label span, .pn__a span, .who p span, .back, .tally__key { font-size: 16px; letter-spacing: .1em; }      /* the small word over a part */
 .latest__meta, .detail__meta { font-size: 17px; }      /* a day and a length */
@@ -619,7 +612,7 @@ body { font-size: 15px; }
   .plate__say { font-size: 20px; }
   .lead { font-size: 21px; }
   .tl li, .facts dd { font-size: 18px; }
-  .phead__say, .foot__brand p, .foot__letter > p, .door__who, .erow__who, .yr__say, .nums span, .f span { font-size: 17px; }
+  .phead__say, .foot__brand p, .door__who, .erow__who, .yr__say, .nums span, .f span { font-size: 17px; }
   .credit, .letter__status, .form__status, .player__state { font-size: 15px; }
   .foot__k, .sub > h2, .tl h2, .also h2, .facts dt, .letter label span, .pn__a span, .who p span, .back, .tally__key { font-size: 19px; }
   .latest__meta, .detail__meta { font-size: 22px; }
