@@ -108,7 +108,7 @@
       '<input class="form__hp" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true"><button class="btn" type="submit">Send</button><p class="letter__status" role="status"></p></form>';
   }
   function nums() {
-    return '<ul class="nums">' + [[SERIES.length, 'mixes'], [ARTISTS.length, 'artists'], [EVENTS.length, 'events'], [clock(TOTAL), 'of sound']].map(function (q) { return '<li><b class="g">' + q[0] + '</b><span>' + q[1] + '</span></li>'; }).join('') + '</ul>';
+    return '<ul class="nums">' + [[SERIES.length, 'mixes'], [EVENTS.length, 'events'], [clock(TOTAL), 'of sound']].map(function (q) { return '<li><b class="g">' + q[0] + '</b><span>' + q[1] + '</span></li>'; }).join('') + '</ul>';
   }
   // the foot of every page: the brush's stroke lying across it, the name as the brush writes it, the event letter, what is newest
   // (the latest mix, the next or last event), every page and every place the label lives, and the way back up.
@@ -121,7 +121,7 @@
       '<div class="foot__cols' + (home ? ' foot__cols--two' : '') + '">' +
       (t0 ? '<div class="foot__col foot__col--wide"><p class="foot__k g">Latest mix</p><div class="foot__mix">' + playBtn(t0) + '<p class="g">' + link('/mixes/' + mixNo(t0), '', '<b>' + mixNo(t0) + '</b> ' + esc(mixWho(t0))) + '<span>' + date(t0.date) + '&nbsp;&nbsp;' + clock(t0.duration) + '</span></p></div></div>' : '') +
       (e ? '<div class="foot__col foot__col--wide"><p class="foot__k g">' + (coming.length ? 'Next event' : 'Last event') + '</p>' + link('/events/' + e.date, 'foot__ev g', '<span>' + date(e.date) + '</span>' + esc(e.title)) + '</div>' : '') +
-      '<nav class="foot__col foot__nav g" aria-label="Pages"><p class="foot__k">Site</p>' + link('/mixes', '', 'Mixes <b>' + SERIES.length + '</b>') + link('/artists', '', 'Artists <b>' + ARTISTS.length + '</b>') + link('/events', '', 'Events <b>' + EVENTS.length + '</b>') + link('/label', '', 'The label') + link('/contact', '', 'Contact') + '</nav>' +
+      '<nav class="foot__col foot__nav g" aria-label="Pages"><p class="foot__k">Site</p>' + link('/mixes', '', 'Mixes <b>' + SERIES.length + '</b>') + link('/artists', '', 'Artists') + link('/events', '', 'Events <b>' + EVENTS.length + '</b>') + link('/label', '', 'The label') + link('/contact', '', 'Contact') + '</nav>' +
       '<div class="foot__col foot__nav g"><p class="foot__k">Follow</p>' + ['instagram', 'soundcloud', 'youtube'].filter(function (k) { return L[k]; }).map(function (k) { return '<a href="' + esc(L[k]) + '" target="_blank" rel="noopener">' + LINKS[k] + '</a>'; }).join('') + '</div></div>' +
       '<div class="foot__end"><p>&copy; ' + new Date().getFullYear() + ' ' + name + '</p>' + (L.was ? '<p>Formerly ' + esc(L.was) + '</p>' : '') + (L.since ? '<p>Tehran, since ' + esc(L.since) + '</p>' : '') + '<button class="foot__up g" type="button" data-top>Back to the top</button></div></footer>';
   }
@@ -156,7 +156,7 @@
           link('/events/' + e.date, 'ev__img', img(thumb(e.poster), 760, 1086, 'Poster for ' + e.title + ', ' + date(e.date))) +
           '<div class="ev__foot"><p class="ev__who">' + lineup(e) + '</p>' + link('/events', 'more g', 'All ' + EVENTS.length + ' events') + '</div></section>' : '') +
         // the artists
-        '<section class="mod mod--artists"><h2 class="mod__h g">Artists</h2><div class="strip">' + PEOPLE.slice(0, 8).map(artistCard).join('') + '</div>' + link('/artists', 'more g', 'All ' + ARTISTS.length + ' artists') + '</section>' +
+        '<section class="mod mod--artists"><h2 class="mod__h g">Artists</h2><div class="strip">' + PEOPLE.slice(0, 8).map(artistCard).join('') + '</div>' + link('/artists', 'more g', 'All artists') + '</section>' +
         // the room: the old site's scene, as it was there. A photograph of one of the nights in a wide frame, held on the screen; it travels
         // from its ceiling down to the dancer on the floor as the page scrolls, and its strips slip sideways with the speed of the scroll
         '<section class="scene scene--room" data-scene="room"><div class="scene__pin"><h2 class="mod__h g">The room</h2><div class="scene__view">' +
@@ -186,7 +186,7 @@
         '<nav class="pn" aria-label="Other mixes">' + (newer ? link('/mixes/' + mixNo(newer), 'pn__a', '<span class="g">Newer</span><b class="g">' + mixNo(newer) + ' ' + esc(mixWho(newer)) + '</b>') : '<span></span>') + (older ? link('/mixes/' + mixNo(older), 'pn__a pn__a--r', '<span class="g">Older</span><b class="g">' + mixNo(older) + ' ' + esc(mixWho(older)) + '</b>') : '<span></span>') + '</nav>' +
         (same.length ? '<section class="also"><h2 class="g">Also from ' + String(t.date).slice(0, 4) + '</h2><div class="grid grid--mix">' + same.map(function (x) { return mixCard(x); }).join('') + '</div></section>' : '') + '</article>' + foot();
     },
-    artists: function () { return head('l', 'Artists', ARTISTS.length + ' artists') + '<div class="grid grid--artist">' + PEOPLE.map(artistCard).join('') + '</div>' + foot(); },
+    artists: function () { return head('l', 'Artists') + '<div class="grid grid--artist">' + PEOPLE.map(artistCard).join('') + '</div>' + foot(); },
     artist: function (slug) {
       var a = artistBySlug(slug); if (!a) return VIEWS.lost();
       var ms = mixesOf(a), es = eventsOf(a), i = PEOPLE.indexOf(a), prev = PEOPLE[i - 1], next = PEOPLE[i + 1];
@@ -614,7 +614,7 @@
     init: function () {
       var self = this;
       $('.menu__nav', this.el).innerHTML = link('/', 'menu__home', '<i class="ink ink--name" aria-hidden="true"></i><span class="vh">Home</span>') +
-        link('/mixes', 'menu__a menu__a--1 g', 'Mixes <b>' + SERIES.length + '</b>') + link('/artists', 'menu__a menu__a--2 g', '<b>' + ARTISTS.length + '</b> Artists') +
+        link('/mixes', 'menu__a menu__a--1 g', 'Mixes <b>' + SERIES.length + '</b>') + link('/artists', 'menu__a menu__a--2 g', 'Artists') +
         link('/events', 'menu__a menu__a--3 g', 'Events <b>' + EVENTS.length + '</b>') + link('/contact', 'menu__a menu__a--4 g', 'Write to us') + link('/label', 'menu__a menu__a--5 g', 'The label');
       this.btn.addEventListener('click', function () { if (self.el.hidden) self.open(); else self.close(); });
       $('.menu__close', this.el).addEventListener('click', function () { self.close(); self.btn.focus(); });
