@@ -131,6 +131,10 @@ window.TM = {
      Dates are shown the way the posters write them, OCT.15 . 2026, next to the Persian date.
      Dates that have passed move by themselves into the past nights on /events.
      Every poster opens whole when tapped. Posters are shown as they are: never cropped or recoloured.
+     more:   further posters of the same event (shown under its line-up; made like the first: dev\event-poster.js).
+     motion: the poster as a short film, 'assets/video/<date>.mp4' (made by dev\video.ps1), with a still of it beside it under the
+             same name as .webp. The event's page shows the still; the film loads and sounds only when the visitor plays it.
+     What is written here is what the posters themselves say (date, names, designer).
      ------------------------------------------------------------------------ */
   events: [
     { date: '2026-10-15', title: 'All Night in Hell', lineup: ['Keyv', 'Erfa (opening)'],
@@ -140,13 +144,22 @@ window.TM = {
       poster: 'assets/img/events/2026-09-10-tehran-underground.jpg', designer: 'Erfan Jamshidi' },
     { date: '2026-08-27', title: 'All Night Long', lineup: ['Keyv', 'Msiyan'],
       poster: 'assets/img/events/2026-08-27-all-night-long.jpg', designer: 'Erfan Jamshidi' },
+    { date: '2026-07-23', title: 'All Night Long', lineup: ['Keyv'],
+      poster: 'assets/img/events/2026-07-23-all-night-long.jpg', designer: 'Erfan Jamshidi' },
     { date: '2026-06-11', title: 'All Night Long', lineup: ['Keyv'],
       poster: 'assets/img/events/2026-06-11-all-night-long.jpg', designer: 'Erfan Jamshidi' },
+    { date: '2025-08-28', title: 'Oscillator', lineup: ['Keyv', 'Elfa (visual)'],
+      poster: 'assets/img/events/2025-08-28-oscillator.jpg', designer: 'Erfan Jamshidi' },
     { date: '2023-09-14', title: 'Oscillator', lineup: ['Keyv', 'Hamed', 'Nycto', 'Sosu'],
-      poster: 'assets/img/events/2023-09-14-oscillator.jpg', designer: 'Erfan Jamshidi' },
+      poster: 'assets/img/events/2023-09-14-oscillator.jpg', designer: 'Erfan Jamshidi', motion: 'assets/video/2023-09-14.mp4' },
     { date: '2023-08-17', title: 'Oscillator', lineup: ['Gia', 'Medo', 'Daimonic', 'Hamed', 'Keyv'],
       poster: 'assets/img/events/2023-08-17-oscillator.jpg', designer: 'Erfan Jamshidi' },
     { date: '2023-08-03', title: 'Oscillator', lineup: ['dynno', 'Nevak', 'Hamed', 'Keyv'],
-      poster: 'assets/img/events/2023-08-03-oscillator.jpg', designer: 'Erfan Jamshidi' }
+      poster: 'assets/img/events/2023-08-03-oscillator.jpg', designer: 'Erfan Jamshidi', motion: 'assets/video/2023-08-03.mp4',
+      more: ['assets/img/events/2023-08-03-oscillator-2.jpg'] },
+    { date: '2023-07-13', title: 'Oscillator', lineup: ['Keyv', 'Hamed', 'Del4raa b2b Mah7arr'],
+      poster: 'assets/img/events/2023-07-13-oscillator.jpg', designer: 'Erfan Jamshidi', motion: 'assets/video/2023-07-13.mp4' },
+    { date: '2023-03-09', title: 'The Last Event of the Year', lineup: ['Hamed', 'Siamo', 'Keyv'],
+      poster: 'assets/img/events/2023-03-09-the-last-event-of-the-year.jpg', designer: 'Erfan Jamshidi', motion: 'assets/video/2023-03-09.mp4' }
   ]
 };

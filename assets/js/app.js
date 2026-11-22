@@ -56,6 +56,21 @@
   var PEOPLE = ARTISTS.slice().sort(function (a, b) { var x = mixesOf(a)[0], y = mixesOf(b)[0]; return (y ? +mixNo(y) : -1) - (x ? +mixNo(x) : -1); });
   var LINKS = { instagram: 'Instagram', soundcloud: 'SoundCloud', residentadvisor: 'Resident Advisor', bandcamp: 'Bandcamp', beatport: 'Beatport', spotify: 'Spotify', youtube: 'YouTube' };
   function years(list) { var m = {}, out = []; list.forEach(function (x) { var y = String(x.date).slice(0, 4); if (!m[y]) { m[y] = { y: y, n: 0 }; out.push(m[y]); } m[y].n++; }); return out.sort(function (a, b) { return b.y - a.y; }); }
+  /* ─── the sections' names ───────────────────────────────────────────── */
+  // Said once, here: the bar at the top, the menu, the foot, the head of each page, the way back and the tab's title take them from N.
+  // The addresses do not change with them (/mixes, /artists, /events). bare: a name that is a verb takes no count beside it.
+  // NAMESETS[0] is what the site says. The others are samples: only a preview can switch to them (Names, below), until one is chosen.
+  var NAMESETS = [
+    { mixes: 'Mixes', artists: 'Artists', events: 'Events', label: 'The label', nav: 'Label', contact: 'Contact', write: 'Write to us' },
+    { mixes: 'Sessions', artists: 'Selectors', events: 'Nights', label: 'The label', nav: 'Label', contact: 'Contact', write: 'Write to us' },
+    { mixes: 'Moves', artists: 'Movers', events: 'Nights', label: 'The label', nav: 'Label', contact: 'Contact', write: 'Write to us' },
+    { mixes: 'Listen', artists: 'Meet', events: 'Dance', label: 'The label', nav: 'Label', contact: 'Write', write: 'Write to us', bare: true },
+    { mixes: 'Seda', artists: 'Bacheha', events: 'Shab', label: 'The label', nav: 'Label', contact: 'Benevis', write: 'Benevis' }
+  ];
+  var N = NAMESETS[0];
+  function cnt(n) { return N.bare ? '' : ' <b>' + n + '</b>'; }
+  // the bar at the top is written in the page itself: its words are set from N
+  function names() { $$('.top__nav a').forEach(function (a) { var k = { '/mixes': 'mixes', '/artists': 'artists', '/events': 'events', '/label': 'nav', '/contact': 'contact' }[a.getAttribute('data-route')]; if (k) a.textContent = N[k]; }); }
   // the picture of a mix: its artist's poster where there is one (the same picture, larger), its cover otherwise
   function bigArt(t) { var a = artistBySlug(t.artist); return a ? a.poster : t.cover; }
 
@@ -99,6 +114,13 @@
     return link('/artists/' + a.slug, 'card card--artist', img(thumb(a.poster), 640, 640, 'Poster for ' + a.name) + '<span class="card__who g">' + esc(a.name) + '</span>' + (t ? '<span class="card__meta g">Mix ' + mixNo(t) + '</span>' : ''));
   }
   function lineup(e) { return (e.lineup || []).map(function (n) { var a = artistByName(n); return a ? link('/artists/' + a.slug, '', esc(n)) : esc(n); }).join(', '); }
+  // an event's poster as a short film: the page shows a still of it; the film itself is fetched and sounds only when the visitor
+  // plays it (nothing moves by itself). A preview has no film beside it: it shows the still and says so
+  function film(e) {
+    var still = String(e.motion).replace(/\.mp4$/, '.webp'), alt = 'The poster for ' + e.title + ', ' + date(e.date) + ', in motion';
+    if (PREVIEW) return '<figure class="film film--still">' + img(still, 1080, 1080, alt) + '<figcaption>A preview: the film plays on the real site.</figcaption></figure>';
+    return '<video class="film" controls playsinline preload="none" width="1080" height="1080" poster="' + esc(still) + '" aria-label="' + esc(alt) + '"><source src="' + esc(e.motion) + '" type="video/mp4"></video>';
+  }
   function eventRow(e) {
     return '<li class="erow">' + link('/events/' + e.date, 'erow__img', img(thumb(e.poster), 760, 1086, 'Poster for ' + e.title + ', ' + date(e.date))) +
       '<div class="erow__txt"><p class="erow__when g">' + date(e.date) + '</p><h3 class="erow__title g">' + link('/events/' + e.date, '', esc(e.title)) + '</h3><p class="erow__who">' + lineup(e) + '</p></div></li>';
@@ -121,7 +143,7 @@
       '<div class="foot__cols' + (home ? ' foot__cols--two' : '') + '">' +
       (t0 ? '<div class="foot__col foot__col--wide"><p class="foot__k g">Latest mix</p><div class="foot__mix">' + playBtn(t0) + '<p class="g">' + link('/mixes/' + mixNo(t0), '', '<b>' + mixNo(t0) + '</b> ' + esc(mixWho(t0))) + '<span>' + date(t0.date) + '&nbsp;&nbsp;' + clock(t0.duration) + '</span></p></div></div>' : '') +
       (e ? '<div class="foot__col foot__col--wide"><p class="foot__k g">' + (coming.length ? 'Next event' : 'Last event') + '</p>' + link('/events/' + e.date, 'foot__ev g', '<span>' + date(e.date) + '</span>' + esc(e.title)) + '</div>' : '') +
-      '<nav class="foot__col foot__nav g" aria-label="Pages"><p class="foot__k">Site</p>' + link('/mixes', '', 'Mixes <b>' + SERIES.length + '</b>') + link('/artists', '', 'Artists') + link('/events', '', 'Events <b>' + EVENTS.length + '</b>') + link('/label', '', 'The label') + link('/contact', '', 'Contact') + '</nav>' +
+      '<nav class="foot__col foot__nav g" aria-label="Pages"><p class="foot__k">Site</p>' + link('/mixes', '', esc(N.mixes) + cnt(SERIES.length)) + link('/artists', '', esc(N.artists)) + link('/events', '', esc(N.events) + cnt(EVENTS.length)) + link('/label', '', esc(N.label)) + link('/contact', '', esc(N.contact)) + '</nav>' +
       '<div class="foot__col foot__nav g"><p class="foot__k">Follow</p>' + ['instagram', 'soundcloud', 'youtube'].filter(function (k) { return L[k]; }).map(function (k) { return '<a href="' + esc(L[k]) + '" target="_blank" rel="noopener">' + LINKS[k] + '</a>'; }).join('') + '</div></div>' +
       '<div class="foot__end"><p>&copy; ' + new Date().getFullYear() + ' ' + name + '</p>' + (L.was ? '<p>Formerly ' + esc(L.was) + '</p>' : '') + (L.since ? '<p>Tehran, since ' + esc(L.since) + '</p>' : '') + '<button class="foot__up g" type="button" data-top>Back to the top</button></div></footer>';
   }
@@ -156,7 +178,7 @@
           link('/events/' + e.date, 'ev__img', img(thumb(e.poster), 760, 1086, 'Poster for ' + e.title + ', ' + date(e.date))) +
           '<div class="ev__foot"><p class="ev__who">' + lineup(e) + '</p>' + link('/events', 'more g', 'All ' + EVENTS.length + ' events') + '</div></section>' : '') +
         // the artists
-        '<section class="mod mod--artists"><h2 class="mod__h g">Artists</h2><div class="strip">' + PEOPLE.slice(0, 8).map(artistCard).join('') + '</div>' + link('/artists', 'more g', 'All artists') + '</section>' +
+        '<section class="mod mod--artists"><h2 class="mod__h g">' + esc(N.artists) + '</h2><div class="strip">' + PEOPLE.slice(0, 8).map(artistCard).join('') + '</div>' + link('/artists', 'more g', 'All artists') + '</section>' +
         // the room: the old site's scene, as it was there. A photograph of one of the nights in a wide frame, held on the screen; it travels
         // from its ceiling down to the dancer on the floor as the page scrolls, and its strips slip sideways with the speed of the scroll
         '<section class="scene scene--room" data-scene="room"><div class="scene__pin"><h2 class="mod__h g">The room</h2><div class="scene__view">' +
@@ -168,7 +190,7 @@
     mixes: function () {
       var ys = years(SERIES);
       // every mix as a card, the newest first; a year's button shows that year only
-      return head('r', 'Mixes', SERIES.length + ' mixes &nbsp; ' + clock(TOTAL)) +
+      return head('r', N.mixes, SERIES.length + ' mixes &nbsp; ' + clock(TOTAL)) +
         '<div class="tools" role="group" aria-label="Year"><button class="chip is-on" type="button" data-year="">All<span>' + SERIES.length + '</span></button>' + ys.map(function (y) { return '<button class="chip" type="button" data-year="' + y.y + '">' + y.y + '<span>' + y.n + '</span></button>'; }).join('') + '</div>' +
         '<div class="grid grid--mix">' + SERIES.map(function (t) { return mixCard(t); }).join('') + '</div>' + foot();
     },
@@ -176,7 +198,7 @@
       var t = mixByNo(no); if (!t) return VIEWS.lost();
       var a = artistBySlug(t.artist), i = SERIES.indexOf(t), newer = SERIES[i - 1], older = SERIES[i + 1], list = (EXTRA.tracklists || {})[t.id], art = bigArt(t), w = a ? 1000 : 360;
       var same = SERIES.filter(function (x) { return x !== t && String(x.date).slice(0, 4) === String(t.date).slice(0, 4); }).slice(0, 4);
-      return '<article class="detail detail--mix">' + fx('slash', 'detail__slash', ' data-part=".5" data-dir="-1" data-seed="' + (40 + i) + '"') + link('/mixes', 'back g', 'Mixes') +
+      return '<article class="detail detail--mix">' + fx('slash', 'detail__slash', ' data-part=".5" data-dir="-1" data-seed="' + (40 + i) + '"') + link('/mixes', 'back g', esc(N.mixes)) +
         '<div class="detail__grid"><div class="detail__art">' + img(a ? thumb(art) : art, w, w, 'Cover of mix ' + mixNo(t) + ', ' + mixWho(t)) + '</div>' +
         '<div class="detail__txt"><p class="detail__no g">' + mixNo(t) + '</p><h1 class="detail__h g">' + esc(mixWho(t)) + '</h1><p class="detail__meta g">' + date(t.date) + '<span>' + clock(t.duration) + '</span></p>' +
         '<div class="detail__play">' + playBtn(t, 'pl--big') + bars(t) + '</div>' +
@@ -186,11 +208,11 @@
         '<nav class="pn" aria-label="Other mixes">' + (newer ? link('/mixes/' + mixNo(newer), 'pn__a', '<span class="g">Newer</span><b class="g">' + mixNo(newer) + ' ' + esc(mixWho(newer)) + '</b>') : '<span></span>') + (older ? link('/mixes/' + mixNo(older), 'pn__a pn__a--r', '<span class="g">Older</span><b class="g">' + mixNo(older) + ' ' + esc(mixWho(older)) + '</b>') : '<span></span>') + '</nav>' +
         (same.length ? '<section class="also"><h2 class="g">Also from ' + String(t.date).slice(0, 4) + '</h2><div class="grid grid--mix">' + same.map(function (x) { return mixCard(x); }).join('') + '</div></section>' : '') + '</article>' + foot();
     },
-    artists: function () { return head('l', 'Artists') + '<div class="grid grid--artist">' + PEOPLE.map(artistCard).join('') + '</div>' + foot(); },
+    artists: function () { return head('l', N.artists) + '<div class="grid grid--artist">' + PEOPLE.map(artistCard).join('') + '</div>' + foot(); },
     artist: function (slug) {
       var a = artistBySlug(slug); if (!a) return VIEWS.lost();
       var ms = mixesOf(a), es = eventsOf(a), i = PEOPLE.indexOf(a), prev = PEOPLE[i - 1], next = PEOPLE[i + 1];
-      return '<article class="detail detail--artist">' + fx('slash', 'detail__slash', ' data-part=".5" data-dir="1" data-seed="' + (60 + i) + '"') + link('/artists', 'back g', 'Artists') +
+      return '<article class="detail detail--artist">' + fx('slash', 'detail__slash', ' data-part=".5" data-dir="1" data-seed="' + (60 + i) + '"') + link('/artists', 'back g', esc(N.artists)) +
         '<div class="detail__grid"><a class="detail__art" href="' + esc(PREVIEW ? thumb(a.poster) : a.poster) + '" target="_blank" rel="noopener" aria-label="' + esc(a.name) + ': the poster, whole">' + img(thumb(a.poster), 640, 640, 'Poster for ' + a.name) + '</a>' +
         '<div class="detail__txt"><h1 class="detail__h g">' + esc(a.name) + '</h1>' + ((a.bio || []).length ? '<div class="bio">' + a.bio.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') + '</div>' : '') +
         (ms.length ? '<section class="sub"><h2 class="g">' + (ms.length > 1 ? 'Mixes' : 'Mix') + '</h2><ul class="rows">' + ms.map(mixRow).join('') + '</ul></section>' : '') +
@@ -200,24 +222,26 @@
     },
     events: function () {
       var past = EVENTS.filter(function (e) { return coming.indexOf(e) < 0; }), ys = years(past);
-      return head('r', 'Events', EVENTS.length + ' events since ' + (EVENTS.length ? EVENTS[EVENTS.length - 1].date.slice(0, 4) : '')) +
+      return head('r', N.events, EVENTS.length + ' events since ' + (EVENTS.length ? EVENTS[EVENTS.length - 1].date.slice(0, 4) : '')) +
         '<section class="sec"><h2 class="sec__h g">Next</h2>' + (coming.length ? '<ul class="erows">' + coming.map(eventRow).join('') + '</ul>' : '<p class="quiet">' + esc(L.quiet || 'No date announced yet. New nights are announced first on Instagram.') + '</p>') + letter() + '</section>' +
         ys.map(function (y) { return '<section class="sec"><h2 class="sec__h g">' + y.y + '</h2><ul class="erows">' + past.filter(function (e) { return e.date.slice(0, 4) === y.y; }).map(eventRow).join('') + '</ul></section>'; }).join('') + foot();
     },
     event: function (d) {
       var e = eventByDate(d); if (!e) return VIEWS.lost();
       var i = EVENTS.indexOf(e), newer = EVENTS[i - 1], older = EVENTS[i + 1];
-      return '<article class="detail detail--event">' + fx('slash', 'detail__slash', ' data-part=".5" data-dir="-1" data-seed="' + (80 + i) + '"') + link('/events', 'back g', 'Events') +
+      return '<article class="detail detail--event">' + fx('slash', 'detail__slash', ' data-part=".5" data-dir="-1" data-seed="' + (80 + i) + '"') + link('/events', 'back g', esc(N.events)) +
         '<div class="detail__grid"><a class="detail__art" href="' + esc(PREVIEW ? thumb(e.poster) : e.poster) + '" target="_blank" rel="noopener" aria-label="' + esc(e.title) + ': the poster, whole">' + img(thumb(e.poster), 760, 1086, 'Poster for ' + e.title + ', ' + date(e.date)) + '</a>' +
         '<div class="detail__txt"><p class="detail__when g">' + date(e.date) + '</p><h1 class="detail__h g">' + esc(e.title) + '</h1>' +
         ((e.lineup || []).length ? '<section class="sub"><h2 class="g">Line-up</h2><ul class="lineup g">' + e.lineup.map(function (n) { var a = artistByName(n); return '<li>' + (a ? link('/artists/' + a.slug, '', esc(n)) : esc(n)) + '</li>'; }).join('') + '</ul></section>' : '') +
-        (e.designer ? '<p class="credit">Poster by ' + esc(e.designer) + '</p>' : '') + letter() + '</div></div>' +
+        (e.motion ? '<section class="sub sub--film"><h2 class="g">The poster in motion</h2>' + film(e) + '</section>' : '') +
+        ((e.more || []).length ? '<section class="sub sub--more"><h2 class="g">' + (e.more.length > 1 ? 'More posters' : 'Second poster') + '</h2><div class="more">' + e.more.map(function (p, k) { return '<a href="' + esc(PREVIEW ? thumb(p) : p) + '" target="_blank" rel="noopener" aria-label="' + esc(e.title) + ': poster ' + (k + 2) + ', whole">' + img(thumb(p), 760, 1086, 'Another poster for ' + e.title + ', ' + date(e.date)) + '</a>'; }).join('') + '</div></section>' : '') +
+        (e.designer ? '<p class="credit">' + ((e.more || []).length ? 'Posters by ' : 'Poster by ') + esc(e.designer) + '</p>' : '') + letter() + '</div></div>' +
         '<nav class="pn" aria-label="Other events">' + (newer ? link('/events/' + newer.date, 'pn__a', '<span class="g">Later</span><b class="g">' + esc(newer.title) + '</b>') : '<span></span>') + (older ? link('/events/' + older.date, 'pn__a pn__a--r', '<span class="g">Earlier</span><b class="g">' + esc(older.title) + '</b>') : '<span></span>') + '</nav></article>' + foot();
     },
     label: function () {
       var my = years(SERIES), ey = years(EVENTS), all = {}; my.forEach(function (y) { all[y.y] = { m: y.n, e: 0 }; }); ey.forEach(function (y) { (all[y.y] = all[y.y] || { m: 0, e: 0 }).e = y.n; });
       var longest = SERIES.slice().sort(function (a, b) { return b.duration - a.duration; })[0], first = SERIES[SERIES.length - 1];
-      return '<section class="lhero">' + fx('gesture', 'lhero__fx') + '<div class="plate"><h1 class="vh">The label</h1><i class="ink ink--name" aria-hidden="true"></i><p class="plate__say">' + esc(L.name || 'Tehran Movement') + ' is a techno label and artist collective from Tehran.</p></div></section>' +
+      return '<section class="lhero">' + fx('gesture', 'lhero__fx') + '<div class="plate"><h1 class="vh">' + esc(N.label) + '</h1><i class="ink ink--name" aria-hidden="true"></i><p class="plate__say">' + esc(L.name || 'Tehran Movement') + ' is a techno label and artist collective from Tehran.</p></div></section>' +
         '<section class="sec sec--facts">' + nums() + '<p class="lead">' + esc(L.mixes || '') + '</p>' +
         '<dl class="facts"><div><dt class="g">Since</dt><dd>' + (L.since || '') + '</dd></div>' +
         (first ? '<div><dt class="g">First mix</dt><dd>' + link('/mixes/' + mixNo(first), '', mixNo(first) + ' ' + esc(mixWho(first))) + ', ' + date(first.date) + '</dd></div>' : '') +
@@ -231,10 +255,10 @@
             ms.map(function (t, i) { return link('/mixes/' + mixNo(t), 'dab', fx('dab', '', ' data-kind="m" data-n="' + (+mixNo(t)) + '" data-wait="' + i * 34 + '"') + '<span class="dab__no g">' + mixNo(t) + '</span>', ' aria-label="Mix ' + esc(mixLabel(t)) + '" title="' + esc(mixLabel(t)) + '"'); }).join('') +
             es.map(function (e, i) { return link('/events/' + e.date, 'dab dab--n', fx('dab', '', ' data-kind="n" data-n="' + (51 + i) + '" data-wait="' + (ms.length + i) * 34 + '"') + '<span class="dab__no g">' + MON[+e.date.slice(5, 7) - 1] + '.' + e.date.slice(8) + '</span>', ' aria-label="Event ' + esc(e.title + ', ' + date(e.date)) + '" title="' + esc(e.title) + '"'); }).join('') + '</div></div></li>';
         }).join('') + '</ul><ul class="tally__key g"><li class="k-m">A mix</li><li class="k-n">An event</li></ul></section>' +
-        '<section class="sec sec--end">' + linkList(L, ['instagram', 'soundcloud', 'youtube'], 'biglinks g') + link('/contact', 'btn', 'Write to us') + '</section>' + foot();
+        '<section class="sec sec--end">' + linkList(L, ['instagram', 'soundcloud', 'youtube'], 'biglinks g') + link('/contact', 'btn', esc(N.write)) + '</section>' + foot();
     },
     contact: function () {
-      return head('r', 'Contact', esc(L.contact || 'Demos, bookings, collaborations. Every message is read.')) +
+      return head('r', N.contact, esc(L.contact || 'Demos, bookings, collaborations. Every message is read.')) +
         '<form class="form" novalidate><div class="chips" role="radiogroup" aria-label="What is it about">' + ['Demo', 'Booking', 'Collaboration', 'Other'].map(function (k, i) { return '<label class="chip chip--pick"><input type="radio" name="about" value="' + k + '"' + (i ? '' : ' checked') + '><span>' + k + '</span></label>'; }).join('') + '</div>' +
         '<label class="f"><span>Your name</span><input name="name" type="text" autocomplete="name" required></label>' +
         '<label class="f"><span>Email or Instagram</span><input name="contact" type="text" autocomplete="email" autocapitalize="none" required></label>' +
@@ -249,7 +273,7 @@
     if (!s.length) return { html: VIEWS.home(), title: (L.name || 'Tehran Movement') + ' | Techno label and artist collective', nav: '/' };
     var one = { mixes: 'mix', artists: 'artist', events: 'event' }[s[0]];
     if (s.length > 1 && one) { var x = one === 'mix' ? mixByNo(s[1]) : one === 'artist' ? artistBySlug(s[1]) : eventByDate(s[1]); return { html: VIEWS[one](s[1]), title: (x ? (one === 'mix' ? mixLabel(x) : one === 'artist' ? x.name : x.title) : 'Not here') + ' | ' + L.name, nav: '/' + s[0] }; }
-    if (s.length === 1 && VIEWS[s[0]] && s[0] !== 'home' && s[0] !== 'lost' && !/^(mix|artist|event)$/.test(s[0])) return { html: VIEWS[s[0]](), title: { mixes: 'Mixes', artists: 'Artists', events: 'Events', label: 'The label', contact: 'Contact' }[s[0]] + ' | ' + L.name, nav: '/' + s[0] };
+    if (s.length === 1 && VIEWS[s[0]] && s[0] !== 'home' && s[0] !== 'lost' && !/^(mix|artist|event)$/.test(s[0])) return { html: VIEWS[s[0]](), title: { mixes: N.mixes, artists: N.artists, events: N.events, label: N.label, contact: N.contact }[s[0]] + ' | ' + L.name, nav: '/' + s[0] };
     return { html: VIEWS.lost(), title: 'Not here | ' + L.name, nav: '' };
   }
 
@@ -611,11 +635,15 @@
   /* ─── the menu: the M walked, a page at every turn ──────────────────── */
   var Menu = {
     el: $('#menu'), btn: $('.top__menu'),
+    // the words on the menu's sheet (the sections' names, from N)
+    fill: function () {
+      $('.menu__nav', this.el).innerHTML = link('/', 'menu__home', '<i class="ink ink--name" aria-hidden="true"></i><span class="vh">Home</span>') +
+        link('/mixes', 'menu__a menu__a--1 g', esc(N.mixes) + cnt(SERIES.length)) + link('/artists', 'menu__a menu__a--2 g', esc(N.artists)) +
+        link('/events', 'menu__a menu__a--3 g', esc(N.events) + cnt(EVENTS.length)) + link('/contact', 'menu__a menu__a--4 g', esc(N.write)) + link('/label', 'menu__a menu__a--5 g', esc(N.label));
+    },
     init: function () {
       var self = this;
-      $('.menu__nav', this.el).innerHTML = link('/', 'menu__home', '<i class="ink ink--name" aria-hidden="true"></i><span class="vh">Home</span>') +
-        link('/mixes', 'menu__a menu__a--1 g', 'Mixes <b>' + SERIES.length + '</b>') + link('/artists', 'menu__a menu__a--2 g', 'Artists') +
-        link('/events', 'menu__a menu__a--3 g', 'Events <b>' + EVENTS.length + '</b>') + link('/contact', 'menu__a menu__a--4 g', 'Write to us') + link('/label', 'menu__a menu__a--5 g', 'The label');
+      this.fill();
       this.btn.addEventListener('click', function () { if (self.el.hidden) self.open(); else self.close(); });
       $('.menu__close', this.el).addEventListener('click', function () { self.close(); self.btn.focus(); });
       document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !self.el.hidden) { self.close(); self.btn.focus(); } });
@@ -685,6 +713,7 @@
     // play a mix, or stop and start the one that is on; frac: from that place in it (0 to 1)
     play: function (id, frac) {
       var t = mixById(id); if (!t) return;
+      $$('video.film').forEach(function (v) { if (!v.paused) v.pause(); });      // a film on the page falls silent when a mix is asked for
       if (this.cur !== t) { this.open(t, frac); return; }
       if (frac != null) { this.frac = frac; this.sec = frac * t.duration; }
       if (PREVIEW) { if (frac == null) this.state = this.state === 'playing' ? 'paused' : 'playing'; else this.state = 'playing'; this.paint(); return; }
@@ -696,6 +725,14 @@
       this.paint();
     },
     ask: function () { this.want = true; this.askedAt = Date.now(); this.retries = 0; this.widget.play(); },
+    // the mix falls silent and stays where it is (a film on the page is about to sound); the player stays open
+    hush: function () {
+      if (!this.cur || (!this.want && this.state !== 'playing')) return;
+      this.want = false;
+      if (!PREVIEW && this.widget && this.ready) { try { this.widget.pause(); } catch (e) { /* gone */ } }
+      if (this.state === 'playing' || this.state === 'loading') this.state = 'paused';
+      this.paint();
+    },
     open: function (t, frac) {
       var self = this, gen = ++this.gen;
       this.cur = t; this.frac = frac || 0; this.sec = this.frac * t.duration; this.seekTo = frac == null ? null : frac;
@@ -792,6 +829,9 @@
     if (lite) return;
     $$('[data-play]', main).forEach(function (c) { var on = !!cur && c.getAttribute('data-play') === cur.id && playing; c.classList.toggle('is-on', on); c.setAttribute('aria-label', (on ? 'Pause ' : 'Play ') + mixLabel(mixById(c.getAttribute('data-play')))); });
   }
+  // a film and a mix are not to sound together: when a film on the page starts, the mix falls silent (a film's own start does not
+  // travel up the page, so it is caught on its way down)
+  main.addEventListener('play', function (e) { if (e.target && e.target.tagName === 'VIDEO') Player.hush(); }, true);
   main.addEventListener('click', function (e) {
     var p = e.target.closest('[data-play]'); if (p) { Player.play(p.getAttribute('data-play')); return; }
     var b = e.target.closest('.bars'); if (b) { var r = b.getBoundingClientRect(); if (e.detail === 0) Player.play(b.getAttribute('data-bars')); else Player.play(b.getAttribute('data-bars'), clamp((e.clientX - r.left) / r.width, 0, 0.999)); return; }
@@ -851,6 +891,28 @@
     });
   }
 
+  /* ─── the samples of the sections' names (a preview only) ───────────── */
+  // A small row at the foot of a preview to try each set of names on the whole site. The real site has no such row and says
+  // NAMESETS[0]. When a set is chosen, it becomes NAMESETS[0] and this part, with the other sets, goes.
+  var Names = {
+    init: function () {
+      names();
+      if (!PREVIEW) return;
+      var i = 0; try { i = +(window.localStorage.getItem('tm-names') || 0) || 0; } catch (e) { /* nothing is kept here */ }
+      var bar = this.bar = document.createElement('div'); bar.className = 'pick'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Samples of the sections\' names');
+      bar.innerHTML = '<span class="pick__k">Names</span>' + NAMESETS.map(function (s, k) { return '<button type="button" data-names="' + k + '" aria-label="Names ' + k + ': ' + esc(s.mixes + ', ' + s.artists + ', ' + s.events) + '"><b>' + k + '</b><span>' + esc(s.mixes + ' / ' + s.artists + ' / ' + s.events) + '</span></button>'; }).join('');
+      document.body.appendChild(bar);
+      bar.addEventListener('click', function (e) { var b = e.target.closest('[data-names]'); if (b) Names.set(+b.getAttribute('data-names'), true); });
+      this.set(i >= 0 && i < NAMESETS.length ? i : 0, false);
+    },
+    set: function (i, redraw) {
+      N = NAMESETS[i]; try { window.localStorage.setItem('tm-names', String(i)); } catch (e) { /* nothing is kept here */ }
+      $$('[data-names]', this.bar).forEach(function (b) { var on = +b.getAttribute('data-names') === i; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+      names(); Menu.fill();
+      if (redraw) show();
+    }
+  };
+
   /* ─── go ─────────────────────────────────────────────────────────────── */
-  Menu.init(); Player.init(); render();
+  Menu.init(); Player.init(); Names.init(); render();
 })();
