@@ -403,14 +403,17 @@
       /* movement (the part in the middle of the home page, held on the screen): only the logo's paint, moved by the scroll alone.
          The logo's five strokes come across the screen, each along its own way, and meet: first the four of the M, then the bar over
          it, last (never the bar with one leg); for a moment the logo stands. Nothing parts again after that: the view draws back, so
-         that the logo grows small and goes to its place at the head of the name, and the brush writes the rest of the name beside
-         it, EHRAN over OVEMENT, both lines at once, as on the label's banner (LOCK above; the picture is assets/brush/lockup.webp).
-         The name is written at the size it keeps: nothing grows large on the way. Scrolling back undoes it.
+         that the logo grows small and goes to its place at the head of the name, and then the brush writes the rest of the name
+         beside it, EHRAN over OVEMENT, both lines at once, as on the label's banner (LOCK above; the picture is
+         assets/brush/lockup.webp, a larger one on a large screen). The name is written at the size it keeps: nothing grows large on
+         the way. Scrolling back undoes it.
+         It is drawn with all the points the screen has (up to a limit), and the finished name is the picture itself, point for point
+         where the picture is large enough: it must stand sharp.
          The way, in shares: the M is whole at A1, the bar lies at A2, the view draws back from B0 to B1, the name is written from C0
          to C1. The frames run only while something still moves. */
       meet: function (el) {
-        var pin = el.firstElementChild, cv = $('canvas', el), c = cv.getContext('2d'), M = FX.mark, A1 = 0.34, A2 = 0.42, B0 = 0.47, B1 = 0.61, C0 = 0.57, C1 = 0.92, HAIRS = 13;
-        var W = 0, H = 0, sized = '', parts = null, real = null, name = null, geo = null, cam = null, both = null, veil = null, pad = 0, rows = null, s = 0, to = 0, shown = -1, busy = false, run = 0, asked = false;
+        var pin = el.firstElementChild, cv = $('canvas', el), c = cv.getContext('2d'), M = FX.mark, A1 = 0.34, A2 = 0.42, B0 = 0.47, B1 = 0.6, C0 = 0.6, C1 = 0.93, HAIRS = 13;
+        var W = 0, H = 0, sized = '', parts = null, real = null, name = null, geo = null, cam = null, both = null, veil = null, pad = 0, rows = null, s = 0, to = 0, shown = -1, busy = false, run = 0, asked = '';
         el.classList.add('is-pinned');
         // how far the part has come: 0 when it is still 0.6 of a screen below its place, 1 when it lets go
         function way(vh) { var r = el.getBoundingClientRect(), lead = vh * 0.6; return clamp((lead - r.top) / (lead + Math.max(1, r.height - pin.offsetHeight)), 0, 1); }
@@ -442,26 +445,33 @@
             return { letters: letters, T: letters[letters.length - 1].t1 };
           });
         }
-        // the name's picture (its ink as white), made yellow once. It is asked for when the part is first measured, a moment after
-        // the page itself
-        function ask() {
-          if (asked) return; asked = true;
+        // the name's picture (its ink as white), made yellow once. It is asked for a moment after the page itself; which of the two
+        // sizes is said by the size the part has (file)
+        function ask(file) {
+          if (asked === file) return;      // (the same picture as before: it is kept)
+          asked = file; name = null;
           var pic = new Image();
-          pic.onload = function () { var o = document.createElement('canvas'); o.width = pic.naturalWidth; o.height = pic.naturalHeight; var g = o.getContext('2d'); g.drawImage(pic, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = getComputedStyle(root).getPropertyValue('--y').trim() || '#FFFE26'; g.fillRect(0, 0, o.width, o.height); name = o; shown = -1; go(); };
-          setTimeout(function () { pic.src = (root.getAttribute('data-assets') || 'assets/') + 'brush/lockup.webp'; }, 700);
+          pic.onload = function () { if (asked !== file) return; var o = document.createElement('canvas'); o.width = pic.naturalWidth; o.height = pic.naturalHeight; var g = o.getContext('2d'); g.drawImage(pic, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = getComputedStyle(root).getPropertyValue('--y').trim() || '#FFFE26'; g.fillRect(0, 0, o.width, o.height); name = o; shown = -1; go(); };
+          setTimeout(function () { pic.src = (root.getAttribute('data-assets') || 'assets/') + file; }, 700);
         }
         // made for the size the part has now, and again only when that size has changed
         function size() {
           var w = pin.clientWidth, h = pin.clientHeight; if (!w || !h) return false;
           if (w + 'x' + h === sized) return true;
           sized = w + 'x' + h; var mine = ++run;
-          var d = Math.min(window.devicePixelRatio || 1, 1.5, Math.sqrt(2.4e6 / (w * h))), top = (parseFloat(getComputedStyle(pin).paddingTop) || 0) * d;
+          // all the points of the screen, as long as that stays under six and a half million of them
+          var d = Math.min(window.devicePixelRatio || 1, 2.5, Math.sqrt(6.5e6 / (w * h))), top = (parseFloat(getComputedStyle(pin).paddingTop) || 0) * d;
           W = Math.round(w * d); H = Math.round(h * d); cv.width = W; cv.height = H; c.imageSmoothingQuality = 'high'; parts = null; shown = -1;
           if (!rows) write();
-          ask();
+          // the whole name at last: about three fifths of a wide screen's width (nearly all of a narrow one's, or the letters could
+          // not be read), never wider than its picture, so that the picture is never stretched
+          var want = W * (w < 900 ? 0.9 : 0.6), big = want > 1650, wide = Math.round(Math.min(want, big ? 2800 : 1600)), tall = Math.round(wide * LOCK.U[1] / LOCK.U[0]), room = H - top;
+          var fin = { x: Math.round((W - wide) / 2), y: Math.round(top + (room - tall) / 2), w: wide, h: tall, k: wide / LOCK.U[0] };
+          ask(big ? 'brush/lockup-2800.webp' : 'brush/lockup.webp');
+          veil = document.createElement('canvas'); veil.width = wide; veil.height = tall;
           FX.withMark(function (im) {
             if (mine !== run || !main.contains(el)) return;
-            var room = H - top, mh = Math.min(room * 0.6, W * 0.72 * im.height / im.width), mw = mh * im.width / im.height, k = mw / M.U;
+            var mh = Math.min(room * 0.6, W * 0.72 * im.height / im.width), mw = mh * im.width / im.height, k = mw / M.U;
             pad = Math.ceil(130 * k); geo = { x: Math.round((W - mw) / 2), y: Math.round(top + (room - mh) / 2), w: mw, h: mh };
             // the logo's own picture, brought once to the size it is shown at when it has met (so that no frame has to bring the large picture down)
             real = document.createElement('canvas'); real.width = Math.ceil(mw); real.height = Math.ceil(mh);
@@ -474,12 +484,12 @@
               FX.paint(o.getContext('2d'), st.p.map(function (p) { return [p[0] * k + pad, p[1] * k + pad]; }), st.w * k, { dry: [1.5, 1.35, 1.45, 1.3, 1.15][i], seed: 21 + i * 4, grain: k * 1.5, ragged: st.w * k * 0.16 });
               return { im: o, ux: (b[0] - a[0]) / l, uy: (b[1] - a[1]) / l, far: i === 4 ? W / 2 + mw * 0.66 : mh * (i < 2 ? 1.3 : 1.4) };
             });
-            both = document.createElement('canvas'); both.width = W; both.height = H; veil = document.createElement('canvas'); veil.width = W; veil.height = H;
-            // the view: at first the logo as it stands when it has met (k0); at last the whole name (k1), a good deal smaller: about
-            // three fifths of a wide screen's width (nearly all of a narrow one's, or the letters could not be read), and never wider
-            // than its picture is sharp; in the middle of the room under the top bar
-            var wide = Math.min(W * (W < 900 * d ? 0.9 : 0.6), 1600), k1 = wide / LOCK.U[0], mx = LOCK.mark[0] + LOCK.mark[2] / 2, my = LOCK.mark[1] + LOCK.mark[3] / 2;
-            cam = { k0: mw / LOCK.mark[2], k1: k1, mx: mx, my: my, x0: geo.x + mw / 2, y0: geo.y + mh / 2, x1: (W - wide) / 2 + mx * k1, y1: top + (room - LOCK.U[1] * k1) / 2 + my * k1 };
+            // the five painted strokes in their places, on one sheet: what the logo's own picture takes the place of
+            both = document.createElement('canvas'); both.width = parts[0].im.width; both.height = parts[0].im.height;
+            var bg = both.getContext('2d'); parts.forEach(function (p) { bg.drawImage(p.im, 0, 0); });
+            // the view: at first the logo as it stands when it has met (k0), at last the logo in its place in the whole name (fin)
+            var mx = LOCK.mark[0] + LOCK.mark[2] / 2, my = LOCK.mark[1] + LOCK.mark[3] / 2;
+            cam = { k0: mw / LOCK.mark[2], k1: fin.k, mx: mx, my: my, x0: geo.x + mw / 2, y0: geo.y + mh / 2, x1: fin.x + mx * fin.k, y1: fin.y + my * fin.k, fin: fin };
             shown = -1; go();
           });
           return true;
@@ -518,31 +528,33 @@
         function draw(v) {
           c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; c.clearRect(0, 0, W, H);
           if (!parts) return;
-          var g, t, share = Math.min(1, (v - C0) / (C1 - C0));
+          var t, f = cam.fin;
           if (v <= B0 || !name) {
             // the strokes come and meet. When the bar lies, the logo's own picture takes the place of the five painted strokes over a short
             // way, and never through a dim state: first it comes over them (t from 0 to 1), then they go from under it (t from 1 to 2)
-            t = clamp((v - A2) / 0.006, 0, 2); g = t > 1 ? both.getContext('2d') : c;
-            if (t < 2) {
-              if (g !== c) { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); }
-              parts.forEach(function (p, i) {
-                var f = i < 4 ? -Math.pow(1 - clamp(v / A1, 0, 1), 1.5) : v <= A1 ? -1 : smooth((v - A1) / (A2 - A1)) - 1;
-                if (f > -1) g.drawImage(p.im, geo.x - pad + p.ux * f * p.far, geo.y - pad + p.uy * f * p.far);
-              });
-              if (g !== c) { c.globalAlpha = 2 - t; c.drawImage(both, 0, 0); c.globalAlpha = 1; }
-            }
+            t = clamp((v - A2) / 0.006, 0, 2);
+            if (t <= 1) parts.forEach(function (p, i) {
+              var g = i < 4 ? -Math.pow(1 - clamp(v / A1, 0, 1), 1.5) : v <= A1 ? -1 : smooth((v - A1) / (A2 - A1)) - 1;
+              if (g > -1) c.drawImage(p.im, geo.x - pad + p.ux * g * p.far, geo.y - pad + p.uy * g * p.far);
+            });
+            else if (t < 2) { c.globalAlpha = 2 - t; c.drawImage(both, geo.x - pad, geo.y - pad); c.globalAlpha = 1; }
             if (t > 0) { c.globalAlpha = Math.min(1, t); c.drawImage(real, geo.x, geo.y, geo.w, geo.h); c.globalAlpha = 1; }
             return;
           }
-          // the view draws back: the logo grows small and goes to its place at the head of the name; then the name is written beside it
-          var e = smooth((v - B0) / (B1 - B0)), k = cam.k0 * Math.pow(cam.k1 / cam.k0, e), ox = cam.x0 + (cam.x1 - cam.x0) * e - cam.mx * k, oy = cam.y0 + (cam.y1 - cam.y0) * e - cam.my * k;
-          c.drawImage(real, ox + LOCK.mark[0] * k, oy + LOCK.mark[1] * k, LOCK.mark[2] * k, LOCK.mark[3] * k);
+          var share = Math.min(1, (v - C0) / (C1 - C0));
+          // the name is whole: its picture itself, point for point
+          if (share >= 1) { c.drawImage(name, f.x, f.y, f.w, f.h); return; }
+          // the view draws back: the logo grows small and goes to its place at the head of the name
+          var e = smooth((v - B0) / (B1 - B0));
+          if (e < 1) { var k = cam.k0 * Math.pow(cam.k1 / cam.k0, e), ox = cam.x0 + (cam.x1 - cam.x0) * e - cam.mx * k, oy = cam.y0 + (cam.y1 - cam.y0) * e - cam.my * k; c.drawImage(real, ox + LOCK.mark[0] * k, oy + LOCK.mark[1] * k, LOCK.mark[2] * k, LOCK.mark[3] * k); return; }
+          // it stands there (taken from the name's own picture, so that nothing shifts when the name is whole); the name is written beside it
+          var cut = LOCK.cut / LOCK.U[0];
+          c.drawImage(name, 0, 0, name.width * cut, name.height, f.x, f.y, f.w * cut, f.h);
           if (share <= 0) return;
-          g = veil.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, W, H);
-          g.setTransform(k, 0, 0, k, ox, oy);
-          if (share >= 1) { g.fillStyle = '#000'; g.fillRect(LOCK.cut, 0, LOCK.U[0] - LOCK.cut, LOCK.U[1]); } else uncover(g, share);
-          g.globalCompositeOperation = 'source-in'; g.drawImage(name, 0, 0, LOCK.U[0], LOCK.U[1]);
-          c.drawImage(veil, 0, 0);
+          var g2 = veil.getContext('2d'); g2.setTransform(1, 0, 0, 1, 0, 0); g2.globalCompositeOperation = 'source-over'; g2.clearRect(0, 0, f.w, f.h);
+          g2.setTransform(f.k, 0, 0, f.k, 0, 0); uncover(g2, share);
+          g2.setTransform(1, 0, 0, 1, 0, 0); g2.globalCompositeOperation = 'source-in'; g2.imageSmoothingQuality = 'high'; g2.drawImage(name, 0, 0, f.w, f.h);
+          c.drawImage(veil, f.x, f.y);
         }
         function frame() {
           busy = false; if (!main.contains(el)) return;

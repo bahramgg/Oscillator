@@ -15,8 +15,8 @@ window.TM = {
   label: {
     name: 'Tehran Movement',
     was: 'Oscillator',          // the name until the rename; shown as "Formerly Oscillator". Leave '' to stop showing it
-    handle: '@oscillator__',
-    instagram: 'https://www.instagram.com/oscillator__/',
+    handle: '@tehranmovement',
+    instagram: 'https://www.instagram.com/tehranmovement/',
     soundcloud: 'https://on.soundcloud.com/1oNQcz1onDKpvNzims',
     youtube: 'https://www.youtube.com/@oscillator2510',
     // the contact form posts here (FormSubmit relays each message to the label's inbox by email)
