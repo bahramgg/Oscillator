@@ -1,73 +1,67 @@
 /* ==========================================================================
-   OSCILLATOR — site content
+   TEHRAN MOVEMENT: the site's content
    --------------------------------------------------------------------------
-   Everything on the site is generated from this one file. To update the
-   site you should only ever need to edit what's below.
+   Everything on the site is made from this one file. To update the site you
+   should only ever need to edit what is below.
 
-   • Images go in assets/img/ and are referenced by relative path.
-   • Text in *asterisks* is rendered in the italic serif accent face.
+   • Images go in assets/img/ and are named by their path from the site's root.
    • Any link left as '' (empty) is simply hidden.
-   • An artist without a photo gets a generated contour "sigil" instead.
+   • Posters are shown as they are. For a new poster no other file is needed:
+     the small copies in the "t" folders only make the pages load faster.
    ========================================================================== */
 
-window.OSCILLATOR = {
+window.TM = {
 
   label: {
-    name: 'Oscillator',
+    name: 'Tehran Movement',
+    was: 'Oscillator',          // the name until the rename; shown as "Formerly Oscillator". Leave '' to stop showing it
     handle: '@oscillator__',
     instagram: 'https://www.instagram.com/oscillator__/',
     soundcloud: 'https://on.soundcloud.com/1oNQcz1onDKpvNzims',
     youtube: 'https://www.youtube.com/@oscillator2510',
-    email: '',                 // e.g. 'demos@oscillator.xyz' — hidden when empty
-    // the contact form posts here (FormSubmit relays each message to this inbox by email)
+    // the contact form posts here (FormSubmit relays each message to the label's inbox by email)
     form: 'https://formsubmit.co/ajax/monadicart@gmail.com',
-    origin: 'Tehran',
-    tagline: 'a techno label & artist collective',
+    since: 2020,
 
-    // "01 — Carrier" manifesto. One string per paragraph.
-    about: [
-      'Oscillator is a techno label and artist collective. We don\'t sign sounds. We *tune into them*.',
-      'A home for the artists who live in the low end, in the dark, in the repetition. Each one a different frequency; together, *one signal*.'
-    ],
-
-    facts: [
-      ['Sound', 'Techno'],
-      ['Signal origin', 'Tehran'],
-      ['Transmits on', 'Instagram · SoundCloud · YouTube']
-    ],
-
-    demos: 'Demos, bookings, collaborations: send it through the form. Every signal gets heard.'
+    // the two lines under the name on the first screen
+    what: 'Underground techno from Tehran.',
+    line: 'A label and artist collective.',
+    // the line that goes with the name wherever the name stands alone (the foot of every page)
+    tag: 'Techno label and artist collective. Tehran.',
+    // the lines beside the section words
+    mixes: 'One DJ each. The series began in 2020 as the Oscillator Series, and the numbers carry on.',
+    artists: 'Each poster comes from that artist\'s mix in the series.',
+    quiet: 'No date announced yet. New nights are announced first on Instagram.',
+    contact: 'Demos, bookings, collaborations. Every message is read.'
   },
 
   /* ------------------------------------------------------------------------
-     ARTISTS — "02 — Voices"
-     slug         url id  →  #/artist/<slug>
-     num          the number on the artist's poster (their Oscillator series episode);
-                  optional — taken from their series mix (osc-031 → 031) when left out
-     poster       the artist's series poster, shown as-is on the roster card and profile
-     photo        main portrait (black & white; used when there is no poster)
-     photos       extra images shown in the profile
-     transmissions ids from the list further down
-     videos       { src: 'assets/video/x.mp4', poster: '...', caption: '' }
-                  or { youtube: 'VIDEO_ID', caption: '' }
+     ARTISTS
+     slug         the address: /artists/<slug>
+     num          the number on the artist's poster (their mix in the series);
+                  optional: taken from their series mix (osc-031 → 031) when left out
+     poster       the artist's series poster, shown as it is on the artist's card and page
+     photo        a portrait, used only when there is no poster
+          transmissions the ids of the artist's mixes, from the series further down
+     videos       { youtube: 'VIDEO_ID', caption: '' }, shown as links to YouTube
      links        instagram / soundcloud / residentadvisor / bandcamp /
-                  beatport / spotify / youtube — empty ones are hidden
+                  beatport / spotify / youtube: empty ones are hidden
      ------------------------------------------------------------------------ */
   artists: [
     // Roster in series order (newest first), each with their series poster
     { slug: 'la-hera', name: 'La Hera', poster: 'assets/img/posters/la-hera.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/dj_la_hera/', soundcloud: '' }, transmissions: ['osc-019'], videos: [] },
-    { slug: 'kenzo', name: 'Kenzo', poster: 'assets/img/posters/kenzo.jpg', role: '', city: '', photo: 'assets/img/artist-kenzo.jpg', bio: [], links: { instagram: 'https://www.instagram.com/shayan.kenzo/', soundcloud: '' }, transmissions: ['osc-031'], videos: [] },
-    { slug: 'mahyar-arabiyan', name: 'Mahyar Arabiyan', poster: 'assets/img/posters/mahyar-arabiyan.jpg', role: '', city: '', photo: 'assets/img/artist-mahyar-arabiyan.jpg', bio: [], links: { instagram: 'https://www.instagram.com/mah7arr/', soundcloud: '' }, transmissions: ['osc-030'], videos: [] },
-    { slug: 'pooyan', name: 'Pooyan', poster: 'assets/img/posters/pooyan.jpg', role: '', city: '', photo: 'assets/img/artist-pooyan.jpg', bio: [], links: { instagram: 'https://www.instagram.com/pooyansaadati/', soundcloud: '' }, transmissions: ['osc-029'], videos: [] },
-    { slug: 'barbad', name: 'Barbad', poster: 'assets/img/posters/barbad.jpg', role: '', city: '', photo: 'assets/img/artist-barbad.jpg', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: ['osc-028'], videos: [] },
-    { slug: 'del4raa', name: 'Del4raa', poster: 'assets/img/posters/del4raa.jpg', role: '', city: '', photo: 'assets/img/artist-del4raa.jpg', bio: [], links: { instagram: 'https://www.instagram.com/delara.toyuri/', soundcloud: '' }, transmissions: ['osc-027'], videos: [] },
-    { slug: 'kiarash', name: 'Kiarash', poster: 'assets/img/posters/kiarash.jpg', role: '', city: '', photo: 'assets/img/artist-kiarash.jpg', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: ['osc-026'], videos: [] },
-    { slug: 'traumatic', name: 'Traumatic', poster: 'assets/img/posters/traumatic.jpg', role: '', city: '', photo: 'assets/img/artist-traumatic.jpg', bio: [], links: { instagram: 'https://www.instagram.com/trmc.live/', soundcloud: '' }, transmissions: ['osc-025'], videos: [] },
-    { slug: 'xaxwave', name: 'Xaxwave', poster: 'assets/img/posters/xaxwave.jpg', role: '', city: '', photo: 'assets/img/artist-xaxwave.jpg', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: ['osc-024'], videos: [] },
-    { slug: 'badador', name: 'Badador', poster: 'assets/img/posters/badador.jpg', role: '', city: '', photo: 'assets/img/artist-badador.jpg', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: ['osc-023'], videos: [] },
-    { slug: 'ronin', name: 'Ronin', poster: 'assets/img/posters/ronin.jpg', role: '', city: '', photo: 'assets/img/artist-ronin.jpg', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: ['osc-022'], videos: [] },
-    { slug: 'dynno', name: 'Dynno', poster: 'assets/img/posters/dynno.jpg', role: 'Resident artist', city: 'Tehran', photo: 'assets/img/artist-dynno.jpg', bio: [], links: { instagram: 'https://www.instagram.com/dynno.music/', soundcloud: '' }, transmissions: ['osc-021'], videos: [] },
-    // The Oscillator Series, #020 and earlier — guests, each with their series poster
+    { slug: 'kenzo', name: 'Kenzo', poster: 'assets/img/posters/kenzo.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/shayan.kenzo/', soundcloud: '' }, transmissions: ['osc-031'], videos: [] },
+    { slug: 'mahyar-arabiyan', name: 'Mahyar Arabiyan', poster: 'assets/img/posters/mahyar-arabiyan.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/mah7arr/', soundcloud: '' }, transmissions: ['osc-030'], videos: [] },
+    { slug: 'pooyan', name: 'Pooyan', poster: 'assets/img/posters/pooyan.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/pooyansaadati/', soundcloud: '' }, transmissions: ['osc-029'], videos: [] },
+    { slug: 'barbad', name: 'Barbad', poster: 'assets/img/posters/barbad.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: ['osc-028'], videos: [] },
+    { slug: 'del4raa', name: 'Del4raa', poster: 'assets/img/posters/del4raa.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/delara.toyuri/', soundcloud: '' }, transmissions: ['osc-027'], videos: [] },
+    { slug: 'kiarash', name: 'Kiarash', poster: 'assets/img/posters/kiarash.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: ['osc-026'], videos: [] },
+    { slug: 'traumatic', name: 'Traumatic', poster: 'assets/img/posters/traumatic.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/trmc.live/', soundcloud: '' }, transmissions: ['osc-025'], videos: [] },
+    { slug: 'xaxwave', name: 'Xaxwave', poster: 'assets/img/posters/xaxwave.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: ['osc-024'], videos: [] },
+    { slug: 'badador', name: 'Badador', poster: 'assets/img/posters/badador.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: ['osc-023'], videos: [] },
+    { slug: 'ronin', name: 'Ronin', poster: 'assets/img/posters/ronin.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: '', soundcloud: '' }, transmissions: ['osc-022'], videos: [] },
+    { slug: 'dynno', name: 'Dynno', poster: 'assets/img/posters/dynno.jpg', role: 'Resident artist', city: 'Tehran', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/dynno.music/', soundcloud: '' }, transmissions: ['osc-021'], videos: [] },
+    // #020 and earlier: guests, each with their series poster
     { slug: 'shabi-seyf', name: 'Shabi Seyf', poster: 'assets/img/posters/shabi-seyf.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/shabiseyf/', soundcloud: '' }, transmissions: ['osc-020'], videos: [] },
     { slug: 'natalia-zaneti', name: 'Natalia Zaneti', poster: 'assets/img/posters/natalia-zaneti.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/nataliazaneti/', soundcloud: '' }, transmissions: ['osc-018'], videos: [] },
     { slug: 'araam', name: 'Araam', poster: 'assets/img/posters/araam.jpg', role: '', city: '', photo: '', bio: [], links: { instagram: 'https://www.instagram.com/aramdien/', soundcloud: '' }, transmissions: ['osc-017'], videos: [] },
@@ -79,30 +73,17 @@ window.OSCILLATOR = {
   ],
 
   /* ------------------------------------------------------------------------
-     TRANSMISSIONS — "03"
-     video: the featured video from the label's YouTube channel, shown first
-            (poster = still image; the player loads only when pressed;
-            no = its number in the series, kind = what it is).
-     transmissions: the mix shown large at the top of the series. Each entry is either the
-            id of a mix in the series below ('osc-031'), optionally with overrides
-            ({ ref: 'osc-031', cover: '…' }), or a full object:
-            { id, title, artist, type, date, duration (s), cover, soundcloud, tracklist, waveform }
+     THE LATEST MIX
+     transmissions: a larger cover for the mix shown large (the latest one): { ref: 'osc-031', cover: '…' }.
+     A mix that was also filmed carries its YouTube id in the series below (youtube: '…') and gets a Video link.
      ------------------------------------------------------------------------ */
-  video: {
-    youtube: 'POCYIXH-Hp4',
-    title: 'Keyv B2B Amiri',
-    no: '006', kind: 'Filmed set',
-    date: '2020-11-04',
-    poster: 'assets/img/video-006.jpg',
-    channel: 'https://www.youtube.com/@oscillator2510'
-  },
   transmissions: [
     { ref: 'osc-031', cover: 'assets/img/series/031-large.jpg' }
   ],
 
   /* ------------------------------------------------------------------------
-     THE OSCILLATOR SERIES — the label's numbered mix series on SoundCloud
-     (soundcloud.com/oscillatorr). Newest first. 'artist' is a roster slug when
+     THE SERIES: the label's numbered mixes on SoundCloud (soundcloud.com/oscillatorr). Newest first.
+     They began as the Oscillator Series, so their titles keep that name; the site shows the number and the DJ. 'artist' is a roster slug when
      the DJ is on the roster (the mix then also shows on their profile),
      otherwise the guest's name.
      ------------------------------------------------------------------------ */
@@ -140,16 +121,16 @@ window.OSCILLATOR = {
     { id: 'osc-001', title: 'Oscillator #001', artist: 'Borna Farshid', type: 'Series', date: '2020-09-01', duration: 4443, cover: 'assets/img/series/001.jpg', soundcloud: 'https://soundcloud.com/oscillatorr/borna-farshid', waveform: [0.97,0.96,0.97,0.97,0.96,0.96,0.97,0.95,0.93,0.95,0.86,0.88,0.86,0.89,0.94,0.86,0.89,0.79,0.84,0.84,0.89,0.95,0.95,0.98,0.93,0.94,0.94,0.96,0.96,0.99,0.98,0.98,0.98,0.98,0.98,0.97,0.96,0.96,0.98,1.0,0.96,0.94,0.98,0.98,0.96,0.97,0.96,0.96,0.96,0.96,0.94,0.94,0.95,0.96,0.94,0.95,0.94,0.94,0.95,0.84,0.85,0.84,0.89,0.86,0.94,0.95,0.94,0.94,0.94,0.95,0.95,0.95,0.95,0.96,0.96,0.96,0.96,0.92,0.96,0.96,0.96,0.97,0.96,0.95,0.96,0.94,0.95,0.94,0.94,0.94,0.94,0.92,0.97,0.95,0.96,0.97,0.96,0.95,0.96,0.97,0.96,0.96,0.94,0.92,0.94,0.94,0.94,0.96,0.96,0.94,0.89,0.91,0.88,0.89,0.91,0.92,0.94,0.89,0.85,0.78] }
   ],
   /* ------------------------------------------------------------------------
-     EVENTS — "05 Next signal" (on the home page: the next two; all of them on /events).
-     Leave empty to show the "no signal" state. Posters go in assets/img/events/.
-     { date: '2026-11-14', title: 'Oscillator Night 01', venue: 'Secret location', city: 'Tehran',
+     NIGHTS (on the home page: the coming ones and the latest posters; all of them on /events).
+     With no coming date the site says so and points to Instagram. Posters go in assets/img/events/.
+     { date: '2026-11-14', title: 'Night 01', venue: 'Secret location', city: 'Tehran',
        lineup: ['kenzo', 'pooyan', 'Guest Name'], poster: 'assets/img/events/2026-11-14.jpg',
        link: 'https://…', linkLabel: 'Tickets', designer: 'Erfan Jamshidi' }
      lineup takes artist slugs (they link to the artist) or plain names; link / linkLabel are optional.
-     designer: who made the poster (credited above the archive as on the posters: POSTERS //// NAME).
+     designer: who made the poster (credited under the posters).
      Dates are shown the way the posters write them, OCT.15 . 2026, next to the Persian date.
-     Dates that have passed move by themselves into the "Past signals" archive on /events.
-     Every poster opens full size when tapped.
+     Dates that have passed move by themselves into the past nights on /events.
+     Every poster opens whole when tapped. Posters are shown as they are: never cropped or recoloured.
      ------------------------------------------------------------------------ */
   events: [
     { date: '2026-10-15', title: 'All Night in Hell', lineup: ['Keyv', 'Erfa (opening)'],
@@ -167,20 +148,5 @@ window.OSCILLATOR = {
       poster: 'assets/img/events/2023-08-17-oscillator.jpg', designer: 'Erfan Jamshidi' },
     { date: '2023-08-03', title: 'Oscillator', lineup: ['dynno', 'Nevak', 'Hamed', 'Keyv'],
       poster: 'assets/img/events/2023-08-03-oscillator.jpg', designer: 'Erfan Jamshidi' }
-  ],
-
-  /* ------------------------------------------------------------------------
-     FEEDBACK — "04" — the visual archive.
-     panorama: the image the section travels across while you scroll — a wide one
-               pans sideways, a tall one tilts from top to bottom.
-     media: extra photos / videos shown underneath.
-       { type: 'image', src: 'assets/img/x.jpg', caption: '' }
-       { type: 'video', src: 'assets/video/x.mp4', poster: 'assets/img/x.jpg', caption: '' }
-     ------------------------------------------------------------------------ */
-  feedback: {
-    panorama: 'assets/img/room.jpg',
-    caption: 'the room is *the instrument*',
-    // extra photos / videos from the nights (shown as a grid under the room)
-    media: []
-  }
+  ]
 };
