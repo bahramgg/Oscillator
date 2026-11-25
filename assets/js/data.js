@@ -161,5 +161,62 @@ window.TM = {
       poster: 'assets/img/events/2023-07-13-oscillator.jpg', designer: 'Erfan Jamshidi', motion: 'assets/video/2023-07-13.mp4' },
     { date: '2023-03-09', title: 'The Last Event of the Year', lineup: ['Hamed', 'Siamo', 'Keyv'],
       poster: 'assets/img/events/2023-03-09-the-last-event-of-the-year.jpg', designer: 'Erfan Jamshidi', motion: 'assets/video/2023-03-09.mp4' }
+  ],
+
+  /* ------------------------------------------------------------------------
+     THE ROOM (/room, entered from "The room" on the home page): a corridor walked by scrolling, with Keyv's sets on its walls,
+     its floor and its ceiling, the newest first. Taken from @keyvdj on Instagram and from the nights above.
+     night      the date of a night above: its title, line-up, poster and designer come from there, and it links to its page
+     or, for a set that is not one of the nights:
+     title, date ('YYYY-MM' when only the month is known), image and alt (what the picture shows), link and linkLabel (where the
+     whole thing is)
+     kind, who  the small line under the name: what it was, and with whom
+     sub        the line under the name when the set is open
+     say        one or two sentences
+     rows       more [label, value] pairs for the open set (a night already shows its line-up, its date and its poster's designer)
+     ig         the post on Instagram, when there is one
+     ------------------------------------------------------------------------ */
+  room: [
+    { night: '2026-10-15', kind: 'All night', who: 'Keyv + Erfa', sub: 'Keyv all night, Erfa opening',
+      say: 'The whole night is Keyv’s, after an opening set by Erfa.',
+      ig: 'https://www.instagram.com/p/DeCg3EnAHgq/' },
+    { night: '2026-09-10', kind: 'Night', who: 'Nine DJs', sub: 'Tehran Underground and Oscillator',
+      say: 'Two crews on one bill, and nine names on the line-up.' },
+    { night: '2026-08-27', kind: 'All night long', who: 'Keyv + Msiyan', sub: 'Keyv and Msiyan',
+      say: 'All Night Long, shared this time with Msiyan.' },
+    { night: '2026-07-23', kind: 'All night long', who: 'Solo', sub: 'Keyv, alone',
+      say: 'One name on the poster, and one DJ from the opening to the close.' },
+    { night: '2026-06-11', kind: 'All night long', who: 'Solo', sub: 'Keyv, alone',
+      say: 'Keyv alone at the decks for the whole night.' },
+    { title: 'Uchiha Mob 08', date: '2025-11-17', image: 'assets/img/room/uchiha-ep08.webp', kind: 'Filmed set', who: 'Uchiha Mob',
+      alt: 'Ifeeelokay and Keyv at the decks in front of a wall of blue light',
+      sub: 'Ifeeelokay b2b Keyv, the finale of Series 01',
+      say: 'The finale of Uchiha Mob’s first series: Keyv back to back with Ifeeelokay, who also directed it. Hard techno, filmed whole and out on YouTube.',
+      rows: [['Series', 'Uchiha Mob, Series 01'], ['Episode', '08, the finale'], ['Sound', 'Hard techno'], ['Director', '@ifeeelokay']],
+      link: 'https://www.instagram.com/p/DRKhI_PCIKD/', linkLabel: 'On Instagram' },
+    { title: 'Uchiha Mob 01', date: '2025-09', image: 'assets/img/room/uchiha-ep01.webp', kind: 'Filmed set', who: 'Uchiha Mob',
+      alt: 'Keyv at the decks in front of bars of blue light',
+      sub: 'Keyv, an electro set. Series 01, Episode 01',
+      say: 'Uchiha Mob’s first series opens with Keyv: a full electro set in front of the light wall, filmed and put out whole on YouTube.',
+      rows: [['Series', 'Uchiha Mob, Series 01'], ['Episode', '01 of 08'], ['Sound', 'Electro'], ['Photographs', '@barismostofi']],
+      link: 'https://www.instagram.com/p/DOtVEVaCLLP/', linkLabel: 'On Instagram' },
+    { night: '2025-08-28', kind: 'Night', who: 'Keyv + Elfa', sub: 'Keyv on the decks, Elfa on the visuals',
+      say: 'Sound and picture: Keyv plays, and Elfa makes the visuals.' },
+    { night: '2023-09-14', kind: 'Night', who: 'Four DJs', sub: 'With Hamed, Nycto and Sosu',
+      say: 'Keyv, Hamed, Nycto and Sosu. The poster also moves: its film is on the night’s page.' },
+    { night: '2023-08-17', kind: 'Night', who: 'Five DJs', sub: 'With Gia, Medo, Daimonic and Hamed',
+      say: 'Five names on one poster: Gia, Medo, Daimonic, Hamed and Keyv.' },
+    { night: '2023-08-03', kind: 'Night', who: 'Four DJs', sub: 'With dynno, Nevak and Hamed',
+      say: 'dynno, Nevak, Hamed and Keyv. The night had two posters, and one of them moves.' },
+    { night: '2023-07-13', kind: 'Night', who: 'Three sets', sub: 'With Hamed, and Del4raa b2b Mah7arr',
+      say: 'Keyv and Hamed, and Del4raa back to back with Mah7arr.' },
+    { night: '2023-03-09', kind: 'Night', who: 'Three DJs', sub: 'With Hamed and Siamo',
+      say: 'Hamed, Siamo and Keyv on the last night of the year.' },
+    { title: 'Keyv B2B Amiri', date: '2020-11-03', image: 'assets/img/series/006.jpg', kind: 'B2B session', who: 'Oscillator Series',
+      alt: 'The cover of session 006: Keyv and Amiri, side by side',
+      sub: 'Session 006 of the series, with Amiri',
+      say: 'Nearly two hours back to back with Amiri: the sixth session of the series, on SoundCloud and YouTube.',
+      rows: [['Length', '1:57:23'], ['With', 'Amiri'], ['Where', 'SoundCloud, YouTube']],
+      link: '/mixes/006', linkLabel: 'The session' }
   ]
 };

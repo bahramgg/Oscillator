@@ -170,7 +170,9 @@
         // from its ceiling down to the dancer on the floor as the page scrolls, and its strips slip sideways with the speed of the scroll
         '<section class="scene scene--room" data-scene="room"><div class="scene__pin"><h2 class="mod__h g">The room</h2><div class="scene__view">' +
           '<div class="scene__band room__pano"><canvas aria-hidden="true"></canvas><img class="room__img" src="assets/img/room.webp" width="1720" height="2576" loading="lazy" decoding="async" alt="One of the nights: a room under green light, people dancing, seen from behind"></div>' +
-          '<div class="room__foot"><p class="room__cap">The room is the instrument.</p><p class="room__rec g" aria-hidden="true"><i></i>REC <span class="room__tc">00:00:00:00</span></p></div></div></div></section>' +
+          // the way into the room itself (/room, room.js): a corridor walked by scrolling, with Keyv's sets on its walls
+          '<div class="room__foot"><div class="room__say"><p class="room__cap">The room is the instrument.</p>' + link('/room', 'btn room__enter', 'Enter the room<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13.5 6.5L19 12l-5.5 5.5"/></svg>') + '</div>' +
+          '<p class="room__rec g" aria-hidden="true"><i></i>REC <span class="room__tc">00:00:00:00</span></p></div></div></div></section>' +
         // (what the label is and its other pages are in the foot, which follows at once: the home page says each thing once)
         foot();
     },
@@ -252,14 +254,16 @@
         '<input class="form__hp" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true"><button class="btn" type="submit">Send</button><p class="form__status" role="status"></p></form>' +
         '<section class="sec sec--end">' + linkList(L, ['instagram', 'soundcloud', 'youtube'], 'biglinks g') + '</section>' + foot();
     },
-    lost: function () { return head('l', 'Not here', 'This page does not exist.') + '<section class="sec">' + link('/', 'btn', 'Home') + '</section>' + foot(); }
+    lost: function () { return head('l', 'Not here', 'This page does not exist.') + '<section class="sec">' + link('/', 'btn', 'Home') + '</section>' + foot(); },
+    // the room: Keyv's sets in a corridor walked by scrolling (room.js makes the page and walks it; data.js, room, is its content)
+    room: function () { return window.TM_ROOM ? TM_ROOM.html({ href: href, head: head, foot: foot }) : VIEWS.lost(); }
   };
   function page(r) {
     var s = r.split('/').filter(Boolean);
     if (!s.length) return { html: VIEWS.home(), title: (L.name || 'Tehran Movement') + ' | Techno label and artist collective', nav: '/' };
     var one = { mixes: 'mix', artists: 'artist', events: 'event' }[s[0]];
     if (s.length > 1 && one) { var x = one === 'mix' ? mixByNo(s[1]) : one === 'artist' ? artistBySlug(s[1]) : eventByDate(s[1]); return { html: VIEWS[one](s[1]), title: (x ? (one === 'mix' ? mixLabel(x) : one === 'artist' ? x.name : x.title) : 'Not here') + ' | ' + L.name, nav: '/' + s[0] }; }
-    if (s.length === 1 && VIEWS[s[0]] && s[0] !== 'home' && s[0] !== 'lost' && !/^(mix|artist|event)$/.test(s[0])) return { html: VIEWS[s[0]](), title: { mixes: N.mixes, artists: N.artists, events: N.events, label: N.label, contact: N.contact }[s[0]] + ' | ' + L.name, nav: '/' + s[0] };
+    if (s.length === 1 && VIEWS[s[0]] && s[0] !== 'home' && s[0] !== 'lost' && !/^(mix|artist|event)$/.test(s[0])) return { html: VIEWS[s[0]](), title: { mixes: N.mixes, artists: N.artists, events: N.events, label: N.label, contact: N.contact, room: 'The room' }[s[0]] + ' | ' + L.name, nav: '/' + s[0] };
     return { html: VIEWS.lost(), title: 'Not here | ' + L.name, nav: '' };
   }
 
@@ -275,6 +279,7 @@
     window.scrollTo(0, 0);
     tone(); Scenes.start(); FX.all(main); Reveal.watch(); drawBars(); initForms(); paintPlay();
     if (!first) main.focus({ preventScroll: true });
+    if (window.TM_ROOM) TM_ROOM.landed(r, main);      // the room that was on the screen lets go; back from it, the home page opens at its room
   }
   // the address has changed: the brush passes over the page that is there, and the new one stands behind it. From the menu the
   // new page is simply there when the menu lifts; so it is the first time, and wherever motion is not wanted
@@ -609,7 +614,9 @@
           measure: function () { d = Math.min(window.devicePixelRatio || 1, 1.5); W = Math.round(pano.clientWidth * d); H = Math.round(pano.clientHeight * d); if (W && H) { cv.width = W; cv.height = H; } fresh = true; go(); },
           update: function (vh) { var r = el.getBoundingClientRect(); if (r.bottom > -40 && r.top < vh + 40) go(); }
         };
-      }
+      },
+      // the room's own page (/room): the corridor of Keyv's sets, walked by the scroll (room.js)
+      tunnel: function (el) { return window.TM_ROOM ? TM_ROOM.mount(el) : null; }
     }
   };
   window.addEventListener('scroll', function () { Scenes.kick(); }, { passive: true });

@@ -1,0 +1,596 @@
+/* Tehran Movement: the room (/room), entered from "The room" on the home page.
+   A corridor drawn as a grid of light and walked by scrolling: Keyv's sets hang on its walls and lie on its floor and its ceiling,
+   the newest first (the content is `room` in data.js). The camera goes forward as the page scrolls, a little behind the scroll, and
+   turns a little toward the pointer; the set nearest ahead is named at the foot of the screen and marked on the rule at the right.
+   A set pointed at says "Open"; opened, it leaves its place, turns and comes to the front, the corridor dims behind it and its
+   story stands beside it; closed, it goes back to its place. At the far end the logo is on the wall.
+   One WebGL canvas, no library. The surfaces draw their own lines, so that a line stays as thin as one point at any distance and
+   fades into the dark far away; the whole picture is then bent at its edges like a wide lens.
+   app.js shows the page (VIEWS.room, with html() below) and starts it as a part that moves with the scroll (data-scene="tunnel").
+   Where motion is not wanted, or the browser cannot draw it, the page is the same sets as a plain list. */
+(function () {
+  'use strict';
+  var D = window.TM || {}, LIST = D.room || [], EVENTS = D.events || [], root = document.documentElement;
+  var MON = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+  function $(s, el) { return (el || document).querySelector(s); }
+  function $$(s, el) { return Array.prototype.slice.call((el || document).querySelectorAll(s)); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function mix(a, b, t) { return a + (b - a) * t; }
+  function smooth(a, b, v) { var t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }
+  function inOut(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+  function outCubic(t) { return 1 - Math.pow(1 - t, 3); }
+  // a day the way the posters write it (OCT.15 . 2026); a month alone as SEP . 2025
+  function when(iso) { var p = String(iso || '').split('-'); return p.length === 3 ? MON[+p[1] - 1] + '.' + p[2] + ' . ' + p[0] : p.length === 2 ? MON[+p[1] - 1] + ' . ' + p[0] : String(iso || ''); }
+  function thumb(src) { return String(src).replace(/\/([^\/]+)\.(jpe?g|png)$/i, '/t/$1.webp'); }
+  function byDate(d) { for (var i = 0; i < EVENTS.length; i++) if (EVENTS[i].date === d) return EVENTS[i]; return null; }
+
+  /* ─── the sets, as the room shows them ─────────────────────────────── */
+  var ITEMS = LIST.map(function (r) {
+    var e = r.night ? byDate(r.night) : null, rows = [];
+    if (r.night && !e) return null;
+    if (e) {
+      if ((e.lineup || []).length) rows.push(['Line-up', e.lineup.join(', ')]);
+      rows.push(['Date', when(e.date)]);
+      if (e.designer) rows.push(['Poster', e.designer]);
+    }
+    (r.rows || []).forEach(function (x) { rows.push(x); });
+    if (!e && r.date) rows.push(['Date', when(r.date)]);
+    var title = e ? e.title : r.title || '', date = e ? e.date : r.date || '';
+    return { title: title, date: date, image: e ? thumb(e.poster) : r.image || '', kind: r.kind || '', who: r.who || '', sub: r.sub || '', say: r.say || '', rows: rows,
+      alt: e ? 'The poster for ' + title + ', ' + when(date) : r.alt || title, link: e ? '/events/' + e.date : r.link || '', linkLabel: e ? 'The night' : r.linkLabel || 'More', ig: r.ig || '' };
+  }).filter(function (it) { return it && it.title && it.image; });
+  ITEMS.forEach(function (it, i) { it.i = i; });
+  var N = ITEMS.length;
+
+  // the small line under a name: what it was, with whom, when (the dots between are drawn, the brush font has none)
+  function tag(it) { return [it.kind, it.who, when(it.date)].filter(Boolean).map(function (s) { return '<span>' + esc(s) + '</span>'; }).join(''); }
+  function hrefOf(env, p) { return /^\//.test(p) && env && env.href ? env.href(p) : p; }
+  function aTo(env, p, cls, inner) {
+    if (/^\//.test(p)) return '<a class="' + cls + '" href="' + esc(hrefOf(env, p)) + '" data-link data-route="' + esc(p) + '">' + inner + '</a>';
+    return '<a class="' + cls + '" href="' + esc(p) + '" target="_blank" rel="noopener">' + inner + '</a>';
+  }
+  var I_MOON = '<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 14.6A8.4 8.4 0 0 1 9.4 3.8a8.4 8.4 0 1 0 10.8 10.8z"/></svg>';
+  var I_SUN = '<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.4"/><path d="M12 1.8v3M12 19.2v3M1.8 12h3M19.2 12h3M4.8 4.8l2.1 2.1M17.1 17.1l2.1 2.1M4.8 19.2l2.1-2.1M17.1 6.9l2.1-2.1"/></svg>';
+  var I_X = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
+  var I_ARROW = '<svg class="rm__arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13.5 6.5L19 12l-5.5 5.5"/></svg>';
+
+  // the page: the corridor's stage (fixed on the screen; the track under it is the length of the walk) and the same sets as a list,
+  // for where the corridor is not drawn
+  function html(env) {
+    env = env || {};
+    var first = ITEMS[0] || { title: '', i: 0 };
+    var stage = '<div class="rm__stage">' +
+      '<canvas class="rm__cv" aria-hidden="true"></canvas>' +
+      '<div class="rm__top"><a class="rm__brand" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/"><i class="rm__mark" aria-hidden="true"></i><span><b>Tehran Movement</b><small>The room / Keyv, live</small></span></a>' +
+        '<div class="rm__tools"><button class="rm__mode" type="button" aria-pressed="false" aria-label="Light room">' + I_MOON + I_SUN + '</button>' +
+        '<button class="rm__pill rm__ix" type="button" aria-expanded="false" aria-controls="rm-index">Index<sup>' + N + '</sup></button>' +
+        '<a class="rm__pill" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/" data-room-exit>Exit</a></div></div>' +
+      '<div class="rm__now"><p class="rm__no"><b>' + pad(1) + '</b> / ' + pad(N) + '</p><h2 class="rm__title">' + esc(first.title) + '</h2><p class="rm__tag"><i></i>' + (ITEMS[0] ? tag(first) : '') + '</p>' +
+        '<p class="rm__hint">Scroll to walk the room<span>Click a set to open it</span></p></div>' +
+      '<div class="rm__end"><p class="rm__no">The end of the room</p><p class="rm__endh">' + esc(N + ' sets, ' + (ITEMS[N - 1] ? String(ITEMS[N - 1].date).slice(0, 4) : '') + ' to ' + (ITEMS[0] ? String(ITEMS[0].date).slice(0, 4) : '')) + '</p>' +
+        '<p class="rm__endgo"><button class="rm__pill rm__pill--solid" type="button" data-room-top>Back to the start</button><a class="rm__pill" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/" data-room-exit>Exit</a></p></div>' +
+      '<nav class="rm__rule" aria-label="The sets in the room">' + ITEMS.map(function (it) { return '<button class="rm__tick" type="button" data-i="' + it.i + '" aria-label="' + esc(pad(it.i + 1) + ', ' + it.title + ', ' + when(it.date)) + '"><span>' + esc(it.title) + '</span></button>'; }).join('') + '</nav>' +
+      '<p class="rm__tip" aria-hidden="true"><i></i>Open<b></b></p><i class="rm__dot" aria-hidden="true"></i>' +
+      '<section class="rm__open" role="dialog" aria-modal="true" aria-labelledby="rm-open-h" hidden><button class="rm__x" type="button" aria-label="Close">' + I_X + '</button>' +
+        '<div class="rm__info"><p class="rm__kind"><i></i><span></span></p><h2 class="rm__h" id="rm-open-h"></h2><p class="rm__sub"></p><p class="rm__say"></p><dl class="rm__rows"></dl>' +
+        '<div class="rm__act"><p class="rm__links"></p><p class="rm__next"><span>Next set</span><button type="button"></button></p></div></div></section>' +
+      '<section class="rm__index" id="rm-index" aria-label="Every set in the room" hidden><div class="rm__ixin"><p class="rm__ixh">Index<sup>' + N + '</sup></p><ol>' + ITEMS.map(function (it) {
+        return '<li><button type="button" data-i="' + it.i + '"><span class="rm__ixno">' + pad(it.i + 1) + '</span><span class="rm__ixt">' + esc(it.title) + '</span><span class="rm__ixtag">' + tag(it) + '</span></button></li>';
+      }).join('') + '</ol></div></section>' +
+      '</div>';
+    var flat = '<div class="rm__flat">' + (env.head ? env.head('r', 'The room', 'Keyv’s sets, from @keyvdj and the nights: the newest first.') : '<h1 class="g">The room</h1>') +
+      '<ol class="rm__cards">' + ITEMS.map(function (it) {
+        var links = [it.link ? aTo(env, it.link, '', esc(it.linkLabel)) : '', it.ig ? aTo(env, it.ig, '', 'On Instagram') : ''].join('');
+        return '<li class="rmc"><figure class="rmc__img"><img src="' + esc(it.image) + '" loading="lazy" decoding="async" alt="' + esc(it.alt) + '"></figure>' +
+          '<div class="rmc__txt"><p class="rmc__no g">' + pad(it.i + 1) + ' / ' + pad(N) + '</p><h2 class="rmc__h g">' + esc(it.title) + '</h2><p class="rmc__tag g">' + tag(it) + '</p>' +
+          (it.sub ? '<p class="rmc__sub">' + esc(it.sub) + '</p>' : '') + (it.say ? '<p class="rmc__say">' + esc(it.say) + '</p>' : '') +
+          '<dl class="rmc__rows">' + it.rows.map(function (r) { return '<div><dt class="g">' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('') + '</dl>' +
+          (links ? '<p class="links">' + links + '</p>' : '') + '</div></li>';
+      }).join('') + '</ol>' + (env.foot ? env.foot() : '') + '</div>';
+    return '<section class="rm" data-scene="tunnel" aria-label="The room: Keyv’s sets"><div class="rm__track" aria-hidden="true"></div>' + stage + flat + '</section>';
+  }
+
+  /* ─── small vector tools ───────────────────────────────────────────── */
+  function v3(x, y, z) { return [x, y, z]; }
+  function add(a, b) { return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; }
+  function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+  function scl(a, k) { return [a[0] * k, a[1] * k, a[2] * k]; }
+  function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+  function cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+  function norm(a) { var l = Math.sqrt(dot(a, a)) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
+  function lerp3(a, b, t) { return [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)]; }
+  // a turn as a quaternion, from the three axes of a thing (its right, its up, its face), and back
+  function quat(r, u, f) {
+    var m00 = r[0], m11 = u[1], m22 = f[2], t = m00 + m11 + m22, s, q;
+    if (t > 0) { s = Math.sqrt(t + 1) * 2; q = [(u[2] - f[1]) / s, (f[0] - r[2]) / s, (r[1] - u[0]) / s, 0.25 * s]; }
+    else if (m00 > m11 && m00 > m22) { s = Math.sqrt(1 + m00 - m11 - m22) * 2; q = [0.25 * s, (u[0] + r[1]) / s, (f[0] + r[2]) / s, (u[2] - f[1]) / s]; }
+    else if (m11 > m22) { s = Math.sqrt(1 + m11 - m00 - m22) * 2; q = [(u[0] + r[1]) / s, 0.25 * s, (f[1] + u[2]) / s, (f[0] - r[2]) / s]; }
+    else { s = Math.sqrt(1 + m22 - m00 - m11) * 2; q = [(f[0] + r[2]) / s, (f[1] + u[2]) / s, 0.25 * s, (r[1] - u[0]) / s]; }
+    return q;
+  }
+  function slerp(a, b, t) {
+    var c = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3], s = 1, k0, k1;
+    if (c < 0) { c = -c; s = -1; }
+    if (c > 0.9995) { k0 = 1 - t; k1 = t * s; }
+    else { var o = Math.acos(c), so = Math.sin(o); k0 = Math.sin((1 - t) * o) / so; k1 = Math.sin(t * o) / so * s; }
+    var q = [a[0] * k0 + b[0] * k1, a[1] * k0 + b[1] * k1, a[2] * k0 + b[2] * k1, a[3] * k0 + b[3] * k1], l = Math.sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]) || 1;
+    return [q[0] / l, q[1] / l, q[2] / l, q[3] / l];
+  }
+  function axes(q) {
+    var x = q[0], y = q[1], z = q[2], w = q[3];
+    return { r: [1 - 2 * (y * y + z * z), 2 * (x * y + z * w), 2 * (x * z - y * w)], u: [2 * (x * y - z * w), 1 - 2 * (x * x + z * z), 2 * (y * z + x * w)] };
+  }
+
+  /* ─── the corridor's measures (one unit is one square of the grid) ──── */
+  var HW = 4, HH = 3, GAP = 6.4, Z0 = -6, AHEAD = 4.6, EPS = 0.02, K = 0.42;
+  // where each set is: on which surface, and how far off the middle of it (the order of the old corridor: right, left, above, below)
+  var SURF = ['right', 'left', 'ceil', 'floor', 'right', 'left', 'floor', 'ceil', 'left', 'right', 'floor', 'right', 'ceil', 'left'];
+  var OFF = [0.15, -0.35, 0.55, -0.45, -0.2, 0.3, 0.5, -0.6, 0.05, 0.45, -0.3, -0.55, 0.2, 0.35];
+  function zOf(i) { return Z0 - i * GAP; }
+  function station(i) { return zOf(i) + AHEAD; }      // where the camera stands when a set is the one named
+  // the walk begins where the first set is named and ends a little past the last one, before the wall at the end
+  var Z_START = station(0), Z_LAST = station(Math.max(0, N - 1)), Z_END = Z_LAST - 6, Z_WALL = zOf(Math.max(0, N - 1)) - 11, Z_BACK = 46;
+  var DARK = { bg: [0, 0, 0], ink: [0.72, 0.72, 0.7], fog: 30, vig: 0.6 }, LIGHT = { bg: [0.957, 0.953, 0.937], ink: [0.6, 0.594, 0.57], fog: 34, vig: 0.2 };
+
+  /* ─── the shaders ──────────────────────────────────────────────────── */
+  var GRID_V = 'attribute vec3 aPos; attribute vec2 aGrid; uniform mat4 uPV; varying vec3 vW; varying vec2 vG;' +
+    'void main() { vW = aPos; vG = aGrid; gl_Position = uPV * vec4(aPos, 1.0); }';
+  var GRID_F = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;' +
+    'varying vec3 vW; varying vec2 vG; uniform vec3 uCam, uInk, uBg; uniform float uFog, uShow, uDim, uPx;' +
+    'void main() {' +
+    '  vec2 f = fwidth(vG);' +
+    '  vec2 d = abs(fract(vG + 0.5) - 0.5) / max(f, vec2(1e-5));' +
+    '  float l = 1.0 - smoothstep(uPx * 0.5 - 0.5, uPx * 0.5 + 0.55, min(d.x, d.y));' +
+    '  float crowd = 1.0 - smoothstep(0.24, 0.62, max(f.x, f.y));' +
+    '  float dist = distance(vW, uCam);' +
+    '  float fog = exp(-pow(dist / uFog, 1.4)) * (0.55 + 0.45 * smoothstep(14.0, 1.5, dist));' +
+    '  float a = l * crowd * fog * uShow * (1.0 - 0.7 * uDim);' +
+    '  gl_FragColor = vec4(mix(uBg, uInk, a), 1.0);' +
+    '}';
+  var PANEL_V = 'attribute vec2 aQ; uniform mat4 uPV; uniform vec3 uC, uU, uV; varying vec2 vUv; varying vec3 vW;' +
+    'void main() { vec3 p = uC + uU * aQ.x + uV * aQ.y; vW = p; vUv = aQ + 0.5; gl_Position = uPV * vec4(p, 1.0); }';
+  var PANEL_F = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;' +
+    'varying vec2 vUv; varying vec3 vW; uniform sampler2D uTex; uniform vec3 uCam, uBg, uTint; uniform float uFog, uA, uDim, uInk;' +
+    'void main() {' +
+    '  vec4 t = texture2D(uTex, vUv);' +
+    '  vec2 fw = fwidth(vUv) * 1.3;' +
+    '  vec2 e = smoothstep(vec2(0.0), fw, vUv) * smoothstep(vec2(0.0), fw, vec2(1.0) - vUv);' +
+    '  float fog = exp(-pow(distance(vW, uCam) / uFog, 1.4));' +
+    '  vec3 c = mix(t.rgb, uTint, uInk) * (1.0 - 0.72 * uDim);' +
+    '  gl_FragColor = vec4(mix(uBg, c, fog), e.x * e.y * uA * mix(1.0, t.a, uInk));' +
+    '}';
+  var POST_V = 'attribute vec2 aP; varying vec2 vUv; void main() { vUv = aP * 0.5 + 0.5; gl_Position = vec4(aP, 0.0, 1.0); }';
+  var POST_F = 'precision mediump float; varying vec2 vUv; uniform sampler2D uScene; uniform vec2 uAsp; uniform float uK, uVig; uniform vec3 uBg;' +
+    'void main() {' +
+    '  vec2 p = vUv * 2.0 - 1.0; vec2 q = p * uAsp; float r2 = dot(q, q);' +
+    '  vec2 s = p * (1.0 + uK * r2) / (1.0 + uK);' +
+    '  vec3 c = texture2D(uScene, s * 0.5 + 0.5).rgb;' +
+    '  float v = smoothstep(1.2, 0.42, sqrt(r2));' +
+    '  gl_FragColor = vec4(mix(uBg, c, mix(1.0, v, uVig)), 1.0);' +
+    '}';
+
+  /* ─── the room on the screen ───────────────────────────────────────── */
+  var back = false;      // the visitor left by "Exit" or by going back: the home page opens at its room
+  function mount(el) {
+    if (el._room) return el._room;
+    if (!N) return null;
+    var cv = $('.rm__cv', el), gl = null;
+    try { gl = cv.getContext('webgl', { alpha: false, antialias: false, depth: true, stencil: false, premultipliedAlpha: false, powerPreference: 'high-performance' }); } catch (e) { gl = null; }
+    if (!gl || !gl.getExtension('OES_standard_derivatives')) return null;
+    var aniso = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic'), maxAniso = aniso ? gl.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
+    var G, P, Q;
+    function shader(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+    function program(vs, fs, attrs) {
+      var p = gl.createProgram(); gl.attachShader(p, shader(gl.VERTEX_SHADER, vs)); gl.attachShader(p, shader(gl.FRAGMENT_SHADER, fs));
+      attrs.forEach(function (a, i) { gl.bindAttribLocation(p, i, a); }); gl.linkProgram(p);
+      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+      var u = {}, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+      for (var i = 0; i < n; i++) { var a = gl.getActiveUniform(p, i); u[a.name] = gl.getUniformLocation(p, a.name); }
+      return { p: p, u: u };
+    }
+    try { G = program(GRID_V, GRID_F, ['aPos', 'aGrid']); P = program(PANEL_V, PANEL_F, ['aQ']); Q = program(POST_V, POST_F, ['aP']); }
+    catch (e) { return null; }
+
+    // the corridor's four surfaces and the wall at its end, each with its own two measures for the grid
+    var T = [], zb = Z_BACK, zf = Z_WALL;
+    function quad(a, b, c, d) { [a, b, c, a, c, d].forEach(function (v) { T.push(v[0], v[1], v[2], v[3], v[4]); }); }
+    quad([-HW, -HH, zb, -HW, zb], [HW, -HH, zb, HW, zb], [HW, -HH, zf, HW, zf], [-HW, -HH, zf, -HW, zf]);      // floor (x, z)
+    quad([-HW, HH, zb, -HW, zb], [HW, HH, zb, HW, zb], [HW, HH, zf, HW, zf], [-HW, HH, zf, -HW, zf]);          // ceiling
+    quad([-HW, -HH, zb, -HH, zb], [-HW, HH, zb, HH, zb], [-HW, HH, zf, HH, zf], [-HW, -HH, zf, -HH, zf]);      // left wall (y, z)
+    quad([HW, -HH, zb, -HH, zb], [HW, HH, zb, HH, zb], [HW, HH, zf, HH, zf], [HW, -HH, zf, -HH, zf]);          // right wall
+    quad([-HW, -HH, zf, -HW, -HH], [HW, -HH, zf, HW, -HH], [HW, HH, zf, HW, HH], [-HW, HH, zf, -HW, HH]);      // the end (x, y)
+    var tunnel = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, tunnel); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(T), gl.STATIC_DRAW);
+    var card = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, card); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5]), gl.STATIC_DRAW);
+    var tri = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, tri); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    var fbo = { fb: gl.createFramebuffer(), tex: gl.createTexture(), depth: gl.createRenderbuffer(), w: 0, h: 0 };
+
+    var stage = $('.rm__stage', el), track = $('.rm__track', el), now = $('.rm__now', el), noEl = $('.rm__no b', now), titleEl = $('.rm__title', now), tagEl = $('.rm__tag', now);
+    var ticks = $$('.rm__tick', el), tip = $('.rm__tip', el), tipB = $('b', tip), dotEl = $('.rm__dot', el), dlg = $('.rm__open', el), info = $('.rm__info', dlg), ixBtn = $('.rm__ix', el), ixEl = $('.rm__index', el), modeBtn = $('.rm__mode', el);
+
+    // each set as a picture in the corridor: placed when its picture has come (its shape decides its size)
+    var panels = ITEMS.map(function (it) { return { it: it, ready: false, a: 0, tex: null, fade: 0, color: '' }; });
+    var markTex = null, markA = 0;
+    function pot(n, cap) { var p = 1; while (p < n && p < cap) p *= 2; return p; }
+    function texture(im, alpha) {
+      var cap = Math.min(window.screen.width || 1024, window.screen.height || 1024) >= 700 ? 1024 : 512;
+      var w = pot(im.naturalWidth, cap), h = pot(im.naturalHeight, cap), c = document.createElement('canvas'); c.width = w; c.height = h;
+      var g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, w, h);
+      var t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+      gl.texImage2D(gl.TEXTURE_2D, 0, alpha ? gl.RGBA : gl.RGB, alpha ? gl.RGBA : gl.RGB, gl.UNSIGNED_BYTE, c);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      if (aniso) gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, maxAniso));
+      return t;
+    }
+    // the picture's own colour, for the dot beside its name: the most vivid part of a small copy (none for a grey picture)
+    function colour(im) {
+      try {
+        var c = document.createElement('canvas'); c.width = c.height = 24; var g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0, 24, 24);
+        var d = g.getImageData(0, 0, 24, 24).data, px = [], i;
+        for (i = 0; i < d.length; i += 4) { var mx = Math.max(d[i], d[i + 1], d[i + 2]), mn = Math.min(d[i], d[i + 1], d[i + 2]); px.push([(mx ? (mx - mn) / mx : 0) * Math.sqrt(mx / 255), d[i], d[i + 1], d[i + 2]]); }
+        px.sort(function (a, b) { return b[0] - a[0]; });
+        if (px[0][0] < 0.3) return '';
+        var top = px.slice(0, 24), r = 0, gg = 0, b = 0; top.forEach(function (p) { r += p[1]; gg += p[2]; b += p[3]; });
+        r /= top.length; gg /= top.length; b /= top.length;
+        var k = 235 / Math.max(r, gg, b, 1); return 'rgb(' + Math.round(Math.min(255, r * k)) + ',' + Math.round(Math.min(255, gg * k)) + ',' + Math.round(Math.min(255, b * k)) + ')';
+      } catch (e) { return ''; }
+    }
+    function place(pn) {
+      var i = pn.it.i, s = SURF[i % SURF.length], o = OFF[i % OFF.length], z = zOf(i), a = pn.a, w, h;
+      if (s === 'right' || s === 'left') {
+        h = Math.min(4.3, 5.2 / a); w = h * a; if (w > 5.2) { w = 5.2; h = w / a; }
+        var y = clamp(o * 0.7, -HH + h / 2 + 0.25, HH - h / 2 - 0.25);
+        pn.C = [s === 'right' ? HW - EPS : -HW + EPS, y, z]; pn.U = [0, 0, s === 'right' ? 1 : -1]; pn.V = [0, 1, 0];
+      } else {
+        h = Math.min(4.7, 5 / a); w = h * a; if (w > 4.8) { w = 4.8; h = w / a; }      // h runs along the corridor
+        var x = clamp(o * 1.4, -HW + w / 2 + 0.3, HW - w / 2 - 0.3);
+        pn.C = [x, s === 'floor' ? -HH + EPS : HH - EPS, z]; pn.U = [1, 0, 0]; pn.V = [0, 0, s === 'floor' ? -1 : 1];
+      }
+      pn.w = w; pn.h = h; pn.N = norm(cross(pn.U, pn.V)); pn.q = quat(pn.U, pn.V, pn.N);
+    }
+    var asked = 0;
+    function fetchNext() {
+      // the pictures come in the order they are met: the first few at once, the rest when the room has arrived
+      var upto = Math.min(panels.length, ready ? panels.length : cur + 6);
+      while (asked < upto) {
+        (function (pn) {
+          var im = new Image(); im.decoding = 'async';
+          im.onload = function () { if (dead) return; pn.a = im.naturalWidth / im.naturalHeight || 1; place(pn); pn.tex = texture(im, false); pn.color = colour(im); pn.ready = true; if (pn.it.i === cur) paintNow(true); kick(); };
+          im.onerror = function () { pn.failed = true; };
+          im.src = pn.it.image;
+        })(panels[asked]);
+        asked++;
+      }
+    }
+    (function () {
+      var im = new Image(); im.decoding = 'async';
+      im.onload = function () { if (dead) return; markTex = texture(im, true); markA = im.naturalWidth / im.naturalHeight || 1; kick(); };
+      im.src = (root.getAttribute('data-assets') || 'assets/') + 'brush/mark-320.webp';
+    })();
+
+    /* the state of the walk */
+    var dead = false, raf = 0, last = 0, t0 = 0, vw = 1, vh = 1, aspect = 1, dpr = 1, cw = 0, ch = 0, stepPx = 600, maxScroll = 1, trackW = 0, trackH = 0;
+    var camZ = Z_START, tz = Z_START, mx = 0, my = 0, tmx = 0, tmy = 0, px = -1, py = -1, pointing = false, speed = 0, fovNow = 1.2;
+    var eye = [0, 0, Z_START], R = { r: [1, 0, 0], u: [0, 1, 0], b: [0, 0, 1] }, PV = new Float32Array(16);
+    var cur = 0, shownCur = -1, atEnd = false, hover = -1, tipW = 0, state = 'walk', oi = -1, ot = 0, after = null, pending = -1, savedY = 0, lastFocus = null;
+    var light = false, lt = 0, sig = '', walked = false, ready = false;
+    try { light = localStorage.getItem('tm:room') === 'light'; } catch (e) { /* no storage: dark */ }
+    lt = light ? 1 : 0; el.classList.toggle('is-light', light); modeBtn.setAttribute('aria-pressed', String(light)); modeBtn.setAttribute('aria-label', light ? 'Dark room' : 'Light room');
+
+    function size() {
+      vw = stage.clientWidth || window.innerWidth; vh = stage.clientHeight || window.innerHeight; aspect = vw / vh;
+      dpr = Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(3.6e6 / (vw * vh)));
+      var w = Math.round(vw * dpr), h = Math.round(vh * dpr);
+      if (w !== cw || h !== ch) {
+        cw = cv.width = w; ch = cv.height = h;
+        gl.bindTexture(gl.TEXTURE_2D, fbo.tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, fbo.depth); gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbo.tex, 0);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, fbo.depth); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      }
+      // the walk's length on the page: a little less than a screen for each set. Measured again only when the screen has really
+      // changed: on a phone the bar of the browser comes and goes while the page scrolls, and the walk must not jump with it
+      var ih = window.innerHeight;
+      if (vw !== trackW || Math.abs(ih - trackH) > 160) {
+        var keep = maxScroll > 1 ? window.scrollY / maxScroll : 0;
+        trackW = vw; trackH = ih;
+        stepPx = Math.round(ih * (vw < 760 ? 0.72 : 0.85));
+        track.style.height = Math.round(ih + (Z_START - Z_END) / GAP * stepPx) + 'px';
+        maxScroll = Math.max(1, track.offsetHeight - ih);
+        if (keep && state === 'walk') window.scrollTo(0, Math.round(keep * maxScroll));
+      }
+      sig = '';
+    }
+    function zAt(y) { return mix(Z_START, Z_END, clamp(y / maxScroll, 0, 1)); }
+    function yAt(z) { return Math.round(clamp((Z_START - z) / (Z_START - Z_END), 0, 1) * maxScroll); }
+    function fovBase() { return (aspect >= 1.2 ? 80 : mix(100, 80, clamp((aspect - 0.45) / 0.75, 0, 1))) * Math.PI / 180; }
+
+    // the camera: where it stands, where it looks, and the picture of the room it takes. The far end of the corridor goes a little
+    // toward the pointer (the camera turns the other way), as in the walk this room is made after
+    function camera(introZ, fovExtra) {
+      var yaw = mx * 0.075, pitch = -my * 0.05, roll = -mx * 0.012;
+      var cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch), cr = Math.cos(roll), sr = Math.sin(roll);
+      // R = turn about y, then about x, then about z; its columns are the camera's right, up and back
+      var ry = [[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]], rx = [[1, 0, 0], [0, cp, -sp], [0, sp, cp]], rz = [[cr, -sr, 0], [sr, cr, 0], [0, 0, 1]];
+      function mm(a, b) { var o = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]; for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) o[i][j] = a[i][0] * b[0][j] + a[i][1] * b[1][j] + a[i][2] * b[2][j]; return o; }
+      var m = mm(mm(ry, rx), rz);
+      R = { r: [m[0][0], m[1][0], m[2][0]], u: [m[0][1], m[1][1], m[2][1]], b: [m[0][2], m[1][2], m[2][2]] };
+      eye = [mx * 0.32, my * 0.16, camZ + introZ];
+      fovNow = fovBase() + fovExtra + Math.min(0.07, Math.abs(speed) * 0.004);
+      var f = 1 / Math.tan(fovNow / 2), n = 0.05, fa = 220, nf = 1 / (n - fa), pr = [f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (fa + n) * nf, -1, 0, 0, 2 * fa * n * nf, 0];
+      var r = R.r, u = R.u, b = R.b, v = [r[0], u[0], b[0], 0, r[1], u[1], b[1], 0, r[2], u[2], b[2], 0, -dot(r, eye), -dot(u, eye), -dot(b, eye), 1];
+      for (var c = 0; c < 4; c++) for (var w = 0; w < 4; w++) PV[c * 4 + w] = pr[w] * v[c * 4] + pr[4 + w] * v[c * 4 + 1] + pr[8 + w] * v[c * 4 + 2] + pr[12 + w] * v[c * 4 + 3];
+    }
+    // a point of the screen (as the visitor sees it, bent) to a ray into the room
+    function ray(x, y) {
+      var p = [x / vw * 2 - 1, -(y / vh * 2 - 1)], l = Math.sqrt(aspect * aspect + 1), q0 = p[0] * aspect / l, q1 = p[1] / l, k = (1 + K * (q0 * q0 + q1 * q1)) / (1 + K);
+      var ty = Math.tan(fovNow / 2), d = norm([p[0] * k * ty * aspect, p[1] * k * ty, -1]);
+      return norm(add(add(scl(R.r, d[0]), scl(R.u, d[1])), scl(R.b, d[2])));
+    }
+    function pick(x, y) {
+      var d = ray(x, y), best = -1, bt = 1e9;
+      panels.forEach(function (pn, i) {
+        if (!pn.ready || (state !== 'walk' && i !== oi)) return;
+        var g = geo(pn, i), den = dot(d, g.N); if (Math.abs(den) < 1e-6) return;
+        var t = dot(sub(g.C, eye), g.N) / den; if (t <= 0.05 || t >= bt || t > 40) return;
+        var hit = sub(add(eye, scl(d, t)), g.C), a = dot(hit, g.U) / g.w, b = dot(hit, g.V) / g.h;
+        if (Math.abs(a) <= 0.5 && Math.abs(b) <= 0.5) { best = i; bt = t; }
+      });
+      return best;
+    }
+    // where the open set stands: in front of the camera, at the left (above, on a narrow screen), as large as the screen allows
+    function front(pn) {
+      var narrow = vw < 760 || aspect < 0.9, d = 3, ty = Math.tan(fovNow / 2);
+      var cx = narrow ? 0 : -0.36, cy = narrow ? 0.4 : 0.0, hf = narrow ? 0.5 : 0.69, wf = narrow ? 0.88 : 0.47;
+      // the screen is bent at its edges: undo that for the place and the size, near enough
+      var l = Math.sqrt(aspect * aspect + 1), q0 = cx * aspect / l, q1 = cy / l, k = (1 + K * (q0 * q0 + q1 * q1)) / (1 + K);
+      var vH = 2 * d * ty, vW = vH * aspect, h = vH * hf * k, w = h * pn.a;
+      if (w > vW * wf * k) { w = vW * wf * k; h = w / pn.a; }
+      var c = [cx * k * d * ty * aspect, cy * k * d * ty, -d];
+      return { C: add(eye, add(add(scl(R.r, c[0]), scl(R.u, c[1])), scl(R.b, c[2]))), q: quat(R.r, R.u, R.b), w: w, h: h };
+    }
+    // a set's place now: in the corridor, or on its way to the front and back
+    function geo(pn, i) {
+      if (i !== oi || ot <= 0) return { C: pn.C, U: pn.U, V: pn.V, N: pn.N, w: pn.w, h: pn.h };
+      var f = front(pn), e = inOut(clamp(ot, 0, 1)), q = slerp(pn.q, f.q, e), ax = axes(q);
+      // it leaves its surface first, toward the middle of the corridor, and comes to the front in an arc
+      var C = add(lerp3(pn.C, f.C, e), scl(pn.N, Math.sin(Math.PI * e) * 0.9));
+      return { C: C, U: ax.r, V: ax.u, N: norm(cross(ax.r, ax.u)), w: mix(pn.w, f.w, e), h: mix(pn.h, f.h, e) };
+    }
+
+    /* drawing */
+    function draw(show, panelsA, dim, reach) {
+      var C = mixC(), bg = C.bg; C.fog *= reach;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fb); gl.viewport(0, 0, cw, ch);
+      gl.clearColor(bg[0], bg[1], bg[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.disable(gl.BLEND);
+      gl.useProgram(G.p);
+      gl.uniformMatrix4fv(G.u.uPV, false, PV); gl.uniform3fv(G.u.uCam, eye); gl.uniform3fv(G.u.uInk, C.ink); gl.uniform3fv(G.u.uBg, bg);
+      gl.uniform1f(G.u.uFog, C.fog); gl.uniform1f(G.u.uShow, show); gl.uniform1f(G.u.uDim, dim); gl.uniform1f(G.u.uPx, Math.max(1, 1.0 * dpr));
+      gl.bindBuffer(gl.ARRAY_BUFFER, tunnel); gl.enableVertexAttribArray(0); gl.enableVertexAttribArray(1);
+      gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 20, 0); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 20, 12);
+      gl.drawArrays(gl.TRIANGLES, 0, T.length / 5);
+      gl.disableVertexAttribArray(1);
+
+      gl.useProgram(P.p); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.bindBuffer(gl.ARRAY_BUFFER, card); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
+      gl.uniformMatrix4fv(P.u.uPV, false, PV); gl.uniform3fv(P.u.uCam, eye); gl.uniform3fv(P.u.uBg, bg); gl.uniform1f(P.u.uFog, C.fog);
+      gl.activeTexture(gl.TEXTURE0); gl.uniform1i(P.u.uTex, 0);
+      function one(g, tex, a, dm, ink, tint) {
+        gl.uniform3fv(P.u.uC, g.C); gl.uniform3fv(P.u.uU, scl(g.U, g.w)); gl.uniform3fv(P.u.uV, scl(g.V, g.h));
+        gl.uniform1f(P.u.uA, a); gl.uniform1f(P.u.uDim, dm); gl.uniform1f(P.u.uInk, ink); gl.uniform3fv(P.u.uTint, tint || [1, 1, 1]);
+        gl.bindTexture(gl.TEXTURE_2D, tex); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      }
+      panels.forEach(function (pn, i) {
+        if (!pn.ready || (i === oi && ot > 0)) return;
+        var z = pn.C[2]; if (z > eye[2] + 8 || z < eye[2] - 75) return;
+        one(pn, pn.tex, pn.fade * panelsA, dim, 0);
+      });
+      // the logo on the wall at the end, in the paint's yellow
+      if (markTex) { var mh = 3.2; one({ C: [0, 0.1, Z_WALL + EPS], U: [1, 0, 0], V: [0, 1, 0], w: mh * markA, h: mh }, markTex, panelsA, dim, 1, [1, 0.996, 0.149]); }
+      if (oi >= 0 && ot > 0) { gl.disable(gl.DEPTH_TEST); one(geo(panels[oi], oi), panels[oi].tex, panels[oi].fade, 0, 0); }
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, cw, ch); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
+      gl.useProgram(Q.p); gl.bindBuffer(gl.ARRAY_BUFFER, tri); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      gl.bindTexture(gl.TEXTURE_2D, fbo.tex); gl.uniform1i(Q.u.uScene, 0);
+      var l = Math.sqrt(aspect * aspect + 1); gl.uniform2f(Q.u.uAsp, aspect / l, 1 / l); gl.uniform1f(Q.u.uK, K); gl.uniform1f(Q.u.uVig, C.vig); gl.uniform3fv(Q.u.uBg, bg);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+    function mixC() { var e = smooth(0, 1, lt); return { bg: lerp3(DARK.bg, LIGHT.bg, e), ink: lerp3(DARK.ink, LIGHT.ink, e), fog: mix(DARK.fog, LIGHT.fog, e), vig: mix(DARK.vig, LIGHT.vig, e) }; }
+
+    /* the words on the screen */
+    function paintNow(force) {
+      if (cur === shownCur && !force) return;
+      var it = ITEMS[cur], pn = panels[cur]; shownCur = cur;
+      noEl.textContent = pad(cur + 1); titleEl.textContent = it.title; tagEl.innerHTML = '<i></i>' + tag(it);
+      $('i', tagEl).style.background = pn.color || '';
+      if (!force) { now.classList.remove('is-in'); void now.offsetWidth; now.classList.add('is-in'); }
+      ticks.forEach(function (t, i) { t.classList.toggle('is-on', i === cur); if (i === cur) t.setAttribute('aria-current', 'true'); else t.removeAttribute('aria-current'); });
+    }
+    function fill(i) {
+      var it = ITEMS[i], pn = panels[i], nx = ITEMS[(i + 1) % N];
+      $('.rm__kind span', info).innerHTML = tag(it); $('.rm__kind i', info).style.background = pn.color || '';
+      $('.rm__h', info).textContent = it.title; $('.rm__sub', info).textContent = it.sub; $('.rm__say', info).textContent = it.say;
+      $('.rm__rows', info).innerHTML = it.rows.map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('');
+      $('.rm__links', info).innerHTML = (it.link ? aTo(null, it.link, 'rm__go', esc(it.linkLabel) + I_ARROW) : '') + (it.ig ? aTo(null, it.ig, 'rm__go rm__go--line', 'On Instagram' + I_ARROW) : '');
+      // a link to a page of the site is answered by the site's own router (app.js reads data-route); its address as the site writes it
+      $$('a[data-route]', info).forEach(function (a) { var r = a.getAttribute('data-route'); a.setAttribute('href', root.getAttribute('data-router') === 'hash' || location.protocol === 'file:' ? hashOf(r) : r); });
+      var nb = $('.rm__next button', info); nb.textContent = nx.title; nb.setAttribute('data-i', String(nx.i)); nb.setAttribute('aria-label', 'Next set: ' + nx.title);
+      $('.rm__next', info).hidden = N < 2;
+    }
+    function hashOf(p) { var s = p.split('/').filter(Boolean); return !s.length ? '#home' : '#' + (s.length > 1 ? s[0].replace(/e?s$/, '') + '-' + s[1] : s[0]); }
+
+    /* opening and closing a set */
+    function lock(on) { root.classList.toggle('room-held', on); }
+    function open(i) {
+      if (state !== 'walk' || !panels[i] || !panels[i].ready) return;
+      state = 'opening'; oi = i; ot = 0; savedY = window.scrollY; lastFocus = document.activeElement; lock(true);
+      fill(i); dlg.hidden = false; void dlg.offsetWidth; el.classList.add('is-open'); tip.classList.remove('is-on'); hover = -1;
+      setTimeout(function () { if (state === 'opening' || state === 'open') $('.rm__x', dlg).focus({ preventScroll: true }); }, 60);
+      kick();
+    }
+    function close(then) {
+      if (state !== 'open' && state !== 'opening') return;
+      state = 'closing'; after = then || null; el.classList.remove('is-open'); kick();
+    }
+    function closed() {
+      state = 'walk'; oi = -1; ot = 0; dlg.hidden = true; lock(false); window.scrollTo(0, savedY);
+      if (lastFocus && lastFocus.focus && document.contains(lastFocus) && lastFocus !== document.body) lastFocus.focus({ preventScroll: true });
+      var f = after; after = null; if (f) f();
+    }
+    // to a set: the page scrolls to where it is named, and the camera follows; with open, it opens when the camera is there
+    function goTo(i, andOpen) {
+      i = clamp(i, 0, N - 1); var y = yAt(station(i));
+      if (state !== 'walk') { close(function () { goTo(i, andOpen); }); return; }
+      window.scrollTo(0, y); tz = zAt(y); pending = andOpen ? i : -1; kick();
+    }
+    function index(on) {
+      ixEl.hidden = !on; ixBtn.setAttribute('aria-expanded', String(on)); el.classList.toggle('is-index', on); lock(on || state !== 'walk');
+      if (on) { var b = $('button[data-i="' + cur + '"]', ixEl) || $('button', ixEl); if (b) b.focus({ preventScroll: true }); } else ixBtn.focus({ preventScroll: true });
+    }
+    function setLight(on) {
+      light = on; el.classList.toggle('is-light', on); modeBtn.setAttribute('aria-pressed', String(on)); modeBtn.setAttribute('aria-label', on ? 'Dark room' : 'Light room');
+      try { localStorage.setItem('tm:room', on ? 'light' : 'dark'); } catch (e) { /* not kept */ }
+      kick();
+    }
+
+    /* each frame: the camera follows the scroll and the pointer, the open set travels, and the picture is drawn when anything moved */
+    function frame(t) {
+      raf = 0;
+      if (dead) return;
+      if (!el.isConnected) { destroy(); return; }
+      if (!t0) t0 = t;
+      var dt = Math.min(0.1, last ? (t - last) / 1000 : 0.016); last = t;      // (a slow screen keeps time, up to ten frames a second)
+      // the way in: the lines come out of the dark and the light reaches down the corridor, the camera arrives, then the sets show,
+      // then the words
+      var ti = clamp((t - t0) / 1400, 0, 1), introZ = 5 * (1 - outCubic(ti)), fovExtra = 0.22 * (1 - outCubic(clamp(ti * 1.6, 0, 1)));
+      var show = smooth(0, 0.2, ti), reach = 0.07 + 0.93 * outCubic(clamp(ti / 0.5, 0, 1)), panelsA = smooth(0.3, 0.62, ti);
+      if (!ready && ti > 0.55) { ready = true; el.classList.add('is-ready'); }
+      if (state === 'walk' && !el.classList.contains('is-index')) tz = zAt(window.scrollY);
+      var before = camZ; camZ += (tz - camZ) * (1 - Math.pow(0.9, dt * 60)); if (Math.abs(tz - camZ) < 0.0004) camZ = tz;
+      speed = (camZ - before) / Math.max(dt, 0.001);
+      var km = 1 - Math.pow(0.94, dt * 60); mx += (tmx - mx) * km; my += (tmy - my) * km;
+      lt += ((light ? 1 : 0) - lt) * (1 - Math.pow(0.88, dt * 60)); if (Math.abs((light ? 1 : 0) - lt) < 0.002) lt = light ? 1 : 0;
+      panels.forEach(function (pn) { if (pn.ready && pn.fade < 1) pn.fade = Math.min(1, pn.fade + dt * 2.5); });
+      if (state === 'opening') { ot = Math.min(1, ot + dt / 0.85); if (ot >= 1) state = 'open'; }
+      if (state === 'closing') { ot = Math.max(0, ot - dt / 0.65); if (ot <= 0) closed(); }
+      var dim = inOut(clamp(ot, 0, 1));
+      camera(introZ, fovExtra);
+
+      // which set is named: the one whose place the camera is nearest to; past the last one, the end
+      var best = 0, bd = 1e9; for (var i = 0; i < N; i++) { var dd = Math.abs(camZ - station(i)); if (dd < bd) { bd = dd; best = i; } }
+      if (state === 'walk' || state === 'closing') cur = best;
+      var end = camZ < Z_LAST - 2.2; if (end !== atEnd) { atEnd = end; el.classList.toggle('is-end', end); }
+      if (ready) paintNow(false);
+      fetchNext();
+      if (!walked && Math.abs(camZ - Z_START) > 1.2) { walked = true; el.classList.add('is-walked'); }
+      if (pending >= 0 && Math.abs(camZ - tz) < 0.25) { var p = pending; pending = -1; open(p); }
+
+      // the pointer: what is under it, and the word that goes with it
+      if (pointing && state === 'walk' && ready) {
+        var h = pick(px, py);
+        if (h !== hover) { hover = h; tip.classList.toggle('is-on', h >= 0); el.classList.toggle('is-over', h >= 0); if (h >= 0) { tipB.textContent = ITEMS[h].title; $('i', tip).style.background = panels[h].color || ''; tipW = tip.offsetWidth; } }
+      } else if (hover >= 0 && state !== 'walk') { hover = -1; tip.classList.remove('is-on'); el.classList.remove('is-over'); }
+      // the word stands at the pointer's right, or at its left near the right edge
+      if (pointing) { var tx = px + 18 + tipW > vw - 12 ? px - 18 - tipW : px + 18; tip.style.transform = 'translate3d(' + Math.round(tx) + 'px,' + Math.round(py - 14) + 'px,0)'; dotEl.style.transform = 'translate3d(' + Math.round(px) + 'px,' + Math.round(py) + 'px,0)'; }
+
+      var s = [camZ.toFixed(4), mx.toFixed(4), my.toFixed(4), ot.toFixed(4), lt.toFixed(3), show.toFixed(3), reach.toFixed(3), panelsA.toFixed(3), cw, ch, panels.reduce(function (a, pn) { return a + pn.fade; }, 0).toFixed(3), markTex ? 1 : 0].join();
+      if (s !== sig) { sig = s; draw(show, panelsA, dim, reach); }
+      // keep going while anything still moves; otherwise wait for the next scroll, pointer or picture
+      var still = s === lastSig && ti >= 1 && state !== 'opening' && state !== 'closing' && pending < 0; lastSig = s;
+      if (!still) kick(); else calm = true;
+    }
+    var lastSig = '', calm = false;
+    function kick() { if (!raf && !dead) { calm = false; raf = requestAnimationFrame(frame); } }
+
+    /* what the visitor does */
+    // the pointer anywhere turns the camera; over the room itself (not over a button) it is the dot, and says "Open" over a set
+    function onPointer(e) {
+      if (e.pointerType === 'touch') return;
+      px = e.clientX; py = e.clientY; tmx = clamp(px / vw * 2 - 1, -1, 1); tmy = clamp(-(py / vh * 2 - 1), -1, 1);
+      var over = e.target === cv;
+      if (over !== pointing) { pointing = over; el.classList.toggle('is-pointing', over); if (!over) onLeave(); }
+      kick();
+    }
+    function onLeave() { pointing = false; el.classList.remove('is-pointing', 'is-over'); tip.classList.remove('is-on'); hover = -1; }
+    function onClick(e) {
+      if (state !== 'walk' || !ready) return;
+      var h = pick(e.clientX, e.clientY); if (h >= 0) open(h);
+    }
+    function onKey(e) {
+      if (dead) return;
+      if (e.key === 'Escape') { if (!ixEl.hidden) { e.preventDefault(); index(false); return; } if (state === 'open' || state === 'opening') { e.preventDefault(); close(); return; } }
+      var tgt = e.target, typing = tgt && /INPUT|TEXTAREA|SELECT/.test(tgt.tagName);
+      if (typing) return;
+      if (state === 'walk' && ixEl.hidden && e.key === 'Enter' && (tgt === document.body || tgt === main())) { e.preventDefault(); open(cur); return; }
+      // the dialog keeps the focus within itself
+      if (e.key === 'Tab' && (state === 'open' || state === 'opening')) {
+        var f = $$('button, a[href]', dlg).filter(function (x) { return x.offsetParent !== null && !x.closest('[hidden]'); }); if (!f.length) return;
+        if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+        else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+      }
+    }
+    function main() { return document.getElementById('main'); }
+    function onResize() { size(); kick(); }
+    function onPop() { back = true; }
+    function onLost(e) { e.preventDefault(); destroy(); el.classList.remove('is-live'); }
+    window.addEventListener('pointermove', onPointer, { passive: true });
+    cv.addEventListener('pointerleave', onLeave);
+    cv.addEventListener('click', onClick);
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('popstate', onPop);
+    cv.addEventListener('webglcontextlost', onLost);
+    el.addEventListener('click', function (e) {
+      var t = e.target;
+      var tk = t.closest('.rm__tick'); if (tk) { goTo(+tk.getAttribute('data-i'), e.detail === 0); return; }      // from the keyboard: it opens too
+      if (t.closest('.rm__ix')) { index(ixEl.hidden); return; }
+      var ib = t.closest('.rm__index button[data-i]'); if (ib) { index(false); goTo(+ib.getAttribute('data-i'), true); return; }
+      if (t.closest('.rm__index') && !t.closest('button')) { index(false); return; }
+      if (t.closest('.rm__x')) { close(); return; }
+      var nb = t.closest('.rm__next button'); if (nb) { var n = +nb.getAttribute('data-i'); close(function () { goTo(n, true); }); return; }
+      if (t.closest('.rm__mode')) { setLight(!light); return; }
+      if (t.closest('[data-room-top]')) { window.scrollTo(0, 0); return; }
+      if (t.closest('[data-room-exit]')) { back = true; return; }
+      // a click beside the open set's story, on the dimmed room, closes it (a click on the set itself does nothing)
+      if (t === dlg && pick(e.clientX, e.clientY) !== oi) { close(); return; }
+    });
+
+    function destroy() {
+      if (dead) return; dead = true;
+      if (raf) cancelAnimationFrame(raf); raf = 0;
+      window.removeEventListener('pointermove', onPointer); window.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize); window.removeEventListener('popstate', onPop);
+      root.classList.remove('room-live', 'room-held');
+      var lose = gl.getExtension('WEBGL_lose_context'); if (lose && el.isConnected === false) lose.loseContext();
+    }
+
+    el._room = { update: function () { if (state === 'walk') kick(); }, measure: function () { size(); kick(); } };
+    el.classList.add('is-live'); root.classList.add('room-live');
+    live = { el: el, destroy: destroy };
+    size(); fetchNext(); kick();
+    return el._room;
+  }
+  var live = null, homeY = -1;
+  // where the home page was when "Enter the room" was pressed: leaving the room goes back to that very place
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.room__enter')) homeY = window.scrollY; }, true);
+
+  // a page has been put on the screen (app.js, show): a room that is no longer on it is let go at once (the top bar comes back);
+  // coming back from the room to the home page, it opens where the visitor went in (or at the room's part of it)
+  function landed(r, main) {
+    if (live && !live.el.isConnected) { live.destroy(); live = null; }
+    var was = back; back = false;
+    if (!was || r !== '/') return;
+    var s = main && main.querySelector('.scene--room'); if (!s) return;
+    var top = Math.round(s.getBoundingClientRect().top + window.scrollY), y = homeY >= top && homeY <= top + s.offsetHeight ? homeY : top;
+    window.scrollTo(0, Math.max(0, y));
+  }
+
+  window.TM_ROOM = { html: html, mount: mount, landed: landed, items: ITEMS };
+})();
