@@ -1,9 +1,10 @@
 /* Tehran Movement: the room (/room), entered from "The room" on the home page.
-   A corridor drawn as a grid of light and walked by scrolling: Keyv's sets hang on its walls and lie on its floor and its ceiling,
-   the newest first (the content is `room` in data.js). The camera goes forward as the page scrolls, a little behind the scroll, and
-   it turns only by hand: a little toward the pointer on a computer, and on a phone with a finger dragged sideways (it stays the way
-   it was turned). Nothing turns it by itself. The set nearest ahead is named at the foot of the screen and marked on the rule at
-   the right. A set pointed at says "Open"; opened, it leaves its place, turns and comes to the front, the corridor dims
+   A corridor drawn as a grid of light and walked like a room: Keyv's sets hang on its walls and lie on its floor and its ceiling,
+   the newest first (the content is `room` in data.js). The visitor walks as a person would, toward where they face: the wheel, a
+   finger up and down, the arrow keys up and down walk on and step back (turned round to the door, on is toward the door). The head
+   turns only by hand, all the way round: the mouse held down or a finger sideways (it stays the way it was turned), a little toward
+   the pointer on a computer. Nothing moves by itself. The set the visitor is coming up to is named at the foot of the screen and
+   marked on the rule at the right. A set pointed at says "Open"; opened, it leaves its place, turns and comes to the front, the corridor dims
    behind it and its story stands beside it; closed, it goes back to its place. At the far end the logo is on the wall.
    It is meant as a room, not a picture of one: every set throws its own colour onto the walls and the floor around it, the floor is
    polished and holds their reflection, and dust hangs in the air and stirs as you walk.
@@ -63,8 +64,8 @@
   var I_X = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
   var I_ARROW = '<svg class="rm__arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13.5 6.5L19 12l-5.5 5.5"/></svg>';
 
-  // the page: the corridor's stage (fixed on the screen; the track under it is the length of the walk) and the same sets as a list,
-  // for where the corridor is not drawn
+  // the page: the corridor's stage (fixed on the screen: the room takes the walk's gestures itself) and the same sets as a list, for
+  // where the corridor is not drawn
   function html(env) {
     env = env || {};
     var first = ITEMS[0] || { title: '', i: 0 };
@@ -75,7 +76,7 @@
         '<button class="rm__pill rm__ix" type="button" aria-expanded="false" aria-controls="rm-index">Index<sup>' + N + '</sup></button>' +
         '<a class="rm__pill" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/" data-room-exit>Exit</a></div></div>' +
       '<div class="rm__now"><p class="rm__no"><b>' + pad(1) + '</b> / ' + pad(N) + '</p><h2 class="rm__title">' + esc(first.title) + '</h2><p class="rm__tag"><i></i>' + (ITEMS[0] ? tag(first) : '') + '</p>' +
-        '<p class="rm__hint"><span class="rm__hint-p">Scroll to walk the room<span>Drag to look around</span><span>Click a set to open it</span></span><span class="rm__hint-t">Swipe to walk<span>Drag sideways to look around</span><span>Tap a set to open it</span></span></p></div>' +
+        '<p class="rm__hint"><span class="rm__hint-p">Scroll to walk the room<span>Drag to look around</span><span>Click a set to open it</span></span><span class="rm__hint-t">Swipe up to walk, down to step back<span>Sideways to look around</span><span>Tap a set to open it</span></span></p></div>' +
       '<div class="rm__end"><p class="rm__no">The end of the room</p><p class="rm__endh">' + esc(N + ' sets, ' + (ITEMS[N - 1] ? String(ITEMS[N - 1].date).slice(0, 4) : '') + ' to ' + (ITEMS[0] ? String(ITEMS[0].date).slice(0, 4) : '')) + '</p>' +
         '<p class="rm__endgo"><button class="rm__pill rm__pill--solid" type="button" data-room-top>Back to the start</button><a class="rm__pill" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/" data-room-exit>Exit</a></p></div>' +
       '<nav class="rm__rule" aria-label="The sets in the room">' + ITEMS.map(function (it) { return '<button class="rm__tick" type="button" data-i="' + it.i + '" aria-label="' + esc(pad(it.i + 1) + ', ' + it.title + ', ' + when(it.date)) + '"><span>' + esc(it.title) + '</span></button>'; }).join('') + '</nav>' +
@@ -96,7 +97,7 @@
           '<dl class="rmc__rows">' + it.rows.map(function (r) { return '<div><dt class="g">' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('') + '</dl>' +
           (links ? '<p class="links">' + links + '</p>' : '') + '</div></li>';
       }).join('') + '</ol>' + (env.foot ? env.foot() : '') + '</div>';
-    return '<section class="rm" data-scene="tunnel" aria-label="The room: Keyv’s sets"><div class="rm__track" aria-hidden="true"></div>' + stage + flat + '</section>';
+    return '<section class="rm" data-scene="tunnel" aria-label="The room: Keyv’s sets">' + stage + flat + '</section>';
   }
 
   /* ─── small vector tools ───────────────────────────────────────────── */
@@ -270,7 +271,7 @@
     gl.bindBuffer(gl.ARRAY_BUFFER, dust); gl.bufferData(gl.ARRAY_BUFFER, DD, gl.STATIC_DRAW);
     var fbo = { fb: gl.createFramebuffer(), tex: gl.createTexture(), depth: gl.createRenderbuffer() };
 
-    var stage = $('.rm__stage', el), track = $('.rm__track', el), now = $('.rm__now', el), noEl = $('.rm__no b', now), titleEl = $('.rm__title', now), tagEl = $('.rm__tag', now);
+    var stage = $('.rm__stage', el), now = $('.rm__now', el), noEl = $('.rm__no b', now), titleEl = $('.rm__title', now), tagEl = $('.rm__tag', now);
     var ticks = $$('.rm__tick', el), tip = $('.rm__tip', el), tipB = $('b', tip), tipWord = $('span', tip), tipDot = $('i', tip), dotEl = $('.rm__dot', el), dlg = $('.rm__open', el), info = $('.rm__info', dlg), ixBtn = $('.rm__ix', el), ixEl = $('.rm__index', el), modeBtn = $('.rm__mode', el);
     var coarse = !!(window.matchMedia && matchMedia('(hover: none) and (pointer: coarse)').matches), lowMem = (navigator.deviceMemory || 4) <= 2;
 
@@ -374,13 +375,13 @@
     })();
 
     /* the state of the walk */
-    var dead = false, raf = 0, last = 0, t0 = 0, vw = 1, vh = 1, aspect = 1, dpr = 1, rs = 1, rsMax = Infinity, cw = 0, ch = 0, fw = 0, fh = 0, stepPx = 600, maxScroll = 1, trackW = 0, trackH = 0, slow = 0;
+    var dead = false, raf = 0, last = 0, t0 = 0, vw = 1, vh = 1, aspect = 1, dpr = 1, rs = 1, rsMax = Infinity, cw = 0, ch = 0, fw = 0, fh = 0, slow = 0;
     var camZ = Z_START, tz = Z_START, mx = 0, my = 0, tmx = 0, tmy = 0, px = -1, py = -1, pointing = false, speed = 0, fovNow = 1.2, air = 0;
-    var dragY = 0, dragP = 0, yawT = 0, pitchT = 0, dragId = -1, dragX0 = 0, dragY0 = 0, dragFrom = 0, pitchFrom = 0, dragging = false, dragged = false, dragMouse = false, doorLit = false;
-    // the way the visitor walks: 0 on into the room, 1 back toward the door (they turn round to face it); a jump is not a walk
-    var heading = 0, walkAcc = 0, lastTz = Z_START, jumping = false, turning = false;
+    var dragY = 0, dragP = 0, yawT = 0, pitchT = 0, dragId = -1, dragX0 = 0, dragY0 = 0, dragFrom = 0, pitchFrom = 0, dragging = false, dragged = false, dragMouse = false, doorLit = false, turning = false;
+    // a finger on the room: it looks (sideways) or walks (up and down), whichever way it set off; a walk let go of glides on (vel)
+    var gesture = '', lastY = 0, trail = [], vel = 0;
     var eye = [0, 0, Z_START], R = { r: [1, 0, 0], u: [0, 1, 0], b: [0, 0, 1] }, PV = new Float32Array(16), LP = new Float32Array(NL * 3), LN = new Float32Array(NL * 3), LC = new Float32Array(NL * 4);
-    var cur = 0, shownCur = -1, atEnd = false, hover = -1, tipW = 0, state = 'walk', oi = -1, ot = 0, after = null, pending = -1, savedY = 0, lastFocus = null;
+    var cur = 0, shownCur = -1, atEnd = false, hover = -1, tipW = 0, state = 'walk', oi = -1, ot = 0, after = null, pending = -1, lastFocus = null;
     var light = false, lt = 0, sig = '', lastSig = '', walked = false, ready = false;
     try { light = localStorage.getItem('tm:room') === 'light'; } catch (e) { /* no storage: dark */ }
     lt = light ? 1 : 0; el.classList.toggle('is-light', light); modeBtn.setAttribute('aria-pressed', String(light)); modeBtn.setAttribute('aria-label', light ? 'Dark room' : 'Light room');
@@ -402,21 +403,16 @@
         gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbo.tex, 0);
         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, fbo.depth); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       }
-      // the walk's length on the page: a little less than a screen for each set. Measured again only when the screen has really
-      // changed: on a phone the bar of the browser comes and goes while the page scrolls, and the walk must not jump with it
-      var ih = window.innerHeight;
-      if (vw !== trackW || Math.abs(ih - trackH) > 160) {
-        var keep = maxScroll > 1 ? window.scrollY / maxScroll : 0;
-        trackW = vw; trackH = ih;
-        stepPx = Math.round(ih * (vw < 760 ? 0.72 : 0.85));
-        track.style.height = Math.round(ih + (Z_START - Z_END) / GAP * stepPx) + 'px';
-        maxScroll = Math.max(1, track.offsetHeight - ih);
-        if (keep && state === 'walk') { jumping = true; window.scrollTo(0, Math.round(keep * maxScroll)); }
-      }
       sig = '';
     }
-    function zAt(y) { return mix(Z_START, Z_END, clamp(y / maxScroll, 0, 1)); }
-    function yAt(z) { return Math.round(clamp((Z_START - z) / (Z_START - Z_END), 0, 1) * maxScroll); }
+
+    /* walking, as a person in the room walks: the wheel, a finger up and down, the arrow keys up and down. On is always toward
+       where the visitor faces (turned round to the door, on is toward the door), back is a step back without turning. The page itself
+       does not scroll: the walk goes from the door behind the start to a little before the wall at the end */
+    var Z_NEAR = Z_BACK - 2.5, Z_FAR = Z_WALL + 3;
+    function along() { return Math.cos(dragY) >= 0 ? 1 : -1; }      // 1: facing on into the room, -1: facing the door
+    function perPx() { return GAP / (vh * (vw < 760 ? 0.72 : 0.85)); }      // a little less than a screen's swipe from one set to the next
+    function walk(u) { if (!u || state !== 'walk') return; var z = clamp(tz - along() * u, Z_FAR, Z_NEAR); if (z === tz) vel = 0; tz = z; kick(); }
     function fovBase() { return (aspect >= 1.2 ? 80 : mix(100, 80, clamp((aspect - 0.45) / 0.75, 0, 1))) * Math.PI / 180; }
 
     // the camera: where it stands, where it looks, and the picture of the room it takes. It turns only when the visitor turns it:
@@ -587,7 +583,7 @@
     function lock(on) { root.classList.toggle('room-held', on); }
     function open(i) {
       if (state !== 'walk' || !panels[i] || !panels[i].ready) return;
-      state = 'opening'; oi = i; ot = 0; savedY = window.scrollY; lastFocus = document.activeElement; lock(true); wantBig(panels[i]);
+      state = 'opening'; oi = i; ot = 0; vel = 0; lastFocus = document.activeElement; lock(true); wantBig(panels[i]);
       fill(i); dlg.hidden = false; void dlg.offsetWidth; el.classList.add('is-open'); tip.classList.remove('is-on'); hover = -1;
       setTimeout(function () { if (state === 'opening' || state === 'open') $('.rm__x', dlg).focus({ preventScroll: true }); }, 60);
       kick();
@@ -597,24 +593,21 @@
       state = 'closing'; after = then || null; el.classList.remove('is-open'); kick();
     }
     function closed() {
-      state = 'walk'; oi = -1; ot = 0; dlg.hidden = true; lock(false); window.scrollTo(0, savedY);
+      state = 'walk'; oi = -1; ot = 0; dlg.hidden = true; lock(false);
       if (lastFocus && lastFocus.focus && document.contains(lastFocus) && lastFocus !== document.body) lastFocus.focus({ preventScroll: true });
       var f = after; after = null; if (f) f();
     }
-    // the visitor turns round to face one way, by the shorter side, and level: 0 on into the room, 1 back toward the door
-    function face(h) {
-      heading = h; walkAcc = 0;
-      var d = (h ? Math.PI : 0) - yawT; d -= 2 * Math.PI * Math.round(d / (2 * Math.PI));
+    // after a jump the visitor faces on into the room, level (turning the shorter way round)
+    function faceOn() {
+      var d = -yawT; d -= 2 * Math.PI * Math.round(d / (2 * Math.PI));
       if (Math.abs(d) < 0.0001 && Math.abs(pitchT) < 0.0001) return;
       yawT += d; pitchT = 0; turning = true; kick();
     }
-    // to a set: the page scrolls to where it is named, and the camera follows, facing it; with open, it opens when the camera is
-    // there. A jump, not a walk: nobody turns round on the way
+    // to a set: the camera goes to where it is named, and faces it; with open, it opens when the camera is there
     function goTo(i, andOpen) {
-      i = clamp(i, 0, N - 1); var y = yAt(station(i));
+      i = clamp(i, 0, N - 1);
       if (state !== 'walk') { close(function () { goTo(i, andOpen); }); return; }
-      jumping = true; face(0);
-      window.scrollTo(0, y); tz = zAt(y); pending = andOpen ? i : -1; kick();
+      faceOn(); vel = 0; tz = station(i); pending = andOpen ? i : -1; kick();
     }
     function index(on) {
       ixEl.hidden = !on; ixBtn.setAttribute('aria-expanded', String(on)); el.classList.toggle('is-index', on); lock(on || state !== 'walk');
@@ -626,7 +619,7 @@
       kick();
     }
 
-    /* each frame: the camera follows the scroll and the pointer, the head turns, the open set travels, and the picture is drawn when
+    /* each frame: the camera follows the walk and the pointer, the head turns, the open set travels, and the picture is drawn when
        anything moved; when nothing moves, no frames run */
     function frame(t) {
       raf = 0;
@@ -639,20 +632,12 @@
       var ti = clamp((t - t0) / 1400, 0, 1), introZ = 5 * (1 - outCubic(ti)), fovExtra = 0.22 * (1 - outCubic(clamp(ti * 1.6, 0, 1)));
       var show = smooth(0, 0.2, ti), reach = 0.07 + 0.93 * outCubic(clamp(ti / 0.5, 0, 1)), panelsA = smooth(0.3, 0.62, ti);
       if (!ready && ti > 0.55) { ready = true; el.classList.add('is-ready'); }
-      if (state === 'walk' && !el.classList.contains('is-index')) tz = zAt(window.scrollY);
+      // a walk let go of glides on and slows, as a step does
+      if (vel && state === 'walk') { walk(vel * dt); vel *= Math.pow(0.95, dt * 60); if (Math.abs(vel) < 0.05) vel = 0; }
       var before = camZ; camZ += (tz - camZ) * (1 - Math.pow(0.9, dt * 60)); if (Math.abs(tz - camZ) < 0.0004) camZ = tz;
       speed = (camZ - before) / Math.max(dt, 0.001); air += Math.abs(camZ - before) * 0.3;
       var km = 1 - Math.pow(0.94, dt * 60); mx += (tmx - mx) * km; my += (tmy - my) * km;
-      // walking back toward the door turns the visitor round to face the way they walk, and walking on turns them round again, as a
-      // person would; it takes a little walk that way first (a scroll that only shudders does not turn anyone), and not while they
-      // hold the room to look round. A jump to a set, or back to the start, is not a walk
-      if (state === 'walk' && !el.classList.contains('is-index') && !jumping && !dragging) {
-        var moved = tz - lastTz;
-        if (moved) { if ((moved > 0) === (heading === 0)) walkAcc += Math.abs(moved); else walkAcc = 0; if (walkAcc > 1) face(1 - heading); }
-      }
-      lastTz = tz;
-      if (jumping && Math.abs(camZ - tz) < 0.3) jumping = false;
-      // a turn (round, or asked for with the arrow keys) is made smoothly; a drag turns the head at once, and where it is left it stays
+      // a turn (after a jump, or asked for with the arrow keys) is made smoothly; a drag turns the head at once, and where it is left it stays
       if (!dragging) {
         var kt = 1 - Math.pow(turning ? 0.93 : 0.86, dt * 60); dragY += (yawT - dragY) * kt; dragP += (pitchT - dragP) * kt;
         if (Math.abs(yawT - dragY) < 0.0005) { dragY = yawT; turning = false; } if (Math.abs(pitchT - dragP) < 0.0005) dragP = pitchT;
@@ -665,10 +650,10 @@
 
       // which set is named: the one the visitor is coming up to, the way they face (its place is a little before it); past the last
       // one, walking on, the end
-      var best = 0, bd = 1e9; for (var i = 0; i < N; i++) { var dd = Math.abs(camZ - (heading ? zOf(i) - AHEAD : station(i))); if (dd < bd) { bd = dd; best = i; } }
+      var on = along() > 0, best = 0, bd = 1e9; for (var i = 0; i < N; i++) { var dd = Math.abs(camZ - (on ? station(i) : zOf(i) - AHEAD)); if (dd < bd) { bd = dd; best = i; } }
       if (state === 'walk' || state === 'closing') cur = best;
       camera(introZ, fovExtra);
-      var end = heading === 0 && camZ < Z_LAST - 2.2; if (end !== atEnd) { atEnd = end; el.classList.toggle('is-end', end); }
+      var end = on && camZ < Z_LAST - 2.2; if (end !== atEnd) { atEnd = end; el.classList.toggle('is-end', end); }
       if (ready) paintNow(false);
       fetchNext();
       if (!walked && Math.abs(camZ - Z_START) > 1.2) { walked = true; el.classList.add('is-walked'); }
@@ -712,25 +697,46 @@
       kick();
     }
     function onLeave() { pointing = false; doorLit = false; el.classList.remove('is-pointing', 'is-over'); tip.classList.remove('is-on'); hover = -1; kick(); }
-    // a drag over the room turns the head, all the way round: a finger sideways on a phone (up and down it walks, as the page
-    // scrolls), or the mouse held down, which tilts it up and down as well. Let go, the head stays the way it was turned: the room
-    // moves only by hand (the owner's wish, 2026-11-25), and can be looked at behind as much as ahead
+    // on the room a finger looks or walks, whichever way it sets off: sideways it turns the head all the way round, up it walks on
+    // and down it steps back (and let go, the walk glides on a little). The mouse held down turns the head, and tilts it up and down
+    // as well; its wheel walks. Let go, the head stays the way it was turned: the room moves only by hand (the owner's wish,
+    // 2026-11-25), and can be looked at, and walked, behind as much as ahead
     function onDown(e) {
       if (state !== 'walk' || (e.pointerType === 'mouse' && e.button !== 0)) return;
       dragId = e.pointerId; dragX0 = e.clientX; dragY0 = e.clientY; dragFrom = dragY; pitchFrom = dragP; dragging = false; dragged = false; dragMouse = e.pointerType !== 'touch';
-      if (dragMouse) { try { cv.setPointerCapture(e.pointerId); } catch (err) { /* the drag still works over the room */ } }
+      gesture = ''; lastY = e.clientY; trail = [[e.timeStamp, e.clientY]]; vel = 0;
+      try { cv.setPointerCapture(e.pointerId); } catch (err) { /* the gesture still works over the room */ }
     }
     function onDrag(e) {
       if (e.pointerId !== dragId) return;
       var dx = e.clientX - dragX0, dy = e.clientY - dragY0;
-      if (!dragging && (dragMouse ? Math.abs(dx) + Math.abs(dy) > 6 : Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2)) { dragging = true; el.classList.add('is-dragging'); }
-      if (!dragging) return;
-      dragged = true;
+      if (!gesture) {
+        if (dragMouse ? Math.abs(dx) + Math.abs(dy) > 6 : Math.abs(dx) > 9 || Math.abs(dy) > 9) gesture = dragMouse || Math.abs(dx) > Math.abs(dy) ? 'look' : 'walk';
+        if (!gesture) return;
+        dragged = true; lastY = e.clientY;
+        if (gesture === 'look') { dragging = true; el.classList.add('is-dragging'); }
+      }
+      if (gesture === 'walk') {
+        walk((lastY - e.clientY) * perPx()); lastY = e.clientY;
+        trail.push([e.timeStamp, e.clientY]); while (trail.length > 2 && e.timeStamp - trail[0][0] > 90) trail.shift();
+        return;
+      }
       dragY = yawT = dragFrom - dx / vw * Math.PI * (dragMouse ? 1 : 1.3);
       if (dragMouse) dragP = pitchT = clamp(pitchFrom + dy / vh * 1.6, -0.75, 0.75);
       kick();
     }
-    function onUp(e) { if (e.pointerId !== dragId) return; dragId = -1; dragging = false; el.classList.remove('is-dragging'); kick(); }
+    function onUp(e) {
+      if (e.pointerId !== dragId) return;
+      // a walk let go of while the finger still moved goes on a little by itself, as a step does
+      if (gesture === 'walk' && trail.length > 1) { var a = trail[0], b = trail[trail.length - 1], ms = Math.max(16, b[0] - a[0]); if (e.timeStamp - b[0] < 80) vel = clamp((a[1] - b[1]) / ms * 1000 * perPx(), -50, 50); }
+      dragId = -1; dragging = false; gesture = ''; el.classList.remove('is-dragging'); kick();
+    }
+    // the wheel walks (down on, up back), toward where the visitor faces; over the index or an open set it scrolls those instead
+    function onWheel(e) {
+      if (dead || e.ctrlKey || state !== 'walk' || !ixEl.hidden) return;
+      e.preventDefault(); vel = 0;
+      walk(e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? vh : 1) * perPx());
+    }
     // the door in the wall behind the start, under a point of the screen
     function onDoor(x, y) {
       if (!doorTex) return false;
@@ -751,8 +757,13 @@
       var tgt = e.target, typing = tgt && /INPUT|TEXTAREA|SELECT/.test(tgt.tagName);
       if (typing) return;
       if (state === 'walk' && ixEl.hidden && e.key === 'Enter' && (tgt === document.body || tgt === main())) { e.preventDefault(); open(cur); return; }
-      // the arrow keys to the sides turn the head (up and down they walk, as the page scrolls)
-      if (state === 'walk' && ixEl.hidden && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && (tgt === document.body || tgt === main() || tgt === cv)) { e.preventDefault(); yawT += e.key === 'ArrowLeft' ? -0.4 : 0.4; kick(); return; }
+      // the arrow keys to the sides turn the head; up and down (and the page keys) walk on and step back, toward where it faces
+      if (state === 'walk' && ixEl.hidden && (tgt === document.body || tgt === main() || tgt === cv)) {
+        var k = e.key, step = { ArrowUp: 1.2, w: 1.2, W: 1.2, ArrowDown: -1.2, s: -1.2, S: -1.2, PageDown: GAP, PageUp: -GAP, ' ': e.shiftKey ? -GAP : GAP }[k];
+        if (k === 'ArrowLeft' || k === 'ArrowRight') { e.preventDefault(); yawT += k === 'ArrowLeft' ? -0.4 : 0.4; kick(); return; }
+        if (step) { e.preventDefault(); vel = 0; walk(step); return; }
+        if (k === 'Home') { e.preventDefault(); faceOn(); vel = 0; tz = Z_START; kick(); return; }
+      }
       // the dialog keeps the focus within itself
       if (e.key === 'Tab' && (state === 'open' || state === 'opening')) {
         var f = $$('button, a[href]', dlg).filter(function (x) { return x.offsetParent !== null && !x.closest('[hidden]'); }); if (!f.length) return;
@@ -768,6 +779,7 @@
     cv.addEventListener('pointerleave', onLeave);
     cv.addEventListener('pointerdown', onDown); cv.addEventListener('pointermove', onDrag); cv.addEventListener('pointerup', onUp); cv.addEventListener('pointercancel', onUp);
     cv.addEventListener('click', onClick);
+    window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('keydown', onKey);
     window.addEventListener('resize', onResize);
     window.addEventListener('popstate', onPop);
@@ -781,7 +793,7 @@
       if (t.closest('.rm__x')) { close(); return; }
       var nb = t.closest('.rm__next button'); if (nb) { var n = +nb.getAttribute('data-i'); close(function () { goTo(n, true); }); return; }
       if (t.closest('.rm__mode')) { setLight(!light); return; }
-      if (t.closest('[data-room-top]')) { jumping = true; face(0); window.scrollTo(0, 0); return; }
+      if (t.closest('[data-room-top]')) { faceOn(); vel = 0; tz = Z_START; kick(); return; }
       if (t.closest('[data-room-exit]')) { back = true; return; }
       // a click beside the open set's story, on the dimmed room, closes it (a click on the set itself does nothing)
       if (t === dlg && pick(e.clientX, e.clientY) !== oi) { close(); return; }
@@ -790,7 +802,7 @@
     function destroy() {
       if (dead) return; dead = true;
       if (raf) cancelAnimationFrame(raf); raf = 0;
-      window.removeEventListener('pointermove', onPointer); window.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize); window.removeEventListener('popstate', onPop);
+      window.removeEventListener('pointermove', onPointer); window.removeEventListener('wheel', onWheel); window.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize); window.removeEventListener('popstate', onPop);
       root.classList.remove('room-live', 'room-held');
       var lose = gl.getExtension('WEBGL_lose_context'); if (lose && el.isConnected === false) lose.loseContext();
     }

@@ -10,10 +10,10 @@
 .room__enter { display: inline-flex; align-items: center; gap: 12px; min-height: 48px; padding: 2px 22px 0; }
 .room__enter svg { width: 20px; height: 20px; margin-top: -2px; fill: none; stroke: currentColor; stroke-width: 2.2; }
 
-/* while the room is on the screen: the site's own top bar gives way to the room's, the page's scroll bar is not shown (the walk is
-   the scroll), and nothing scrolls while a set is open */
+/* while the room is on the screen: the site's own top bar gives way to the room's, and the page does not scroll at all (the room
+   takes the wheel and the finger itself, to walk toward where the visitor faces); nor does it bounce or pull to refresh */
 html.room-live .top { display: none; }
-html.room-live { scrollbar-width: none; }
+html.room-live, html.room-live body { overflow: hidden; overscroll-behavior: none; scrollbar-width: none; }
 html.room-live::-webkit-scrollbar { display: none; }
 html.room-held { overflow: hidden; }
 
@@ -22,11 +22,10 @@ html.room-held { overflow: hidden; }
   position: relative; }
 .rm.is-light { --rm-bg: #F4F3EF; --rm-ink: #111110; --rm-dim: rgba(17, 17, 16, .55); --rm-line: rgba(17, 17, 16, .13); --rm-pill: rgba(244, 243, 239, .7);
   --rm-pill-line: rgba(17, 17, 16, .16); --rm-solid: #111110; --rm-solid-ink: #F4F3EF; --rm-veil: rgba(244, 243, 239, .82); }
-.rm__track, .rm__stage { display: none; }
-.rm.is-live .rm__track { display: block; }
+.rm__stage { display: none; }
 .rm.is-live .rm__flat { display: none; }
 .rm.is-live .rm__stage { display: block; position: fixed; z-index: 20; inset: 0; overflow: hidden; background: var(--rm-bg); color: var(--rm-ink); transition: background-color .5s, color .5s; }
-.rm__cv { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: pan-y; }
+.rm__cv { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; }
 .rm.is-live .rm__cv { cursor: none; }
 .rm.is-live.is-open .rm__cv { cursor: auto; }
 /* held down to look around: the dot grows, and nothing is offered meanwhile */
