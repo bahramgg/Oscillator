@@ -1,11 +1,15 @@
 /* Tehran Movement: the room (/room), entered from "The room" on the home page.
    A corridor drawn as a grid of light and walked by scrolling: Keyv's sets hang on its walls and lie on its floor and its ceiling,
-   the newest first (the content is `room` in data.js). The camera goes forward as the page scrolls, a little behind the scroll, and
-   turns a little toward the pointer; the set nearest ahead is named at the foot of the screen and marked on the rule at the right.
-   A set pointed at says "Open"; opened, it leaves its place, turns and comes to the front, the corridor dims behind it and its
-   story stands beside it; closed, it goes back to its place. At the far end the logo is on the wall.
-   One WebGL canvas, no library. The surfaces draw their own lines, so that a line stays as thin as one point at any distance and
-   fades into the dark far away; the whole picture is then bent at its edges like a wide lens.
+   the newest first (the content is `room` in data.js). The camera goes forward as the page scrolls, a little behind the scroll; it
+   turns its head toward the set it is passing, and a little toward the pointer (on a phone: toward a finger dragged sideways, and
+   with the phone itself where the phone says how it is held). The set nearest ahead is named at the foot of the screen and marked on
+   the rule at the right. A set pointed at says "Open"; opened, it leaves its place, turns and comes to the front, the corridor dims
+   behind it and its story stands beside it; closed, it goes back to its place. At the far end the logo is on the wall.
+   It is meant as a room, not a picture of one: every set throws its own colour onto the walls and the floor around it, the floor is
+   polished and holds their reflection, and dust hangs in the air and stirs as you walk.
+   One WebGL canvas, no library. The surfaces draw their own lines, one point wide at any distance; the whole picture is bent at its
+   edges like a wide lens, and it is drawn larger than the screen, so that the bending never makes its middle soft. An open set is
+   drawn from the poster itself, not from its small copy.
    app.js shows the page (VIEWS.room, with html() below) and starts it as a part that moves with the scroll (data-scene="tunnel").
    Where motion is not wanted, or the browser cannot draw it, the page is the same sets as a plain list. */
 (function () {
@@ -22,12 +26,14 @@
   function smooth(a, b, v) { var t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }
   function inOut(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
   function outCubic(t) { return 1 - Math.pow(1 - t, 3); }
+  function hash(n) { var s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); }
   // a day the way the posters write it (OCT.15 . 2026); a month alone as SEP . 2025
   function when(iso) { var p = String(iso || '').split('-'); return p.length === 3 ? MON[+p[1] - 1] + '.' + p[2] + ' . ' + p[0] : p.length === 2 ? MON[+p[1] - 1] + ' . ' + p[0] : String(iso || ''); }
   function thumb(src) { return String(src).replace(/\/([^\/]+)\.(jpe?g|png)$/i, '/t/$1.webp'); }
   function byDate(d) { for (var i = 0; i < EVENTS.length; i++) if (EVENTS[i].date === d) return EVENTS[i]; return null; }
 
   /* ─── the sets, as the room shows them ─────────────────────────────── */
+  // image: the picture on the wall (a night's small copy of its poster); full: the picture when the set is open (the poster itself)
   var ITEMS = LIST.map(function (r) {
     var e = r.night ? byDate(r.night) : null, rows = [];
     if (r.night && !e) return null;
@@ -39,7 +45,7 @@
     (r.rows || []).forEach(function (x) { rows.push(x); });
     if (!e && r.date) rows.push(['Date', when(r.date)]);
     var title = e ? e.title : r.title || '', date = e ? e.date : r.date || '';
-    return { title: title, date: date, image: e ? thumb(e.poster) : r.image || '', kind: r.kind || '', who: r.who || '', sub: r.sub || '', say: r.say || '', rows: rows,
+    return { title: title, date: date, image: e ? thumb(e.poster) : r.image || '', full: e ? e.poster : r.full || r.image || '', kind: r.kind || '', who: r.who || '', sub: r.sub || '', say: r.say || '', rows: rows,
       alt: e ? 'The poster for ' + title + ', ' + when(date) : r.alt || title, link: e ? '/events/' + e.date : r.link || '', linkLabel: e ? 'The night' : r.linkLabel || 'More', ig: r.ig || '' };
   }).filter(function (it) { return it && it.title && it.image; });
   ITEMS.forEach(function (it, i) { it.i = i; });
@@ -69,12 +75,12 @@
         '<button class="rm__pill rm__ix" type="button" aria-expanded="false" aria-controls="rm-index">Index<sup>' + N + '</sup></button>' +
         '<a class="rm__pill" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/" data-room-exit>Exit</a></div></div>' +
       '<div class="rm__now"><p class="rm__no"><b>' + pad(1) + '</b> / ' + pad(N) + '</p><h2 class="rm__title">' + esc(first.title) + '</h2><p class="rm__tag"><i></i>' + (ITEMS[0] ? tag(first) : '') + '</p>' +
-        '<p class="rm__hint">Scroll to walk the room<span>Click a set to open it</span></p></div>' +
+        '<p class="rm__hint"><span class="rm__hint-p">Scroll to walk the room<span>Click a set to open it</span></span><span class="rm__hint-t">Swipe to walk<span>Drag sideways to look</span><span>Tap a set to open it</span></span></p></div>' +
       '<div class="rm__end"><p class="rm__no">The end of the room</p><p class="rm__endh">' + esc(N + ' sets, ' + (ITEMS[N - 1] ? String(ITEMS[N - 1].date).slice(0, 4) : '') + ' to ' + (ITEMS[0] ? String(ITEMS[0].date).slice(0, 4) : '')) + '</p>' +
         '<p class="rm__endgo"><button class="rm__pill rm__pill--solid" type="button" data-room-top>Back to the start</button><a class="rm__pill" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/" data-room-exit>Exit</a></p></div>' +
       '<nav class="rm__rule" aria-label="The sets in the room">' + ITEMS.map(function (it) { return '<button class="rm__tick" type="button" data-i="' + it.i + '" aria-label="' + esc(pad(it.i + 1) + ', ' + it.title + ', ' + when(it.date)) + '"><span>' + esc(it.title) + '</span></button>'; }).join('') + '</nav>' +
       '<p class="rm__tip" aria-hidden="true"><i></i>Open<b></b></p><i class="rm__dot" aria-hidden="true"></i>' +
-      '<section class="rm__open" role="dialog" aria-modal="true" aria-labelledby="rm-open-h" hidden><button class="rm__x" type="button" aria-label="Close">' + I_X + '</button>' +
+      '<section class="rm__open" role="dialog" aria-modal="true" aria-labelledby="rm-open-h" hidden><button class="rm__x" type="button" aria-label="Close, back to the room">' + I_X + '</button>' +
         '<div class="rm__info"><p class="rm__kind"><i></i><span></span></p><h2 class="rm__h" id="rm-open-h"></h2><p class="rm__sub"></p><p class="rm__say"></p><dl class="rm__rows"></dl>' +
         '<div class="rm__act"><p class="rm__links"></p><p class="rm__next"><span>Next set</span><button type="button"></button></p></div></div></section>' +
       '<section class="rm__index" id="rm-index" aria-label="Every set in the room" hidden><div class="rm__ixin"><p class="rm__ixh">Index<sup>' + N + '</sup></p><ol>' + ITEMS.map(function (it) {
@@ -94,7 +100,6 @@
   }
 
   /* ─── small vector tools ───────────────────────────────────────────── */
-  function v3(x, y, z) { return [x, y, z]; }
   function add(a, b) { return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; }
   function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
   function scl(a, k) { return [a[0] * k, a[1] * k, a[2] * k]; }
@@ -104,12 +109,11 @@
   function lerp3(a, b, t) { return [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)]; }
   // a turn as a quaternion, from the three axes of a thing (its right, its up, its face), and back
   function quat(r, u, f) {
-    var m00 = r[0], m11 = u[1], m22 = f[2], t = m00 + m11 + m22, s, q;
-    if (t > 0) { s = Math.sqrt(t + 1) * 2; q = [(u[2] - f[1]) / s, (f[0] - r[2]) / s, (r[1] - u[0]) / s, 0.25 * s]; }
-    else if (m00 > m11 && m00 > m22) { s = Math.sqrt(1 + m00 - m11 - m22) * 2; q = [0.25 * s, (u[0] + r[1]) / s, (f[0] + r[2]) / s, (u[2] - f[1]) / s]; }
-    else if (m11 > m22) { s = Math.sqrt(1 + m11 - m00 - m22) * 2; q = [(u[0] + r[1]) / s, 0.25 * s, (f[1] + u[2]) / s, (f[0] - r[2]) / s]; }
-    else { s = Math.sqrt(1 + m22 - m00 - m11) * 2; q = [(f[0] + r[2]) / s, (f[1] + u[2]) / s, 0.25 * s, (r[1] - u[0]) / s]; }
-    return q;
+    var m00 = r[0], m11 = u[1], m22 = f[2], t = m00 + m11 + m22, s;
+    if (t > 0) { s = Math.sqrt(t + 1) * 2; return [(u[2] - f[1]) / s, (f[0] - r[2]) / s, (r[1] - u[0]) / s, 0.25 * s]; }
+    if (m00 > m11 && m00 > m22) { s = Math.sqrt(1 + m00 - m11 - m22) * 2; return [0.25 * s, (u[0] + r[1]) / s, (f[0] + r[2]) / s, (u[2] - f[1]) / s]; }
+    if (m11 > m22) { s = Math.sqrt(1 + m11 - m00 - m22) * 2; return [(u[0] + r[1]) / s, 0.25 * s, (f[1] + u[2]) / s, (f[0] - r[2]) / s]; }
+    s = Math.sqrt(1 + m22 - m00 - m11) * 2; return [(f[0] + r[2]) / s, (f[1] + u[2]) / s, 0.25 * s, (r[1] - u[0]) / s];
   }
   function slerp(a, b, t) {
     var c = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3], s = 1, k0, k1;
@@ -125,7 +129,8 @@
   }
 
   /* ─── the corridor's measures (one unit is one square of the grid) ──── */
-  var HW = 4, HH = 3, GAP = 6.4, Z0 = -6, AHEAD = 4.6, EPS = 0.02, K = 0.42;
+  // K: how much the picture bends at its edges (it is drawn K larger than the screen, so that its middle is never stretched)
+  var HW = 4, HH = 3, GAP = 6.4, Z0 = -6, AHEAD = 4.6, EPS = 0.02, K = 0.34, SS = 1 + K, NL = 6, DUST = 700, AIR = 34;
   // where each set is: on which surface, and how far off the middle of it (the order of the old corridor: right, left, above, below)
   var SURF = ['right', 'left', 'ceil', 'floor', 'right', 'left', 'floor', 'ceil', 'left', 'right', 'floor', 'right', 'ceil', 'left'];
   var OFF = [0.15, -0.35, 0.55, -0.45, -0.2, 0.3, 0.5, -0.6, 0.05, 0.45, -0.3, -0.55, 0.2, 0.35];
@@ -133,47 +138,83 @@
   function station(i) { return zOf(i) + AHEAD; }      // where the camera stands when a set is the one named
   // the walk begins where the first set is named and ends a little past the last one, before the wall at the end
   var Z_START = station(0), Z_LAST = station(Math.max(0, N - 1)), Z_END = Z_LAST - 6, Z_WALL = zOf(Math.max(0, N - 1)) - 11, Z_BACK = 46;
-  var DARK = { bg: [0, 0, 0], ink: [0.72, 0.72, 0.7], fog: 30, vig: 0.6 }, LIGHT = { bg: [0.957, 0.953, 0.937], ink: [0.6, 0.594, 0.57], fog: 34, vig: 0.2 };
+  var DARK = { bg: [0, 0, 0], ink: [0.7, 0.7, 0.68], fog: 30, vig: 0.58, dimTo: [0, 0, 0] }, LIGHT = { bg: [0.957, 0.953, 0.937], ink: [0.62, 0.614, 0.59], fog: 34, vig: 0.2, dimTo: [0.975, 0.972, 0.96] };
+  var YELLOW = [1, 0.996, 0.149];
 
-  /* ─── the shaders ──────────────────────────────────────────────────── */
-  var GRID_V = 'attribute vec3 aPos; attribute vec2 aGrid; uniform mat4 uPV; varying vec3 vW; varying vec2 vG;' +
-    'void main() { vW = aPos; vG = aGrid; gl_Position = uPV * vec4(aPos, 1.0); }';
-  var GRID_F = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;' +
-    'varying vec3 vW; varying vec2 vG; uniform vec3 uCam, uInk, uBg; uniform float uFog, uShow, uDim, uPx;' +
-    'void main() {' +
-    '  vec2 f = fwidth(vG);' +
-    '  vec2 d = abs(fract(vG + 0.5) - 0.5) / max(f, vec2(1e-5));' +
-    '  float l = 1.0 - smoothstep(uPx * 0.5 - 0.5, uPx * 0.5 + 0.55, min(d.x, d.y));' +
-    '  float crowd = 1.0 - smoothstep(0.24, 0.62, max(f.x, f.y));' +
-    '  float dist = distance(vW, uCam);' +
-    '  float fog = exp(-pow(dist / uFog, 1.4)) * (0.55 + 0.45 * smoothstep(14.0, 1.5, dist));' +
-    '  float a = l * crowd * fog * uShow * (1.0 - 0.7 * uDim);' +
-    '  gl_FragColor = vec4(mix(uBg, uInk, a), 1.0);' +
+  /* ─── the shaders ──────────────────────────────────────────────────────
+     The light of the sets (up to six, the nearest) is worked out at the corners of the corridor's small squares and spread between
+     them: a soft pool of each picture's colour on the surfaces in front of it, and a little on the wall it hangs on. */
+  var LIGHT_GLSL = 'uniform vec3 uLP[6]; uniform vec3 uLN[6]; uniform vec4 uLC[6];\n' +
+    'vec3 lightAt(vec3 p, vec3 n, float reach) {\n' +
+    '  vec3 s = vec3(0.0);\n' +
+    '  for (int i = 0; i < 6; i++) {\n' +
+    '    vec3 d = p - uLP[i]; float r = max(uLC[i].a, 0.001) * reach;\n' +
+    '    float f = exp(-dot(d, d) / (r * r)) * mix(0.42, 1.0, smoothstep(-0.3, 1.0, dot(d, uLN[i])));\n' +
+    '    f *= clamp(dot(n, -normalize(d + vec3(0.0, 0.0, 0.0001))) * 0.7 + 0.45, 0.0, 1.0);\n' +
+    '    s += uLC[i].rgb * f;\n' +
+    '  }\n' +
+    '  return s;\n' +
+    '}\n';
+  var GRID_V = 'precision highp float;\nattribute vec3 aPos; attribute vec2 aGrid; attribute vec3 aN; uniform mat4 uPV; varying vec3 vW; varying vec2 vG; varying vec3 vLit;\n' + LIGHT_GLSL +
+    'void main() { vW = aPos; vG = aGrid; vLit = lightAt(aPos, aN, 1.0); gl_Position = uPV * vec4(aPos, 1.0); }';
+  var GRID_F = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;\n' +
+    'varying vec3 vW; varying vec2 vG; varying vec3 vLit;\n' +
+    'uniform vec3 uCam, uInk, uBg, uDimTo; uniform float uFog, uShow, uDim, uPx, uK, uMode; uniform vec2 uRes, uAsp;\n' +
+    'void main() {\n' +
+    '  vec2 f = fwidth(vG);\n' +
+    // a line is one point wide on the screen: where the bending squeezes the picture, it is drawn wider here
+    '  vec2 q = (gl_FragCoord.xy / uRes * 2.0 - 1.0) * uAsp; float px = uPx * (1.0 + 2.0 * uK * dot(q, q));\n' +
+    '  vec2 d = abs(fract(vG + 0.5) - 0.5) / max(f, vec2(1e-5));\n' +
+    '  float l = 1.0 - smoothstep(px * 0.5 - 0.5, px * 0.5 + 0.55, min(d.x, d.y));\n' +
+    '  float crowd = 1.0 - smoothstep(0.24, 0.62, max(f.x, f.y));\n' +
+    '  float dist = distance(vW, uCam);\n' +
+    '  float fog = exp(-pow(dist / uFog, 1.4)) * (0.55 + 0.45 * smoothstep(14.0, 1.5, dist));\n' +
+    '  vec3 lit = vLit * uShow; float k = clamp(max(lit.r, max(lit.g, lit.b)), 0.0, 1.0); vec3 hue = lit / max(max(lit.r, max(lit.g, lit.b)), 0.001);\n' +
+    // in the dark the light brightens and colours the lines and washes the surface; in the light room it colours the lines
+    '  vec3 ink = mix(uInk + lit * 1.2, mix(uInk, hue * 0.62, k * 0.8), uMode);\n' +
+    '  vec3 base = uBg + lit * 0.12 * (1.0 - uMode) * fog;\n' +
+    '  float a = l * crowd * fog * uShow;\n' +
+    '  gl_FragColor = vec4(mix(mix(base, ink, a), uDimTo, uDim * 0.7), 1.0);\n' +
     '}';
-  var PANEL_V = 'attribute vec2 aQ; uniform mat4 uPV; uniform vec3 uC, uU, uV; varying vec2 vUv; varying vec3 vW;' +
-    'void main() { vec3 p = uC + uU * aQ.x + uV * aQ.y; vW = p; vUv = aQ + 0.5; gl_Position = uPV * vec4(p, 1.0); }';
-  var PANEL_F = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;' +
-    'varying vec2 vUv; varying vec3 vW; uniform sampler2D uTex; uniform vec3 uCam, uBg, uTint; uniform float uFog, uA, uDim, uInk;' +
-    'void main() {' +
-    '  vec4 t = texture2D(uTex, vUv);' +
-    '  vec2 fw = fwidth(vUv) * 1.3;' +
-    '  vec2 e = smoothstep(vec2(0.0), fw, vUv) * smoothstep(vec2(0.0), fw, vec2(1.0) - vUv);' +
-    '  float fog = exp(-pow(distance(vW, uCam) / uFog, 1.4));' +
-    '  vec3 c = mix(t.rgb, uTint, uInk) * (1.0 - 0.72 * uDim);' +
-    '  gl_FragColor = vec4(mix(uBg, c, fog), e.x * e.y * uA * mix(1.0, t.a, uInk));' +
+  // a picture in the room, or its reflection in the floor (mirrored, fainter the higher the picture hangs, and soft)
+  var PANEL_V = 'precision highp float;\nattribute vec2 aQ; uniform mat4 uPV; uniform vec3 uC, uU, uV; uniform float uMirror, uFloorY; varying vec2 vUv; varying vec3 vW; varying float vUp;\n' +
+    'void main() { vec3 p = uC + uU * aQ.x + uV * aQ.y; vUp = p.y - uFloorY; if (uMirror > 0.5) p.y = 2.0 * uFloorY - p.y; vW = p; vUv = aQ + 0.5; gl_Position = uPV * vec4(p, 1.0); }';
+  var PANEL_F = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;\n' +
+    'varying vec2 vUv; varying vec3 vW; varying float vUp; uniform sampler2D uTex; uniform vec3 uCam, uBg, uTint, uDimTo; uniform float uFog, uA, uDim, uInk, uMirror, uRefl;\n' +
+    'void main() {\n' +
+    '  vec4 t = uMirror > 0.5 ? texture2D(uTex, vUv, 2.4) : texture2D(uTex, vUv);\n' +
+    '  vec2 fw = fwidth(vUv) * 1.3;\n' +
+    '  vec2 e = smoothstep(vec2(0.0), fw, vUv) * smoothstep(vec2(0.0), fw, vec2(1.0) - vUv);\n' +
+    '  float fog = exp(-pow(distance(vW, uCam) / uFog, 1.4));\n' +
+    '  vec3 c = mix(mix(t.rgb, uTint, uInk), uDimTo, uDim * 0.72);\n' +
+    '  float a = e.x * e.y * uA * mix(1.0, t.a, uInk);\n' +
+    '  if (uMirror > 0.5) a *= uRefl * exp(-vUp * 0.5);\n' +
+    '  gl_FragColor = vec4(mix(uBg, c, fog), a);\n' +
     '}';
+  // dust in the air: fixed in the room (so it passes by as you walk), lit by the pictures near it, stirred a little by the walk
+  var DUST_V = 'precision highp float;\nattribute vec4 aD; uniform mat4 uPV; uniform vec3 uCam; uniform float uT, uLen, uPx, uFog, uA, uMode; varying float vA; varying vec3 vC;\n' + LIGHT_GLSL +
+    'void main() {\n' +
+    '  float w = uCam.z + 3.0 - mod(uCam.z + 3.0 - aD.z * uLen, uLen);\n' +
+    '  vec3 p = vec3(aD.x * 3.8 + sin(uT + aD.w * 6.283) * 0.22, aD.y * 2.8 + sin(uT * 0.8 + aD.w * 11.0) * 0.16, w);\n' +
+    '  float dist = distance(p, uCam), back = uCam.z + 3.0 - w;\n' +
+    '  vA = uA * (0.22 + 0.4 * fract(aD.w * 7.31)) * exp(-pow(dist / uFog, 1.4)) * smoothstep(0.5, 1.8, dist) * smoothstep(0.0, 3.0, back) * smoothstep(uLen, uLen - 6.0, back);\n' +
+    '  vec3 lit = lightAt(p, vec3(0.0, 1.0, 0.0), 1.25);\n' +
+    '  vC = mix(vec3(0.86, 0.85, 0.8) + lit * 1.7, vec3(0.2, 0.2, 0.19) + lit * 0.3, uMode);\n' +
+    '  gl_Position = uPV * vec4(p, 1.0);\n' +
+    '  gl_PointSize = uPx * (1.3 + 2.2 * fract(aD.w * 3.7)) * clamp(4.2 / dist, 0.6, 3.0);\n' +
+    '}';
+  var DUST_F = 'precision mediump float;\nvarying float vA; varying vec3 vC;\nvoid main() { float a = smoothstep(0.5, 0.06, length(gl_PointCoord - 0.5)) * vA; gl_FragColor = vec4(vC * a, a); }';
   var POST_V = 'attribute vec2 aP; varying vec2 vUv; void main() { vUv = aP * 0.5 + 0.5; gl_Position = vec4(aP, 0.0, 1.0); }';
-  var POST_F = 'precision mediump float; varying vec2 vUv; uniform sampler2D uScene; uniform vec2 uAsp; uniform float uK, uVig; uniform vec3 uBg;' +
-    'void main() {' +
-    '  vec2 p = vUv * 2.0 - 1.0; vec2 q = p * uAsp; float r2 = dot(q, q);' +
-    '  vec2 s = p * (1.0 + uK * r2) / (1.0 + uK);' +
-    '  vec3 c = texture2D(uScene, s * 0.5 + 0.5).rgb;' +
-    '  float v = smoothstep(1.2, 0.42, sqrt(r2));' +
-    '  gl_FragColor = vec4(mix(uBg, c, mix(1.0, v, uVig)), 1.0);' +
+  var POST_F = 'precision mediump float;\nvarying vec2 vUv; uniform sampler2D uScene; uniform vec2 uAsp; uniform float uK, uVig; uniform vec3 uBg;\n' +
+    'void main() {\n' +
+    '  vec2 p = vUv * 2.0 - 1.0; vec2 q = p * uAsp; float r2 = dot(q, q);\n' +
+    '  vec2 s = p * (1.0 + uK * r2) / (1.0 + uK);\n' +
+    '  vec3 c = texture2D(uScene, s * 0.5 + 0.5).rgb;\n' +
+    '  gl_FragColor = vec4(mix(uBg, c, mix(1.0, smoothstep(1.2, 0.42, sqrt(r2)), uVig)), 1.0);\n' +
     '}';
 
   /* ─── the room on the screen ───────────────────────────────────────── */
-  var back = false;      // the visitor left by "Exit" or by going back: the home page opens at its room
+  var back = false;      // the visitor left by "Exit" or by going back: the home page opens where they went in
   function mount(el) {
     if (el._room) return el._room;
     if (!N) return null;
@@ -181,41 +222,60 @@
     try { gl = cv.getContext('webgl', { alpha: false, antialias: false, depth: true, stencil: false, premultipliedAlpha: false, powerPreference: 'high-performance' }); } catch (e) { gl = null; }
     if (!gl || !gl.getExtension('OES_standard_derivatives')) return null;
     var aniso = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic'), maxAniso = aniso ? gl.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
-    var G, P, Q;
+    var maxTex = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE), 8192);
+    var G, P, U, Q;
     function shader(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
     function program(vs, fs, attrs) {
       var p = gl.createProgram(); gl.attachShader(p, shader(gl.VERTEX_SHADER, vs)); gl.attachShader(p, shader(gl.FRAGMENT_SHADER, fs));
       attrs.forEach(function (a, i) { gl.bindAttribLocation(p, i, a); }); gl.linkProgram(p);
       if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
       var u = {}, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
-      for (var i = 0; i < n; i++) { var a = gl.getActiveUniform(p, i); u[a.name] = gl.getUniformLocation(p, a.name); }
+      for (var i = 0; i < n; i++) { var a = gl.getActiveUniform(p, i); u[a.name.replace(/\[0\]$/, '')] = gl.getUniformLocation(p, a.name); }
       return { p: p, u: u };
     }
-    try { G = program(GRID_V, GRID_F, ['aPos', 'aGrid']); P = program(PANEL_V, PANEL_F, ['aQ']); Q = program(POST_V, POST_F, ['aP']); }
+    try { G = program(GRID_V, GRID_F, ['aPos', 'aGrid', 'aN']); P = program(PANEL_V, PANEL_F, ['aQ']); U = program(DUST_V, DUST_F, ['aD']); Q = program(POST_V, POST_F, ['aP']); }
     catch (e) { return null; }
 
-    // the corridor's four surfaces and the wall at its end, each with its own two measures for the grid
-    var T = [], zb = Z_BACK, zf = Z_WALL;
-    function quad(a, b, c, d) { [a, b, c, a, c, d].forEach(function (v) { T.push(v[0], v[1], v[2], v[3], v[4]); }); }
-    quad([-HW, -HH, zb, -HW, zb], [HW, -HH, zb, HW, zb], [HW, -HH, zf, HW, zf], [-HW, -HH, zf, -HW, zf]);      // floor (x, z)
-    quad([-HW, HH, zb, -HW, zb], [HW, HH, zb, HW, zb], [HW, HH, zf, HW, zf], [-HW, HH, zf, -HW, zf]);          // ceiling
-    quad([-HW, -HH, zb, -HH, zb], [-HW, HH, zb, HH, zb], [-HW, HH, zf, HH, zf], [-HW, -HH, zf, -HH, zf]);      // left wall (y, z)
-    quad([HW, -HH, zb, -HH, zb], [HW, HH, zb, HH, zb], [HW, HH, zf, HH, zf], [HW, -HH, zf, -HH, zf]);          // right wall
-    quad([-HW, -HH, zf, -HW, -HH], [HW, -HH, zf, HW, -HH], [HW, HH, zf, HW, HH], [-HW, HH, zf, -HW, HH]);      // the end (x, y)
-    var tunnel = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, tunnel); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(T), gl.STATIC_DRAW);
+    // the corridor, in squares of half a unit (the light is worked out at their corners): the floor first (it is drawn on its own,
+    // under the reflections), then the ceiling, the two walls and the wall at the end. Each surface has its own two measures for
+    // the grid, and the way it faces
+    var C = (function () {
+      var V = [], I = [];
+      function surface(o, a, la, b, lb, n, grid) {
+        var na = Math.max(1, Math.round(la / 0.5)), nb = Math.max(1, Math.round(lb / 0.5)), sa = la / na, sb = lb / nb, base = V.length / 8, i, j;
+        for (j = 0; j <= nb; j++) for (i = 0; i <= na; i++) {
+          var p = [o[0] + a[0] * i * sa + b[0] * j * sb, o[1] + a[1] * i * sa + b[1] * j * sb, o[2] + a[2] * i * sa + b[2] * j * sb], g = grid(p);
+          V.push(p[0], p[1], p[2], g[0], g[1], n[0], n[1], n[2]);
+        }
+        for (j = 0; j < nb; j++) for (i = 0; i < na; i++) { var k = base + j * (na + 1) + i; I.push(k, k + 1, k + na + 2, k, k + na + 2, k + na + 1); }
+      }
+      var L = Z_BACK - Z_WALL, xz = function (p) { return [p[0], p[2]]; }, yz = function (p) { return [p[1], p[2]]; };
+      surface([-HW, -HH, Z_BACK], [1, 0, 0], 2 * HW, [0, 0, -1], L, [0, 1, 0], xz);
+      var floor = I.length;
+      surface([-HW, HH, Z_BACK], [1, 0, 0], 2 * HW, [0, 0, -1], L, [0, -1, 0], xz);
+      surface([-HW, -HH, Z_BACK], [0, 1, 0], 2 * HH, [0, 0, -1], L, [1, 0, 0], yz);
+      surface([HW, -HH, Z_BACK], [0, 1, 0], 2 * HH, [0, 0, -1], L, [-1, 0, 0], yz);
+      surface([-HW, -HH, Z_WALL], [1, 0, 0], 2 * HW, [0, 1, 0], 2 * HH, [0, 0, 1], function (p) { return [p[0], p[1]]; });
+      var vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(V), gl.STATIC_DRAW);
+      var ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(I), gl.STATIC_DRAW);
+      return { vb: vb, ib: ib, floor: floor, all: I.length };
+    })();
     var card = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, card); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5]), gl.STATIC_DRAW);
     var tri = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, tri); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-    var fbo = { fb: gl.createFramebuffer(), tex: gl.createTexture(), depth: gl.createRenderbuffer(), w: 0, h: 0 };
+    var dust = gl.createBuffer(), DD = new Float32Array(DUST * 4);
+    for (var di = 0; di < DUST; di++) { DD[di * 4] = hash(di * 1.7) * 2 - 1; DD[di * 4 + 1] = hash(di * 2.9 + 5) * 2 - 1; DD[di * 4 + 2] = hash(di * 4.3 + 11); DD[di * 4 + 3] = hash(di * 7.1 + 17); }
+    gl.bindBuffer(gl.ARRAY_BUFFER, dust); gl.bufferData(gl.ARRAY_BUFFER, DD, gl.STATIC_DRAW);
+    var fbo = { fb: gl.createFramebuffer(), tex: gl.createTexture(), depth: gl.createRenderbuffer() };
 
     var stage = $('.rm__stage', el), track = $('.rm__track', el), now = $('.rm__now', el), noEl = $('.rm__no b', now), titleEl = $('.rm__title', now), tagEl = $('.rm__tag', now);
     var ticks = $$('.rm__tick', el), tip = $('.rm__tip', el), tipB = $('b', tip), dotEl = $('.rm__dot', el), dlg = $('.rm__open', el), info = $('.rm__info', dlg), ixBtn = $('.rm__ix', el), ixEl = $('.rm__index', el), modeBtn = $('.rm__mode', el);
+    var coarse = !!(window.matchMedia && matchMedia('(hover: none) and (pointer: coarse)').matches), lowMem = (navigator.deviceMemory || 4) <= 2;
 
     // each set as a picture in the corridor: placed when its picture has come (its shape decides its size)
-    var panels = ITEMS.map(function (it) { return { it: it, ready: false, a: 0, tex: null, fade: 0, color: '' }; });
-    var markTex = null, markA = 0;
+    var panels = ITEMS.map(function (it) { return { it: it, ready: false, a: 0, tex: null, big: null, fade: 0, color: '', glow: [1, 1, 1] }; });
+    var markTex = null, markA = 0, bigs = [], bigV = 0;
     function pot(n, cap) { var p = 1; while (p < n && p < cap) p *= 2; return p; }
-    function texture(im, alpha) {
-      var cap = Math.min(window.screen.width || 1024, window.screen.height || 1024) >= 700 ? 1024 : 512;
+    function texture(im, alpha, cap) {
       var w = pot(im.naturalWidth, cap), h = pot(im.naturalHeight, cap), c = document.createElement('canvas'); c.width = w; c.height = h;
       var g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, w, h);
       var t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
@@ -224,21 +284,24 @@
       gl.generateMipmap(gl.TEXTURE_2D);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      if (aniso) gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, maxAniso));
+      if (aniso) gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(16, maxAniso));
       return t;
     }
-    // the picture's own colour, for the dot beside its name: the most vivid part of a small copy (none for a grey picture)
-    function colour(im) {
+    // the picture's own colours: the most vivid part (for the dot beside its name; none for a grey picture), and the colour of
+    // the light it gives the room (its whole colour, made bright)
+    function colours(im) {
       try {
         var c = document.createElement('canvas'); c.width = c.height = 24; var g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0, 24, 24);
-        var d = g.getImageData(0, 0, 24, 24).data, px = [], i;
-        for (i = 0; i < d.length; i += 4) { var mx = Math.max(d[i], d[i + 1], d[i + 2]), mn = Math.min(d[i], d[i + 1], d[i + 2]); px.push([(mx ? (mx - mn) / mx : 0) * Math.sqrt(mx / 255), d[i], d[i + 1], d[i + 2]]); }
+        var d = g.getImageData(0, 0, 24, 24).data, px = [], R = 0, Gr = 0, B = 0, i;
+        for (i = 0; i < d.length; i += 4) { var mx = Math.max(d[i], d[i + 1], d[i + 2]), mn = Math.min(d[i], d[i + 1], d[i + 2]); px.push([(mx ? (mx - mn) / mx : 0) * Math.sqrt(mx / 255), d[i], d[i + 1], d[i + 2]]); R += d[i]; Gr += d[i + 1]; B += d[i + 2]; }
+        var top = Math.max(R, Gr, B, 1), glow = [R / top, Gr / top, B / top].map(function (v) { return mix(v, 1, 0.12); });
         px.sort(function (a, b) { return b[0] - a[0]; });
-        if (px[0][0] < 0.3) return '';
-        var top = px.slice(0, 24), r = 0, gg = 0, b = 0; top.forEach(function (p) { r += p[1]; gg += p[2]; b += p[3]; });
-        r /= top.length; gg /= top.length; b /= top.length;
-        var k = 235 / Math.max(r, gg, b, 1); return 'rgb(' + Math.round(Math.min(255, r * k)) + ',' + Math.round(Math.min(255, gg * k)) + ',' + Math.round(Math.min(255, b * k)) + ')';
-      } catch (e) { return ''; }
+        if (px[0][0] < 0.3) return { css: '', glow: glow };
+        var some = px.slice(0, 24), r = 0, gg = 0, b = 0; some.forEach(function (p) { r += p[1]; gg += p[2]; b += p[3]; });
+        r /= some.length; gg /= some.length; b /= some.length;
+        var k = 235 / Math.max(r, gg, b, 1);
+        return { css: 'rgb(' + Math.round(Math.min(255, r * k)) + ',' + Math.round(Math.min(255, gg * k)) + ',' + Math.round(Math.min(255, b * k)) + ')', glow: glow };
+      } catch (e) { return { css: '', glow: [1, 1, 1] }; }
     }
     function place(pn) {
       var i = pn.it.i, s = SURF[i % SURF.length], o = OFF[i % OFF.length], z = zOf(i), a = pn.a, w, h;
@@ -251,6 +314,7 @@
         var x = clamp(o * 1.4, -HW + w / 2 + 0.3, HW - w / 2 - 0.3);
         pn.C = [x, s === 'floor' ? -HH + EPS : HH - EPS, z]; pn.U = [1, 0, 0]; pn.V = [0, 0, s === 'floor' ? -1 : 1];
       }
+      pn.floor = s === 'floor'; pn.ceil = s === 'ceil';
       pn.w = w; pn.h = h; pn.N = norm(cross(pn.U, pn.V)); pn.q = quat(pn.U, pn.V, pn.N);
     }
     var asked = 0;
@@ -260,38 +324,61 @@
       while (asked < upto) {
         (function (pn) {
           var im = new Image(); im.decoding = 'async';
-          im.onload = function () { if (dead) return; pn.a = im.naturalWidth / im.naturalHeight || 1; place(pn); pn.tex = texture(im, false); pn.color = colour(im); pn.ready = true; if (pn.it.i === cur) paintNow(true); kick(); };
+          im.onload = function () { if (dead) return; var c = colours(im); pn.a = im.naturalWidth / im.naturalHeight || 1; place(pn); pn.tex = texture(im, false, lowMem ? 512 : 1024); pn.color = c.css; pn.glow = c.glow; pn.ready = true; if (pn.it.i === cur) paintNow(true); kick(); };
           im.onerror = function () { pn.failed = true; };
           im.src = pn.it.image;
         })(panels[asked]);
         asked++;
       }
     }
+    // the poster itself, for a set that is pointed at or opened: two at most are kept, the older one gives its room back
+    function wantBig(pn) {
+      if (!pn || !pn.ready || pn.big || pn.bigAsked || !pn.it.full) return;
+      pn.bigAsked = true;
+      var im = new Image(); im.decoding = 'async';
+      im.onload = function () {
+        if (dead) return;
+        pn.big = texture(im, false, lowMem ? 1024 : 2048); bigs.push(pn); bigV++;
+        for (var j = 0; bigs.length > 2 && j < bigs.length;) {
+          var o = bigs[j];
+          if (o !== pn && o !== panels[oi]) { gl.deleteTexture(o.big); o.big = null; o.bigAsked = false; bigs.splice(j, 1); } else j++;
+        }
+        kick();
+      };
+      im.onerror = function () { pn.bigAsked = false; };
+      im.src = pn.it.full;
+    }
     (function () {
       var im = new Image(); im.decoding = 'async';
-      im.onload = function () { if (dead) return; markTex = texture(im, true); markA = im.naturalWidth / im.naturalHeight || 1; kick(); };
+      im.onload = function () { if (dead) return; markTex = texture(im, true, 512); markA = im.naturalWidth / im.naturalHeight || 1; kick(); };
       im.src = (root.getAttribute('data-assets') || 'assets/') + 'brush/mark-320.webp';
     })();
 
     /* the state of the walk */
-    var dead = false, raf = 0, last = 0, t0 = 0, vw = 1, vh = 1, aspect = 1, dpr = 1, cw = 0, ch = 0, stepPx = 600, maxScroll = 1, trackW = 0, trackH = 0;
-    var camZ = Z_START, tz = Z_START, mx = 0, my = 0, tmx = 0, tmy = 0, px = -1, py = -1, pointing = false, speed = 0, fovNow = 1.2;
-    var eye = [0, 0, Z_START], R = { r: [1, 0, 0], u: [0, 1, 0], b: [0, 0, 1] }, PV = new Float32Array(16);
+    var dead = false, raf = 0, last = 0, t0 = 0, vw = 1, vh = 1, aspect = 1, dpr = 1, rs = 1, rsMax = Infinity, cw = 0, ch = 0, fw = 0, fh = 0, stepPx = 600, maxScroll = 1, trackW = 0, trackH = 0, slow = 0;
+    var camZ = Z_START, tz = Z_START, mx = 0, my = 0, tmx = 0, tmy = 0, px = -1, py = -1, pointing = false, speed = 0, fovNow = 1.2, air = 0;
+    var lookY = 0, lookP = 0, dragY = 0, dragId = -1, dragX0 = 0, dragY0 = 0, dragFrom = 0, dragging = false, dragged = false, gyX = 0, gyY = 0, gyTX = 0, gyTY = 0, g0 = null, b0 = 0;
+    var eye = [0, 0, Z_START], R = { r: [1, 0, 0], u: [0, 1, 0], b: [0, 0, 1] }, PV = new Float32Array(16), LP = new Float32Array(NL * 3), LN = new Float32Array(NL * 3), LC = new Float32Array(NL * 4);
     var cur = 0, shownCur = -1, atEnd = false, hover = -1, tipW = 0, state = 'walk', oi = -1, ot = 0, after = null, pending = -1, savedY = 0, lastFocus = null;
-    var light = false, lt = 0, sig = '', walked = false, ready = false;
+    var light = false, lt = 0, sig = '', lastSig = '', walked = false, ready = false;
+    var LOOK = coarse ? 0.62 : 0.36;
     try { light = localStorage.getItem('tm:room') === 'light'; } catch (e) { /* no storage: dark */ }
     lt = light ? 1 : 0; el.classList.toggle('is-light', light); modeBtn.setAttribute('aria-pressed', String(light)); modeBtn.setAttribute('aria-label', light ? 'Dark room' : 'Light room');
 
+    // the canvas has all the screen's points; the picture of the room is drawn K larger than that (up to what the device can carry,
+    // less if it turns out slow), so that after the bending its middle has one point of the picture for one point of the screen
     function size() {
       vw = stage.clientWidth || window.innerWidth; vh = stage.clientHeight || window.innerHeight; aspect = vw / vh;
-      dpr = Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(3.6e6 / (vw * vh)));
-      var w = Math.round(vw * dpr), h = Math.round(vh * dpr);
-      if (w !== cw || h !== ch) {
-        cw = cv.width = w; ch = cv.height = h;
-        gl.bindTexture(gl.TEXTURE_2D, fbo.tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      dpr = Math.min(window.devicePixelRatio || 1, 3);
+      rs = Math.max(0.75, Math.min(dpr, rsMax, Math.sqrt((coarse ? 5.2e6 : 8.6e6) / (vw * vh * SS * SS))));
+      var w = Math.round(vw * dpr), h = Math.round(vh * dpr), fw2 = Math.min(maxTex, Math.round(vw * rs * SS)), fh2 = Math.min(maxTex, Math.round(vh * rs * SS));
+      if (w !== cw || h !== ch) { cw = cv.width = w; ch = cv.height = h; }
+      if (fw2 !== fw || fh2 !== fh) {
+        fw = fw2; fh = fh2;
+        gl.bindTexture(gl.TEXTURE_2D, fbo.tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, fw, fh, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.bindRenderbuffer(gl.RENDERBUFFER, fbo.depth); gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, fbo.depth); gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, fw, fh);
         gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbo.tex, 0);
         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, fbo.depth); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       }
@@ -313,16 +400,17 @@
     function fovBase() { return (aspect >= 1.2 ? 80 : mix(100, 80, clamp((aspect - 0.45) / 0.75, 0, 1))) * Math.PI / 180; }
 
     // the camera: where it stands, where it looks, and the picture of the room it takes. The far end of the corridor goes a little
-    // toward the pointer (the camera turns the other way), as in the walk this room is made after
+    // toward the pointer (the camera turns the other way), as in the walk this room is made after; the head turns toward the set
+    // it passes (look), toward a finger dragged sideways (drag) and with the phone (gy)
     function camera(introZ, fovExtra) {
-      var yaw = mx * 0.075, pitch = -my * 0.05, roll = -mx * 0.012;
+      var yaw = mx * 0.075 + gyX - lookY - dragY, pitch = -my * 0.05 + gyY + lookP, roll = -mx * 0.012 + (lookY + dragY) * 0.03;
       var cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch), cr = Math.cos(roll), sr = Math.sin(roll);
       // R = turn about y, then about x, then about z; its columns are the camera's right, up and back
       var ry = [[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]], rx = [[1, 0, 0], [0, cp, -sp], [0, sp, cp]], rz = [[cr, -sr, 0], [sr, cr, 0], [0, 0, 1]];
       function mm(a, b) { var o = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]; for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) o[i][j] = a[i][0] * b[0][j] + a[i][1] * b[1][j] + a[i][2] * b[2][j]; return o; }
       var m = mm(mm(ry, rx), rz);
       R = { r: [m[0][0], m[1][0], m[2][0]], u: [m[0][1], m[1][1], m[2][1]], b: [m[0][2], m[1][2], m[2][2]] };
-      eye = [mx * 0.32, my * 0.16, camZ + introZ];
+      eye = [mx * 0.32, my * 0.16 - 0.1, camZ + introZ];
       fovNow = fovBase() + fovExtra + Math.min(0.07, Math.abs(speed) * 0.004);
       var f = 1 / Math.tan(fovNow / 2), n = 0.05, fa = 220, nf = 1 / (n - fa), pr = [f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (fa + n) * nf, -1, 0, 0, 2 * fa * n * nf, 0];
       var r = R.r, u = R.u, b = R.b, v = [r[0], u[0], b[0], 0, r[1], u[1], b[1], 0, r[2], u[2], b[2], 0, -dot(r, eye), -dot(u, eye), -dot(b, eye), 1];
@@ -364,46 +452,90 @@
       var C = add(lerp3(pn.C, f.C, e), scl(pn.N, Math.sin(Math.PI * e) * 0.9));
       return { C: C, U: ax.r, V: ax.u, N: norm(cross(ax.r, ax.u)), w: mix(pn.w, f.w, e), h: mix(pn.h, f.h, e) };
     }
+    // the lights of the room this frame: the nearest sets, each in its own colour, and the logo's yellow near the end
+    function lights(panelsA, dim) {
+      var near = [], n = 0;
+      LP.fill(0); LN.fill(0); LC.fill(0);
+      function set(p, nn, col, s, r) { if (n >= NL || s <= 0) return; LP.set(p, n * 3); LN.set(nn, n * 3); LC.set([col[0] * s, col[1] * s, col[2] * s, r], n * 4); n++; }
+      if (markTex && Math.abs(Z_WALL - eye[2]) < 42) set([0, 0.1, Z_WALL + 0.8], [0, 0, 1], [1, 0.93, 0.12], 0.8 * panelsA, 5.2);
+      panels.forEach(function (pn, i) { if (pn.ready) { var dz = Math.abs(pn.C[2] - eye[2]); if (dz < 40) near.push({ pn: pn, i: i, dz: dz }); } });
+      near.sort(function (a, b) { return a.dz - b.dz; });
+      near.forEach(function (o) { var pn = o.pn; set(add(pn.C, scl(pn.N, 0.3)), pn.N, pn.glow, 0.92 * pn.fade * panelsA * (o.i === oi ? 1 - dim : 1), 0.62 * (pn.w + pn.h)); });
+    }
 
     /* drawing */
     function draw(show, panelsA, dim, reach) {
-      var C = mixC(), bg = C.bg; C.fog *= reach;
-      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fb); gl.viewport(0, 0, cw, ch);
+      var c = colors(), bg = c.bg, fog = c.fog * reach, l = Math.sqrt(aspect * aspect + 1);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fb); gl.viewport(0, 0, fw, fh);
       gl.clearColor(bg[0], bg[1], bg[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.disable(gl.BLEND);
-      gl.useProgram(G.p);
-      gl.uniformMatrix4fv(G.u.uPV, false, PV); gl.uniform3fv(G.u.uCam, eye); gl.uniform3fv(G.u.uInk, C.ink); gl.uniform3fv(G.u.uBg, bg);
-      gl.uniform1f(G.u.uFog, C.fog); gl.uniform1f(G.u.uShow, show); gl.uniform1f(G.u.uDim, dim); gl.uniform1f(G.u.uPx, Math.max(1, 1.0 * dpr));
-      gl.bindBuffer(gl.ARRAY_BUFFER, tunnel); gl.enableVertexAttribArray(0); gl.enableVertexAttribArray(1);
-      gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 20, 0); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 20, 12);
-      gl.drawArrays(gl.TRIANGLES, 0, T.length / 5);
-      gl.disableVertexAttribArray(1);
+      gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.depthMask(true); gl.disable(gl.BLEND);
 
+      // the surfaces: first the floor
+      gl.useProgram(G.p);
+      gl.uniformMatrix4fv(G.u.uPV, false, PV); gl.uniform3fv(G.u.uLP, LP); gl.uniform3fv(G.u.uLN, LN); gl.uniform4fv(G.u.uLC, LC);
+      gl.uniform3fv(G.u.uCam, eye); gl.uniform3fv(G.u.uInk, c.ink); gl.uniform3fv(G.u.uBg, bg); gl.uniform3fv(G.u.uDimTo, c.dimTo);
+      gl.uniform1f(G.u.uFog, fog); gl.uniform1f(G.u.uShow, show); gl.uniform1f(G.u.uDim, dim); gl.uniform1f(G.u.uPx, Math.max(1, rs));
+      gl.uniform1f(G.u.uK, K); gl.uniform1f(G.u.uMode, c.mode); gl.uniform2f(G.u.uRes, fw, fh); gl.uniform2f(G.u.uAsp, aspect / l, 1 / l);
+      function corridor(from, count) {
+        gl.useProgram(G.p);
+        gl.bindBuffer(gl.ARRAY_BUFFER, C.vb); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, C.ib);
+        gl.enableVertexAttribArray(0); gl.enableVertexAttribArray(1); gl.enableVertexAttribArray(2);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 32, 0); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 32, 12); gl.vertexAttribPointer(2, 3, gl.FLOAT, false, 32, 20);
+        gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, from * 2);
+        gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2);
+      }
+      corridor(0, C.floor);
+
+      // the pictures' program, for their reflections first
       gl.useProgram(P.p); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       gl.bindBuffer(gl.ARRAY_BUFFER, card); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
-      gl.uniformMatrix4fv(P.u.uPV, false, PV); gl.uniform3fv(P.u.uCam, eye); gl.uniform3fv(P.u.uBg, bg); gl.uniform1f(P.u.uFog, C.fog);
+      gl.uniformMatrix4fv(P.u.uPV, false, PV); gl.uniform3fv(P.u.uCam, eye); gl.uniform3fv(P.u.uBg, bg); gl.uniform3fv(P.u.uDimTo, c.dimTo); gl.uniform1f(P.u.uFog, fog); gl.uniform1f(P.u.uFloorY, -HH);
       gl.activeTexture(gl.TEXTURE0); gl.uniform1i(P.u.uTex, 0);
-      function one(g, tex, a, dm, ink, tint) {
+      function one(g, tex, a, dm, ink, tint, mirror, refl) {
         gl.uniform3fv(P.u.uC, g.C); gl.uniform3fv(P.u.uU, scl(g.U, g.w)); gl.uniform3fv(P.u.uV, scl(g.V, g.h));
         gl.uniform1f(P.u.uA, a); gl.uniform1f(P.u.uDim, dm); gl.uniform1f(P.u.uInk, ink); gl.uniform3fv(P.u.uTint, tint || [1, 1, 1]);
+        gl.uniform1f(P.u.uMirror, mirror ? 1 : 0); gl.uniform1f(P.u.uRefl, refl || 0);
         gl.bindTexture(gl.TEXTURE_2D, tex); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
-      panels.forEach(function (pn, i) {
-        if (!pn.ready || (i === oi && ot > 0)) return;
-        var z = pn.C[2]; if (z > eye[2] + 8 || z < eye[2] - 75) return;
-        one(pn, pn.tex, pn.fade * panelsA, dim, 0);
-      });
-      // the logo on the wall at the end, in the paint's yellow
-      if (markTex) { var mh = 3.2; one({ C: [0, 0.1, Z_WALL + EPS], U: [1, 0, 0], V: [0, 1, 0], w: mh * markA, h: mh }, markTex, panelsA, dim, 1, [1, 0.996, 0.149]); }
-      if (oi >= 0 && ot > 0) { gl.disable(gl.DEPTH_TEST); one(geo(panels[oi], oi), panels[oi].tex, panels[oi].fade, 0, 0); }
+      function visible(pn, i) { return pn.ready && !(i === oi && ot > 0) && pn.C[2] < eye[2] + 8 && pn.C[2] > eye[2] - 75; }
+      var mark = markTex ? { C: [0, 0.1, Z_WALL + EPS], U: [1, 0, 0], V: [0, 1, 0], w: 3.2 * markA, h: 3.2 } : null;
+      // the polished floor holds the sets on the walls and the ceiling, and the logo. A reflection lies beyond the floor, so it is
+      // drawn over the floor alone (nothing else stands where it can be seen)
+      gl.disable(gl.DEPTH_TEST); gl.depthMask(false);
+      var shine = 0.26 * (1 - 0.55 * c.mode);
+      panels.forEach(function (pn, i) { if (visible(pn, i) && !pn.floor) one(pn, pn.big || pn.tex, pn.fade * panelsA, dim, 0, null, true, pn.ceil ? shine * 0.5 : shine); });
+      if (mark) one(mark, markTex, panelsA, dim, 1, YELLOW, true, shine);
+      gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.disable(gl.BLEND);
 
+      // the rest of the corridor
+      corridor(C.floor, C.all - C.floor);
+
+      // the sets in their places, and the logo on the wall at the end, in the paint's yellow
+      gl.useProgram(P.p); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.bindBuffer(gl.ARRAY_BUFFER, card); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
+      panels.forEach(function (pn, i) { if (visible(pn, i)) one(pn, pn.big || pn.tex, pn.fade * panelsA, dim, 0); });
+      if (mark) one(mark, markTex, panelsA, dim, 1, YELLOW);
+
+      // the dust: in front of the walls, behind the sets, never hiding anything
+      gl.useProgram(U.p); gl.depthMask(false); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.bindBuffer(gl.ARRAY_BUFFER, dust); gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 16, 0);
+      gl.uniformMatrix4fv(U.u.uPV, false, PV); gl.uniform3fv(U.u.uCam, eye); gl.uniform1f(U.u.uT, air); gl.uniform1f(U.u.uLen, AIR); gl.uniform1f(U.u.uPx, Math.max(1, rs));
+      gl.uniform1f(U.u.uFog, fog * 0.8); gl.uniform1f(U.u.uA, show * (1 - 0.6 * c.mode) * (1 - 0.75 * dim)); gl.uniform1f(U.u.uMode, c.mode);
+      gl.uniform3fv(U.u.uLP, LP); gl.uniform3fv(U.u.uLN, LN); gl.uniform4fv(U.u.uLC, LC);
+      gl.drawArrays(gl.POINTS, 0, DUST);
+      gl.depthMask(true);
+
+      // the open set, in front of everything
+      if (oi >= 0 && ot > 0) { gl.useProgram(P.p); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.bindBuffer(gl.ARRAY_BUFFER, card); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0); gl.disable(gl.DEPTH_TEST); one(geo(panels[oi], oi), panels[oi].big || panels[oi].tex, panels[oi].fade, 0, 0); }
+
+      // the whole picture onto the screen, bent at its edges
       gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, cw, ch); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
       gl.useProgram(Q.p); gl.bindBuffer(gl.ARRAY_BUFFER, tri); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
       gl.bindTexture(gl.TEXTURE_2D, fbo.tex); gl.uniform1i(Q.u.uScene, 0);
-      var l = Math.sqrt(aspect * aspect + 1); gl.uniform2f(Q.u.uAsp, aspect / l, 1 / l); gl.uniform1f(Q.u.uK, K); gl.uniform1f(Q.u.uVig, C.vig); gl.uniform3fv(Q.u.uBg, bg);
+      gl.uniform2f(Q.u.uAsp, aspect / l, 1 / l); gl.uniform1f(Q.u.uK, K); gl.uniform1f(Q.u.uVig, c.vig); gl.uniform3fv(Q.u.uBg, bg);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
-    function mixC() { var e = smooth(0, 1, lt); return { bg: lerp3(DARK.bg, LIGHT.bg, e), ink: lerp3(DARK.ink, LIGHT.ink, e), fog: mix(DARK.fog, LIGHT.fog, e), vig: mix(DARK.vig, LIGHT.vig, e) }; }
+    function colors() { var e = smooth(0, 1, lt); return { bg: lerp3(DARK.bg, LIGHT.bg, e), ink: lerp3(DARK.ink, LIGHT.ink, e), dimTo: lerp3(DARK.dimTo, LIGHT.dimTo, e), fog: mix(DARK.fog, LIGHT.fog, e), vig: mix(DARK.vig, LIGHT.vig, e), mode: e }; }
 
     /* the words on the screen */
     function paintNow(force) {
@@ -431,7 +563,7 @@
     function lock(on) { root.classList.toggle('room-held', on); }
     function open(i) {
       if (state !== 'walk' || !panels[i] || !panels[i].ready) return;
-      state = 'opening'; oi = i; ot = 0; savedY = window.scrollY; lastFocus = document.activeElement; lock(true);
+      state = 'opening'; oi = i; ot = 0; savedY = window.scrollY; lastFocus = document.activeElement; lock(true); wantBig(panels[i]);
       fill(i); dlg.hidden = false; void dlg.offsetWidth; el.classList.add('is-open'); tip.classList.remove('is-on'); hover = -1;
       setTimeout(function () { if (state === 'opening' || state === 'open') $('.rm__x', dlg).focus({ preventScroll: true }); }, 60);
       kick();
@@ -461,7 +593,8 @@
       kick();
     }
 
-    /* each frame: the camera follows the scroll and the pointer, the open set travels, and the picture is drawn when anything moved */
+    /* each frame: the camera follows the scroll and the pointer, the head turns, the open set travels, and the picture is drawn when
+       anything moved; when nothing moves, no frames run */
     function frame(t) {
       raf = 0;
       if (dead) return;
@@ -475,18 +608,32 @@
       if (!ready && ti > 0.55) { ready = true; el.classList.add('is-ready'); }
       if (state === 'walk' && !el.classList.contains('is-index')) tz = zAt(window.scrollY);
       var before = camZ; camZ += (tz - camZ) * (1 - Math.pow(0.9, dt * 60)); if (Math.abs(tz - camZ) < 0.0004) camZ = tz;
-      speed = (camZ - before) / Math.max(dt, 0.001);
+      speed = (camZ - before) / Math.max(dt, 0.001); air += Math.abs(camZ - before) * 0.3;
       var km = 1 - Math.pow(0.94, dt * 60); mx += (tmx - mx) * km; my += (tmy - my) * km;
+      gyX += (gyTX - gyX) * km; gyY += (gyTY - gyY) * km;
+      if (!dragging) { dragY *= Math.pow(0.97, dt * 60); if (Math.abs(dragY) < 0.0005) dragY = 0; }
       lt += ((light ? 1 : 0) - lt) * (1 - Math.pow(0.88, dt * 60)); if (Math.abs((light ? 1 : 0) - lt) < 0.002) lt = light ? 1 : 0;
       panels.forEach(function (pn) { if (pn.ready && pn.fade < 1) pn.fade = Math.min(1, pn.fade + dt * 2.5); });
       if (state === 'opening') { ot = Math.min(1, ot + dt / 0.85); if (ot >= 1) state = 'open'; }
       if (state === 'closing') { ot = Math.max(0, ot - dt / 0.65); if (ot <= 0) closed(); }
       var dim = inOut(clamp(ot, 0, 1));
-      camera(introZ, fovExtra);
 
       // which set is named: the one whose place the camera is nearest to; past the last one, the end
       var best = 0, bd = 1e9; for (var i = 0; i < N; i++) { var dd = Math.abs(camZ - station(i)); if (dd < bd) { bd = dd; best = i; } }
       if (state === 'walk' || state === 'closing') cur = best;
+      // the head turns toward the set it is passing, most when it stands where the set is named, as a visitor looks at the pictures
+      // they walk by (on a phone, with no pointer, it is how the room turns)
+      if (state === 'walk') {
+        var lyT = 0, lpT = 0, pc = panels[cur];
+        if (pc && pc.ready && ready && !atEnd) {
+          var prox = smooth(0, 1, 1 - clamp(Math.abs(camZ - station(cur)) / (GAP * 0.62), 0, 1)), dx = pc.C[0] - eye[0], dy = pc.C[1] - eye[1], dz = eye[2] - pc.C[2];
+          lyT = clamp(Math.atan2(dx, Math.max(0.6, dz)) * LOOK, -0.36, 0.36) * prox;
+          lpT = clamp(Math.atan2(dy, Math.max(0.6, Math.sqrt(dx * dx + dz * dz))) * LOOK * 0.7, -0.22, 0.22) * prox;
+        }
+        var kl = 1 - Math.pow(0.955, dt * 60); lookY += (lyT - lookY) * kl; lookP += (lpT - lookP) * kl;
+        if (Math.abs(lyT - lookY) < 0.0003) lookY = lyT; if (Math.abs(lpT - lookP) < 0.0003) lookP = lpT;
+      }
+      camera(introZ, fovExtra);
       var end = camZ < Z_LAST - 2.2; if (end !== atEnd) { atEnd = end; el.classList.toggle('is-end', end); }
       if (ready) paintNow(false);
       fetchNext();
@@ -496,19 +643,24 @@
       // the pointer: what is under it, and the word that goes with it
       if (pointing && state === 'walk' && ready) {
         var h = pick(px, py);
-        if (h !== hover) { hover = h; tip.classList.toggle('is-on', h >= 0); el.classList.toggle('is-over', h >= 0); if (h >= 0) { tipB.textContent = ITEMS[h].title; $('i', tip).style.background = panels[h].color || ''; tipW = tip.offsetWidth; } }
+        if (h !== hover) { hover = h; tip.classList.toggle('is-on', h >= 0); el.classList.toggle('is-over', h >= 0); if (h >= 0) { tipB.textContent = ITEMS[h].title; $('i', tip).style.background = panels[h].color || ''; tipW = tip.offsetWidth; wantBig(panels[h]); } }
       } else if (hover >= 0 && state !== 'walk') { hover = -1; tip.classList.remove('is-on'); el.classList.remove('is-over'); }
       // the word stands at the pointer's right, or at its left near the right edge
       if (pointing) { var tx = px + 18 + tipW > vw - 12 ? px - 18 - tipW : px + 18; tip.style.transform = 'translate3d(' + Math.round(tx) + 'px,' + Math.round(py - 14) + 'px,0)'; dotEl.style.transform = 'translate3d(' + Math.round(px) + 'px,' + Math.round(py) + 'px,0)'; }
 
-      var s = [camZ.toFixed(4), mx.toFixed(4), my.toFixed(4), ot.toFixed(4), lt.toFixed(3), show.toFixed(3), reach.toFixed(3), panelsA.toFixed(3), cw, ch, panels.reduce(function (a, pn) { return a + pn.fade; }, 0).toFixed(3), markTex ? 1 : 0].join();
+      lights(panelsA, dim);
+      var s = [camZ.toFixed(4), mx.toFixed(4), my.toFixed(4), lookY.toFixed(4), lookP.toFixed(4), dragY.toFixed(4), gyX.toFixed(4), gyY.toFixed(4), ot.toFixed(4), lt.toFixed(3), show.toFixed(3), reach.toFixed(3), panelsA.toFixed(3), cw, ch, fw, fh, bigV, panels.reduce(function (a, pn) { return a + pn.fade; }, 0).toFixed(3), markTex ? 1 : 0].join();
       if (s !== sig) { sig = s; draw(show, panelsA, dim, reach); }
-      // keep going while anything still moves; otherwise wait for the next scroll, pointer or picture
+      // keep going while anything still moves; otherwise wait for the next scroll, pointer, finger or picture
       var still = s === lastSig && ti >= 1 && state !== 'opening' && state !== 'closing' && pending < 0; lastSig = s;
-      if (!still) kick(); else calm = true;
+      // a device that cannot keep up draws the room with fewer points (never fewer than the page has)
+      if (!still && ti >= 1 && document.visibilityState === 'visible') {
+        if (dt > 0.034) slow++; else if (slow > 0) slow -= 0.5;
+        if (slow > 18 && rs > 1.001) { slow = 0; rsMax = Math.max(1, rs * 0.82); size(); }
+      }
+      if (!still) kick();
     }
-    var lastSig = '', calm = false;
-    function kick() { if (!raf && !dead) { calm = false; raf = requestAnimationFrame(frame); } }
+    function kick() { if (!raf && !dead) raf = requestAnimationFrame(frame); }
 
     /* what the visitor does */
     // the pointer anywhere turns the camera; over the room itself (not over a button) it is the dot, and says "Open" over a set
@@ -520,7 +672,28 @@
       kick();
     }
     function onLeave() { pointing = false; el.classList.remove('is-pointing', 'is-over'); tip.classList.remove('is-on'); hover = -1; }
+    // a finger dragged sideways over the room turns the head (up and down it walks, as the page scrolls); let go, the head comes
+    // back to the way ahead
+    function onDown(e) { if (e.pointerType !== 'touch' || state !== 'walk') return; dragId = e.pointerId; dragX0 = e.clientX; dragY0 = e.clientY; dragFrom = dragY; dragging = false; dragged = false; }
+    function onDrag(e) {
+      if (e.pointerId !== dragId) return;
+      var dx = e.clientX - dragX0, dy = e.clientY - dragY0;
+      if (!dragging && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) dragging = true;
+      if (dragging) { dragged = true; dragY = clamp(dragFrom - dx / vw * 1.6, -0.75, 0.75); kick(); }
+    }
+    function onUp(e) { if (e.pointerId !== dragId) return; dragId = -1; dragging = false; kick(); }
+    // the phone turned in the hand turns the head a little (where the phone tells it without asking: it is never asked for)
+    function onTilt(e) {
+      if (e.gamma == null || e.beta == null) return;
+      var ang = (window.screen.orientation && window.screen.orientation.angle) || window.orientation || 0, a = e.gamma, b = e.beta;
+      if (ang === 90) { a = e.beta; b = -e.gamma; } else if (ang === -90 || ang === 270) { a = -e.beta; b = e.gamma; }
+      if (g0 === null) { g0 = a; b0 = b; }
+      g0 += (a - g0) * 0.03; b0 += (b - b0) * 0.03;
+      var x = clamp(-(a - g0) * 0.012, -0.28, 0.28), y = clamp((b - b0) * 0.008, -0.2, 0.2);
+      if (Math.abs(x - gyTX) + Math.abs(y - gyTY) > 0.003) { gyTX = x; gyTY = y; kick(); }
+    }
     function onClick(e) {
+      if (dragged) { dragged = false; return; }
       if (state !== 'walk' || !ready) return;
       var h = pick(e.clientX, e.clientY); if (h >= 0) open(h);
     }
@@ -543,10 +716,12 @@
     function onLost(e) { e.preventDefault(); destroy(); el.classList.remove('is-live'); }
     window.addEventListener('pointermove', onPointer, { passive: true });
     cv.addEventListener('pointerleave', onLeave);
+    cv.addEventListener('pointerdown', onDown); cv.addEventListener('pointermove', onDrag); cv.addEventListener('pointerup', onUp); cv.addEventListener('pointercancel', onUp);
     cv.addEventListener('click', onClick);
     window.addEventListener('keydown', onKey);
     window.addEventListener('resize', onResize);
     window.addEventListener('popstate', onPop);
+    if (coarse && 'DeviceOrientationEvent' in window && typeof DeviceOrientationEvent.requestPermission !== 'function') window.addEventListener('deviceorientation', onTilt);
     cv.addEventListener('webglcontextlost', onLost);
     el.addEventListener('click', function (e) {
       var t = e.target;
@@ -567,6 +742,7 @@
       if (dead) return; dead = true;
       if (raf) cancelAnimationFrame(raf); raf = 0;
       window.removeEventListener('pointermove', onPointer); window.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize); window.removeEventListener('popstate', onPop);
+      window.removeEventListener('deviceorientation', onTilt);
       root.classList.remove('room-live', 'room-held');
       var lose = gl.getExtension('WEBGL_lose_context'); if (lose && el.isConnected === false) lose.loseContext();
     }

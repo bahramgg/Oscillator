@@ -36,7 +36,7 @@ html.room-held { overflow: hidden; }
 .rm__brand b, .rm__pill, .rm__title, .rm__h, .rm__go, .rm__next button, .rm__ixt, .rm__endh {
   font-family: 'TM Brush', 'League Gothic', 'Arial Narrow', sans-serif; font-weight: 400; text-transform: uppercase; }
 /* the small line under a name: its parts with a dot between them (the brush has no dot of its own) */
-.rm__tag span + span::before, .rm__kind span + span::before, .rm__ixtag span + span::before, .rmc__tag span + span::before, .rm__hint span::before {
+.rm__tag span + span::before, .rm__kind span + span::before, .rm__ixtag span + span::before, .rmc__tag span + span::before, .rm__hint > span > span::before {
   content: ''; display: inline-block; width: 3px; height: 3px; margin: 0 .75em; border-radius: 50%; background: currentColor; vertical-align: .28em; }
 
 /* the top: the name, and the room's buttons */
@@ -69,17 +69,23 @@ html.room-held { overflow: hidden; }
 .rm__tag i, .rm__kind i { flex: none; width: 9px; height: 9px; margin-right: 11px; background: var(--y); }
 .rm__hint { margin-top: 18px; color: var(--rm-dim); opacity: .75; transition: opacity .6s; }
 .rm.is-walked .rm__hint { opacity: 0; }
+.rm__hint-t { display: none; }
+@media (hover: none) and (pointer: coarse) { .rm__hint-p { display: none; } .rm__hint-t { display: inline; } }
 .rm__now.is-in .rm__no, .rm__now.is-in .rm__title, .rm__now.is-in .rm__tag { animation: rm-in .6s cubic-bezier(.2, .7, .1, 1) both; }
 .rm__now.is-in .rm__title { animation-delay: .03s; }
 .rm__now.is-in .rm__tag { animation-delay: .08s; }
 @keyframes rm-in { from { opacity: 0; transform: translate3d(0, 16px, 0); filter: blur(7px); } }
-.rm__end { opacity: 0; }
 .rm__endh { margin-top: 12px; font-size: clamp(40px, 5.6vw, 96px); line-height: .9; }
 .rm__endgo { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
-.rm.is-end .rm__now { opacity: 0; }
-.rm.is-end .rm__end { opacity: 1; pointer-events: auto; }
-/* the words come after the room has arrived */
-.rm.is-live:not(.is-ready) .rm__top, .rm.is-live:not(.is-ready) .rm__now, .rm.is-live:not(.is-ready) .rm__rule, .rm.is-live:not(.is-ready) .rm__end { opacity: 0; pointer-events: none; }
+/* what is not shown cannot be pressed either: hidden, a part of the screen is let go of at the end of its fade (a button left
+   under another was the "Exit" that answered a press on the open set's cross) */
+.rm__now, .rm__end, .rm__rule, .rm__tools, .rm__top { visibility: visible; }
+.rm__end, .rm.is-end .rm__now,
+.rm.is-live:not(.is-ready) .rm__top, .rm.is-live:not(.is-ready) .rm__now, .rm.is-live:not(.is-ready) .rm__rule, .rm.is-live:not(.is-ready) .rm__end,
+.rm.is-open .rm__now, .rm.is-open .rm__end, .rm.is-open .rm__rule, .rm.is-open .rm__tools,
+.rm.is-index .rm__now, .rm.is-index .rm__rule, .rm.is-index .rm__end { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .35s, visibility 0s linear .35s; }
+.rm.is-end:not(.is-open):not(.is-index) .rm__end { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .4s, visibility 0s; }
+.rm.is-open .rm__tools { transition: none; }      /* gone at once: the cross of the open set takes its place */
 
 /* the rule at the right: a mark for each set; the one ahead is longer and named */
 .rm__rule { position: absolute; z-index: 2; right: max(24px, env(safe-area-inset-right, 0px)); top: 50%; display: flex; flex-direction: column; align-items: flex-end; transform: translateY(-50%); pointer-events: none; transition: opacity .4s; }
@@ -104,7 +110,6 @@ html.room-held { overflow: hidden; }
 
 /* a set, open: it stands at the left (the canvas draws it); its story stands at the right */
 .rm__open { position: absolute; z-index: 3; inset: 0; }
-.rm.is-open .rm__now, .rm.is-open .rm__end, .rm.is-open .rm__rule, .rm.is-open .rm__tools, .rm.is-index .rm__now, .rm.is-index .rm__rule, .rm.is-index .rm__end { opacity: 0; pointer-events: none; }
 .rm__x { position: absolute; z-index: 6; top: calc(env(safe-area-inset-top, 0px) + 22px); right: max(28px, env(safe-area-inset-right, 0px)); display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%;
   background: var(--rm-pill); box-shadow: inset 0 0 0 1px var(--rm-pill-line); color: inherit; cursor: pointer; opacity: 0; transition: opacity .3s, background-color .2s, color .2s; }
 .rm__x:hover { background: var(--rm-solid); color: var(--rm-solid-ink); }
