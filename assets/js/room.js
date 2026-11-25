@@ -69,6 +69,8 @@
 
   // the page: the corridor's stage (fixed on the screen: the room takes the walk's gestures itself) and the same sets as a list, for
   // where the corridor is not drawn
+  // the years the photographs span: 2023, or 2021 to 2025
+  function span() { var y0 = ITEMS[N - 1] ? String(ITEMS[N - 1].date).slice(0, 4) : '', y1 = ITEMS[0] ? String(ITEMS[0].date).slice(0, 4) : ''; return y0 === y1 ? y1 : y0 + ' to ' + y1; }
   function html(env) {
     env = env || {};
     var first = ITEMS[0] || { title: '', i: 0 };
@@ -81,7 +83,7 @@
         '<a class="rm__pill" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/" data-room-exit>Exit</a></div></div>' +
       '<div class="rm__now"><p class="rm__no"><b>' + pad(1) + '</b> / ' + pad(N) + '</p><h2 class="rm__title">' + esc(first.title) + '</h2><p class="rm__tag"><i></i>' + (ITEMS[0] ? tag(first) : '') + '</p>' +
         '<p class="rm__hint"><span class="rm__hint-p">Scroll to walk the room<span>Drag to look around</span><span>Click a photo to open it</span></span><span class="rm__hint-t">Swipe up to walk, down to step back<span>Sideways to look around</span><span>Tap a photo to open it</span></span></p></div>' +
-      '<div class="rm__end"><p class="rm__no">The end of the room</p><p class="rm__endh">' + esc(N + ' photos, ' + (ITEMS[N - 1] ? String(ITEMS[N - 1].date).slice(0, 4) : '') + ' to ' + (ITEMS[0] ? String(ITEMS[0].date).slice(0, 4) : '')) + '</p>' +
+      '<div class="rm__end"><p class="rm__no">The end of the room</p><p class="rm__endh">' + esc(N + ' photos, ' + span()) + '</p>' +
         (SND ? '<p class="rm__endsnd">Sound: ' + esc(SND.title + ', ' + SND.artist) + '</p>' : '') +
         '<p class="rm__endgo"><button class="rm__pill rm__pill--solid" type="button" data-room-top>Back to the start</button><a class="rm__pill" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/" data-room-exit>Exit</a></p></div>' +
       '<nav class="rm__rule" aria-label="The photos in the room">' + ITEMS.map(function (it) { return '<button class="rm__tick" type="button" data-i="' + it.i + '" aria-label="' + esc(pad(it.i + 1) + ', ' + it.title + ', ' + when(it.date)) + '"><span>' + esc(it.title) + '</span></button>'; }).join('') + '</nav>' +

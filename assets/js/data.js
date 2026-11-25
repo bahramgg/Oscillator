@@ -166,8 +166,8 @@ window.TM = {
   /* ------------------------------------------------------------------------
      THE ROOM (/room, entered from "The room" on the home page): a corridor walked like a room, hung with photographs of Keyv's
      nights in black and white: the newest first, and the photographs of one night in the order they were taken. Keyv sent them to
-     the label; the two from Uchiha Mob's filmed sets are from @keyvdj on Instagram. They are in assets/img/room/, each one twice:
-     for the wall, and larger in full/ for when it is opened.
+     the label (2026-11-25, and five more on 2026-11-26 in place of the first two, the last two and the hooks close up). They are in
+     assets/img/room/, each one twice: for the wall, and larger in full/ for when it is opened.
      image, full  the photograph on the wall, and the larger one for when it is opened
      taken        when it was taken, 'YYYY-MM-DD HH:MM', as the camera wrote it
      night        the date of a night above, when it was taken at one: the night's name, line-up and page come from there
@@ -182,18 +182,6 @@ window.TM = {
      ig           the post on Instagram, when there is one
      ------------------------------------------------------------------------ */
   room: [
-    { title: 'Uchiha Mob 08', date: '2025-11-17', image: 'assets/img/room/uchiha-ep08.webp', kind: 'Filmed set', who: 'Uchiha Mob',
-      alt: 'Ifeeelokay and Keyv at the decks in front of a wall of light',
-      sub: 'Ifeeelokay b2b Keyv, the finale of Series 01',
-      say: 'The last episode of the first series. Keyv back to back with Ifeeelokay, who directed it too: hard techno against a wall of light, filmed whole.',
-      rows: [['Series', 'Uchiha Mob, Series 01'], ['Episode', '08, the finale'], ['Sound', 'Hard techno'], ['Director', '@ifeeelokay']],
-      link: 'https://www.instagram.com/p/DRKhI_PCIKD/', linkLabel: 'On Instagram' },
-    { title: 'Uchiha Mob 01', date: '2025-09', image: 'assets/img/room/uchiha-ep01.webp', kind: 'Filmed set', who: 'Uchiha Mob',
-      alt: 'Keyv at the decks in front of bars of light',
-      sub: 'Keyv, an electro set. Series 01, Episode 01',
-      say: 'Where the series begins: Keyv alone in front of the light bars, one electro set, filmed whole.',
-      rows: [['Series', 'Uchiha Mob, Series 01'], ['Episode', '01 of 08'], ['Sound', 'Electro'], ['Photographs', '@barismostofi']],
-      link: 'https://www.instagram.com/p/DOtVEVaCLLP/', linkLabel: 'On Instagram' },
     { title: 'No Smoking', taken: '2023-09-01 04:19',
       image: 'assets/img/room/2023-09-01-0419.webp', full: 'assets/img/room/full/2023-09-01-0419.webp',
       alt: 'A dark corridor ending at a steel door with four No Smoking signs on it, light coming round its edges, and a poster with KEYV on it on the wall',
@@ -209,11 +197,6 @@ window.TM = {
       alt: 'A steel door covered in stickers, one of them CLUB, the night’s poster on the wall beside it and someone standing in the doorway',
       sub: 'Stickers on the steel',
       say: 'The steel door stickered over, CLUB in big letters, the night’s own poster pasted up beside it, and someone standing in the doorway.' },
-    { night: '2023-08-03', title: 'Cold Steel', taken: '2023-08-03 23:28',
-      image: 'assets/img/room/2023-08-03-2328.webp', full: 'assets/img/room/full/2023-08-03-2328.webp',
-      alt: 'Steel hooks hanging in rows from the ceiling, close up',
-      sub: 'The hooks, up close',
-      say: 'Before it all starts. The hooks in the ceiling up close, steel on steel, waiting like everyone else.' },
     { night: '2023-08-03', title: 'Two at the Table', taken: '2023-08-04 01:24',
       image: 'assets/img/room/2023-08-04-0124.webp', full: 'assets/img/room/full/2023-08-04-0124.webp',
       alt: 'Two DJs behind a table of gear, cables and bottles, seen from above',
@@ -229,6 +212,11 @@ window.TM = {
       alt: 'A DJ in a white T-shirt and a cap, headphones round the neck, dancing at the decks with the crowd close around',
       sub: 'Cap down, headphones round the neck',
       say: 'A white tee, a cap pulled low, a fist up, the crowd pressed right against the decks, and the gear in front gone to streaks of light.' },
+    { night: '2023-08-03', title: 'Straight Lines', taken: '2023-08-04 05:20',
+      image: 'assets/img/room/2023-08-04-0520.webp', full: 'assets/img/room/full/2023-08-04-0520.webp',
+      alt: 'Laser beams running down the middle of a packed narrow room toward a bright light, hooks on rails along the ceiling',
+      sub: 'Lasers down the middle of the room',
+      say: 'Near dawn, and the lasers still run straight down the middle of the room: the hooks on their rails overhead, speakers either side, every head turned to the light.' },
     { night: '2023-08-03', title: '6 in the Morning', taken: '2023-08-04 06:08',
       image: 'assets/img/room/2023-08-04-0608.webp', full: 'assets/img/room/full/2023-08-04-0608.webp',
       alt: 'The crowd with hands in the air around the DJ in the white T-shirt and the cap, someone clapping at the front',
@@ -239,6 +227,11 @@ window.TM = {
       alt: 'A DJ head down over the mixer in a packed crowd, a fan open above them and a tattooed arm raised in front',
       sub: 'A tattooed arm up, head down at the mixer',
       say: 'One minute later. A tattooed arm thrown up in front of the lens, a fan open over the crowd, and the head down over the mixer.' },
+    { night: '2023-07-13', title: 'Shades at Four', taken: '2023-07-14 04:02',
+      image: 'assets/img/room/2023-07-14-0402.webp', full: 'assets/img/room/full/2023-07-14-0402.webp',
+      alt: 'A crowd seen from behind the DJ in a narrow room, some in sunglasses, a beam of light across a ceiling of hooks on rails',
+      sub: 'The room, from behind the decks',
+      say: 'Four in the morning, seen from behind the decks: a beam across the ceiling, the hooks in their rows, the crowd pressed close, and sunglasses on in the dark.' },
     { night: '2023-07-13', title: 'Caught in the Beam', taken: '2023-07-14 04:33',
       image: 'assets/img/room/2023-07-14-0433.webp', full: 'assets/img/room/full/2023-07-14-0433.webp',
       alt: 'A DJ in a cap at the decks, beams of light cutting across the dark',
@@ -254,16 +247,21 @@ window.TM = {
       alt: 'Beams of light crossing over the dark shapes of the crowd',
       sub: 'Light over the heads',
       say: 'Broad day outside by now, and in here the beams are still crossing over the heads.' },
-    { title: 'Shades On', taken: '2021-03-10 16:28',
-      image: 'assets/img/room/2021-03-10-1628.webp', full: 'assets/img/room/full/2021-03-10-1628.webp',
-      alt: 'In a dark room, someone leaning back and laughing, headphones round the neck and a glass in hand; a bottle in front catches the flash, and someone in sunglasses reaches in',
-      sub: 'A laugh in the dark',
-      say: 'An afternoon with the lights down anyway. Headphones round the neck, a glass in hand, a laugh, and a pair of shades in the dark.' },
-    { title: 'Back in the Day', taken: '2021-02-24 14:22',
-      image: 'assets/img/room/2021-02-24-1422.webp', full: 'assets/img/room/full/2021-02-24-1422.webp',
-      alt: 'Two at the decks in a dark room: one in headphones with a hand on the player, the other looking on',
-      sub: 'February 2021, an afternoon at the decks',
-      say: 'The oldest photograph in the room. Daytime, the room kept dark: headphones on, a hand on the deck, someone looking over the shoulder.' }
+    { title: 'Full House', taken: '2023-06-30 00:40',
+      image: 'assets/img/room/2023-06-30-0040.webp', full: 'assets/img/room/full/2023-06-30-0040.webp',
+      alt: 'From behind a DJ in a cap and headphones on a raised stage, a crowd filling the space below a steel truss, buildings and stairs around it',
+      sub: 'The whole place, seen from the decks',
+      say: 'Twenty to one and the place is full to the walls: a cap and a pair of headphones at the decks, a steel truss overhead, and heads as far back as the stairs.' },
+    { title: 'Through the Fence', taken: '2023-05-26 07:31',
+      image: 'assets/img/room/2023-05-26-0731.webp', full: 'assets/img/room/full/2023-05-26-0731.webp',
+      alt: 'Through a chain-link fence: someone dancing with eyes closed and head tipped back beside a DJ with both hands on the decks',
+      sub: 'A morning set behind the wire',
+      say: 'Half past seven in the morning, and nobody has noticed. Through the wire: eyes shut, head back, lost in it, and both hands on the decks.' },
+    { title: 'Wire and Smoke', taken: '2023-05-26 08:41',
+      image: 'assets/img/room/2023-05-26-0841.webp', full: 'assets/img/room/full/2023-05-26-0841.webp',
+      alt: 'A DJ in headphones with a cigarette in the mouth, seen from low down through a chain-link fence, the decks in front',
+      sub: 'Headphones on, a cigarette, the wire in front',
+      say: 'Twenty to nine, the sun long up and the set still going. Headphones on, a cigarette at the lips, and the fence between the decks and the lens.' }
   ],
 
   // THE ROOM'S SOUND: one track, looped on its own bars while the visitor is in the room (bpm and bars give the length of one pass,
