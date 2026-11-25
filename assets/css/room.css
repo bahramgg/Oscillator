@@ -61,6 +61,14 @@ html.room-held { overflow: hidden; }
 .rm__mode svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
 .rm__mode .i-moon { fill: currentColor; stroke: none; }
 .rm.is-light .rm__mode .i-moon, .rm:not(.is-light) .rm__mode .i-sun { display: none; }
+/* the sound: four bars that move with the music (low to high), flat while it is quiet, crossed out when it is turned off */
+.rm__snd { position: relative; display: flex; align-items: center; justify-content: center; gap: 3px; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%;
+  background: var(--rm-pill); box-shadow: inset 0 0 0 1px var(--rm-pill-line); color: inherit; cursor: pointer; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); transition: background-color .2s, color .2s; }
+.rm__snd:hover { background: var(--rm-solid); color: var(--rm-solid-ink); }
+.rm__snd i { flex: none; width: 3px; height: 16px; border-radius: 2px; background: currentColor; transform: scaleY(.16); transition: transform .1s linear; }
+.rm:not(.is-light) .rm__snd.is-on:not(:hover) i { background: var(--y); }
+.rm__snd.is-off::after { content: ''; position: absolute; left: 50%; top: 50%; width: 24px; height: 1.7px; margin: -.85px 0 0 -12px; border-radius: 1px; background: currentColor; transform: rotate(-45deg); }
+.rm__endsnd { margin-top: 14px; color: var(--rm-dim); font: 400 12px/1.2 'TM Brush', 'League Gothic', 'Arial Narrow', sans-serif; text-transform: uppercase; letter-spacing: .13em; }
 
 /* the set ahead, at the foot on the left: its number, its name as large as the corner allows, what it was */
 .rm__now, .rm__end { position: absolute; z-index: 2; left: var(--rm-edge); bottom: calc(env(safe-area-inset-bottom, 0px) + 34px); max-width: min(72vw, 1040px); pointer-events: none; transition: opacity .4s; }
@@ -176,6 +184,8 @@ html.room-held { overflow: hidden; }
   .rm__tools { gap: 6px; }
   .rm__pill { min-height: 36px; padding: 2px 12px 0; font-size: 14.5px; }
   .rm__mode { width: 36px; height: 36px; }
+  .rm__snd { width: 36px; height: 36px; gap: 2.5px; }
+  .rm__snd i { height: 14px; }
   .rm__rule { display: none; }
   .rm__now, .rm__end { right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); max-width: none; }
   .rm__title { font-size: clamp(40px, 12.5vw, 72px); }
@@ -191,6 +201,11 @@ html.room-held { overflow: hidden; }
   .rm__act { margin-top: 18px; }
   .rm__index li button { grid-template-columns: 38px minmax(0, 1fr); gap: 4px 12px; }
   .rm__ixtag { grid-column: 2; text-align: left; }
+}
+/* a phone: the name in two lines beside the logo, TEHRAN over MOVEMENT as on the label's banner, so that the room's buttons have room */
+@media (max-width: 420px) {
+  .rm__brand small { display: none; }
+  .rm__brand b { width: min-content; line-height: .94; }
 }
 @media (max-height: 560px) and (min-width: 760px) {
   .rm__title { font-size: clamp(40px, 6vw, 80px); }

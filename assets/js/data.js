@@ -164,59 +164,109 @@ window.TM = {
   ],
 
   /* ------------------------------------------------------------------------
-     THE ROOM (/room, entered from "The room" on the home page): a corridor walked by scrolling, with Keyv's sets on its walls,
-     its floor and its ceiling, the newest first. Taken from @keyvdj on Instagram and from the nights above.
-     night      the date of a night above: its title, line-up, poster and designer come from there, and it links to its page
-     or, for a set that is not one of the nights:
-     title, date ('YYYY-MM' when only the month is known), image and alt (what the picture shows), link and linkLabel (where the
-     whole thing is)
-     kind, who  the small line under the name: what it was, and with whom
-     sub        the line under the name when the set is open
-     say        one or two sentences
-     rows       more [label, value] pairs for the open set (a night already shows its line-up, its date and its poster's designer)
-     ig         the post on Instagram, when there is one
+     THE ROOM (/room, entered from "The room" on the home page): a corridor walked like a room, hung with photographs of Keyv's
+     nights in black and white: the newest first, and the photographs of one night in the order they were taken. Keyv sent them to
+     the label; the two from Uchiha Mob's filmed sets are from @keyvdj on Instagram. They are in assets/img/room/, each one twice:
+     for the wall, and larger in full/ for when it is opened.
+     image, full  the photograph on the wall, and the larger one for when it is opened
+     taken        when it was taken, 'YYYY-MM-DD HH:MM', as the camera wrote it
+     night        the date of a night above, when it was taken at one: the night's name, line-up and page come from there
+                  (a night with no image of its own shows its poster)
+     title        its name; date ('YYYY-MM' when only the month is known) when there is no night and no time it was taken
+     alt          what the photograph shows, for those who cannot see it
+     kind, who    the small line under the name: what it was, and with whom (for a night: the night's name)
+     sub          the line under the name when it is open
+     say          one or two sentences
+     rows         more [label, value] pairs for when it is open (the night, its line-up and when it was taken are written already)
+     link, linkLabel   where the whole thing is (a night links to its page)
+     ig           the post on Instagram, when there is one
      ------------------------------------------------------------------------ */
   room: [
-    { night: '2026-10-15', kind: 'All night', who: 'Keyv + Erfa', sub: 'Keyv all night, Erfa opening',
-      say: 'The whole night is Keyv’s, after an opening set by Erfa.',
-      ig: 'https://www.instagram.com/p/DeCg3EnAHgq/' },
-    { night: '2026-09-10', kind: 'Night', who: 'Nine DJs', sub: 'Tehran Underground and Oscillator',
-      say: 'Two crews on one bill, and nine names on the line-up.' },
-    { night: '2026-08-27', kind: 'All night long', who: 'Keyv + Msiyan', sub: 'Keyv and Msiyan',
-      say: 'All Night Long, shared this time with Msiyan.' },
-    { night: '2026-07-23', kind: 'All night long', who: 'Solo', sub: 'Keyv, alone',
-      say: 'One name on the poster, and one DJ from the opening to the close.' },
-    { night: '2026-06-11', kind: 'All night long', who: 'Solo', sub: 'Keyv, alone',
-      say: 'Keyv alone at the decks for the whole night.' },
     { title: 'Uchiha Mob 08', date: '2025-11-17', image: 'assets/img/room/uchiha-ep08.webp', kind: 'Filmed set', who: 'Uchiha Mob',
-      alt: 'Ifeeelokay and Keyv at the decks in front of a wall of blue light',
+      alt: 'Ifeeelokay and Keyv at the decks in front of a wall of light',
       sub: 'Ifeeelokay b2b Keyv, the finale of Series 01',
-      say: 'The finale of Uchiha Mob’s first series: Keyv back to back with Ifeeelokay, who also directed it. Hard techno, filmed whole and out on YouTube.',
+      say: 'The last episode of the first series. Keyv back to back with Ifeeelokay, who directed it too: hard techno against a wall of light, filmed whole.',
       rows: [['Series', 'Uchiha Mob, Series 01'], ['Episode', '08, the finale'], ['Sound', 'Hard techno'], ['Director', '@ifeeelokay']],
       link: 'https://www.instagram.com/p/DRKhI_PCIKD/', linkLabel: 'On Instagram' },
     { title: 'Uchiha Mob 01', date: '2025-09', image: 'assets/img/room/uchiha-ep01.webp', kind: 'Filmed set', who: 'Uchiha Mob',
-      alt: 'Keyv at the decks in front of bars of blue light',
+      alt: 'Keyv at the decks in front of bars of light',
       sub: 'Keyv, an electro set. Series 01, Episode 01',
-      say: 'Uchiha Mob’s first series opens with Keyv: a full electro set in front of the light wall, filmed and put out whole on YouTube.',
+      say: 'Where the series begins: Keyv alone in front of the light bars, one electro set, filmed whole.',
       rows: [['Series', 'Uchiha Mob, Series 01'], ['Episode', '01 of 08'], ['Sound', 'Electro'], ['Photographs', '@barismostofi']],
       link: 'https://www.instagram.com/p/DOtVEVaCLLP/', linkLabel: 'On Instagram' },
-    { night: '2025-08-28', kind: 'Night', who: 'Keyv + Elfa', sub: 'Keyv on the decks, Elfa on the visuals',
-      say: 'Sound and picture: Keyv plays, and Elfa makes the visuals.' },
-    { night: '2023-09-14', kind: 'Night', who: 'Four DJs', sub: 'With Hamed, Nycto and Sosu',
-      say: 'Keyv, Hamed, Nycto and Sosu. The poster also moves: its film is on the night’s page.' },
-    { night: '2023-08-17', kind: 'Night', who: 'Five DJs', sub: 'With Gia, Medo, Daimonic and Hamed',
-      say: 'Five names on one poster: Gia, Medo, Daimonic, Hamed and Keyv.' },
-    { night: '2023-08-03', kind: 'Night', who: 'Four DJs', sub: 'With dynno, Nevak and Hamed',
-      say: 'dynno, Nevak, Hamed and Keyv. The night had two posters, and one of them moves.' },
-    { night: '2023-07-13', kind: 'Night', who: 'Three sets', sub: 'With Hamed, and Del4raa b2b Mah7arr',
-      say: 'Keyv and Hamed, and Del4raa back to back with Mah7arr.' },
-    { night: '2023-03-09', kind: 'Night', who: 'Three DJs', sub: 'With Hamed and Siamo',
-      say: 'Hamed, Siamo and Keyv on the last night of the year.' },
-    { title: 'Keyv B2B Amiri', date: '2020-11-03', image: 'assets/img/series/006.jpg', kind: 'B2B session', who: 'Oscillator Series',
-      alt: 'The cover of session 006: Keyv and Amiri, side by side',
-      sub: 'Session 006 of the series, with Amiri',
-      say: 'Nearly two hours back to back with Amiri: the sixth session of the series, on SoundCloud and YouTube.',
-      rows: [['Length', '1:57:23'], ['With', 'Amiri'], ['Where', 'SoundCloud, YouTube']],
-      link: '/mixes/006', linkLabel: 'The session' }
-  ]
+    { title: 'No Smoking', taken: '2023-09-01 04:19',
+      image: 'assets/img/room/2023-09-01-0419.webp', full: 'assets/img/room/full/2023-09-01-0419.webp',
+      alt: 'A dark corridor ending at a steel door with four No Smoking signs on it, light coming round its edges, and a poster with KEYV on it on the wall',
+      sub: 'Four signs on one steel door',
+      say: 'The end of a dark corridor: one steel door, No Smoking four times over, light leaking round its edges, and KEYV on the poster beside it. The sound is on the other side.' },
+    { night: '2023-08-17', title: 'Under the Hooks', taken: '2023-08-18 02:21',
+      image: 'assets/img/room/2023-08-18-0221.webp', full: 'assets/img/room/full/2023-08-18-0221.webp',
+      alt: 'Rows of steel hooks hanging over a tiled wall with posters on it, three people walking past',
+      sub: 'Steel overhead, posters on the tiles',
+      say: 'Steel hooks in rows off the ceiling, the label’s posters along the tiles underneath, and the night walking past in between.' },
+    { night: '2023-08-17', title: 'Club Door', taken: '2023-08-18 04:33',
+      image: 'assets/img/room/2023-08-18-0433.webp', full: 'assets/img/room/full/2023-08-18-0433.webp',
+      alt: 'A steel door covered in stickers, one of them CLUB, the night’s poster on the wall beside it and someone standing in the doorway',
+      sub: 'Stickers on the steel',
+      say: 'The steel door stickered over, CLUB in big letters, the night’s own poster pasted up beside it, and someone standing in the doorway.' },
+    { night: '2023-08-03', title: 'Cold Steel', taken: '2023-08-03 23:28',
+      image: 'assets/img/room/2023-08-03-2328.webp', full: 'assets/img/room/full/2023-08-03-2328.webp',
+      alt: 'Steel hooks hanging in rows from the ceiling, close up',
+      sub: 'The hooks, up close',
+      say: 'Before it all starts. The hooks in the ceiling up close, steel on steel, waiting like everyone else.' },
+    { night: '2023-08-03', title: 'Two at the Table', taken: '2023-08-04 01:24',
+      image: 'assets/img/room/2023-08-04-0124.webp', full: 'assets/img/room/full/2023-08-04-0124.webp',
+      alt: 'Two DJs behind a table of gear, cables and bottles, seen from above',
+      sub: 'One table, four hands',
+      say: 'One table, two DJs: the mixer in the middle, a player either side, cables all over and the bottles standing by.' },
+    { night: '2023-08-03', title: 'From the Floor', taken: '2023-08-04 01:38',
+      image: 'assets/img/room/2023-08-04-0138.webp', full: 'assets/img/room/full/2023-08-04-0138.webp',
+      alt: 'The room from the floor: two DJs at the far wall between speakers on stands, a steel frame with lights above them, heads in front',
+      sub: 'Speakers, the frame, the heads',
+      say: 'Fourteen minutes later, from the floor: speakers up on stands, the steel frame with its lights, two at the decks against the far wall, and nothing between them and the heads but a table.' },
+    { night: '2023-08-03', title: 'White Tee', taken: '2023-08-04 04:16',
+      image: 'assets/img/room/2023-08-04-0416.webp', full: 'assets/img/room/full/2023-08-04-0416.webp',
+      alt: 'A DJ in a white T-shirt and a cap, headphones round the neck, dancing at the decks with the crowd close around',
+      sub: 'Cap down, headphones round the neck',
+      say: 'A white tee, a cap pulled low, a fist up, the crowd pressed right against the decks, and the gear in front gone to streaks of light.' },
+    { night: '2023-08-03', title: '6 in the Morning', taken: '2023-08-04 06:08',
+      image: 'assets/img/room/2023-08-04-0608.webp', full: 'assets/img/room/full/2023-08-04-0608.webp',
+      alt: 'The crowd with hands in the air around the DJ in the white T-shirt and the cap, someone clapping at the front',
+      sub: 'The hands still up',
+      say: 'The hands are still up: a pair clapping right at the decks, a smile at the front, and the white tee still at it.' },
+    { night: '2023-08-03', title: 'Ink', taken: '2023-08-04 06:09',
+      image: 'assets/img/room/2023-08-04-0609.webp', full: 'assets/img/room/full/2023-08-04-0609.webp',
+      alt: 'A DJ head down over the mixer in a packed crowd, a fan open above them and a tattooed arm raised in front',
+      sub: 'A tattooed arm up, head down at the mixer',
+      say: 'One minute later. A tattooed arm thrown up in front of the lens, a fan open over the crowd, and the head down over the mixer.' },
+    { night: '2023-07-13', title: 'Caught in the Beam', taken: '2023-07-14 04:33',
+      image: 'assets/img/room/2023-07-14-0433.webp', full: 'assets/img/room/full/2023-07-14-0433.webp',
+      alt: 'A DJ in a cap at the decks, beams of light cutting across the dark',
+      sub: 'Beams across the decks',
+      say: 'Two beams cut across the dark and land on the decks: a cap, a beard, both hands on the mixer.' },
+    { night: '2023-07-13', title: 'Door Left Open', taken: '2023-07-14 07:13',
+      image: 'assets/img/room/2023-07-14-0713.webp', full: 'assets/img/room/full/2023-07-14-0713.webp',
+      alt: 'A heavy steel door standing open in a tiled stone wall, the night’s poster on it',
+      sub: 'The night’s poster, still on the door',
+      say: 'Morning. The heavy steel door stands open onto the dark, and the night’s poster is still on it.' },
+    { night: '2023-07-13', title: 'Still Here', taken: '2023-07-14 07:33',
+      image: 'assets/img/room/2023-07-14-0733.webp', full: 'assets/img/room/full/2023-07-14-0733.webp',
+      alt: 'Beams of light crossing over the dark shapes of the crowd',
+      sub: 'Light over the heads',
+      say: 'Broad day outside by now, and in here the beams are still crossing over the heads.' },
+    { title: 'Shades On', taken: '2021-03-10 16:28',
+      image: 'assets/img/room/2021-03-10-1628.webp', full: 'assets/img/room/full/2021-03-10-1628.webp',
+      alt: 'In a dark room, someone leaning back and laughing, headphones round the neck and a glass in hand; a bottle in front catches the flash, and someone in sunglasses reaches in',
+      sub: 'A laugh in the dark',
+      say: 'An afternoon with the lights down anyway. Headphones round the neck, a glass in hand, a laugh, and a pair of shades in the dark.' },
+    { title: 'Back in the Day', taken: '2021-02-24 14:22',
+      image: 'assets/img/room/2021-02-24-1422.webp', full: 'assets/img/room/full/2021-02-24-1422.webp',
+      alt: 'Two at the decks in a dark room: one in headphones with a hand on the player, the other looking on',
+      sub: 'February 2021, an afternoon at the decks',
+      say: 'The oldest photograph in the room. Daytime, the room kept dark: headphones on, a hand on the deck, someone looking over the shoulder.' }
+  ],
+
+  // THE ROOM'S SOUND: one track, looped on its own bars while the visitor is in the room (bpm and bars give the length of one pass,
+  // so that each pass begins on the beat of the one before). Keyv sent it for the room when the owner asked for music (2026-11-25)
+  roomSound: { src: 'assets/audio/room-breakthrough.mp3', title: 'Breakthrough', artist: 'Deep Mind Direction', from: 'Confinement LP, Darkart, 2022', bpm: 79, bars: 25 }
 };

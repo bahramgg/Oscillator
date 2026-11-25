@@ -1,6 +1,7 @@
 /* Tehran Movement: the room (/room), entered from "The room" on the home page.
-   A corridor drawn as a grid of light and walked like a room: Keyv's sets hang on its walls and lie on its floor and its ceiling,
-   the newest first (the content is `room` in data.js). The visitor walks as a person would, toward where they face: the wheel, a
+   A corridor drawn as a grid of light and walked like a room: photographs of Keyv's nights, in black and white, hang on its walls
+   and lie on its floor and its ceiling, the newest first (the content is `room` in data.js; in the code below each one is still
+   called a set, as the posters of the first room were). The visitor walks as a person would, toward where they face: the wheel, a
    finger up and down, the arrow keys up and down walk on and step back (turned round to the door, on is toward the door). The head
    turns only by hand, all the way round: the mouse held down or a finger sideways (it stays the way it was turned), a little toward
    the pointer on a computer. Nothing moves by itself. The set the visitor is coming up to is named at the foot of the screen and
@@ -10,7 +11,7 @@
    polished and holds their reflection, and dust hangs in the air and stirs as you walk.
    One WebGL canvas, no library. The surfaces draw their own lines, one point wide at any distance; the whole picture is bent at its
    edges like a wide lens, and it is drawn larger than the screen, so that the bending never makes its middle soft. An open set is
-   drawn from the poster itself, not from its small copy.
+   drawn from its large picture, not from the copy on the wall.
    app.js shows the page (VIEWS.room, with html() below) and starts it as a part that moves with the scroll (data-scene="tunnel").
    Where motion is not wanted, or the browser cannot draw it, the page is the same sets as a plain list. */
 (function () {
@@ -34,26 +35,28 @@
   function byDate(d) { for (var i = 0; i < EVENTS.length; i++) if (EVENTS[i].date === d) return EVENTS[i]; return null; }
 
   /* ─── the sets, as the room shows them ─────────────────────────────── */
-  // image: the picture on the wall (a night's small copy of its poster); full: the picture when the set is open (the poster itself)
+  // image: the picture on the wall; full: the picture when it is open. A photograph brings its own; a night without one shows its
+  // poster (its small copy on the wall, the poster itself when open). A photograph taken at a night is under the night's name, with
+  // the hour it was taken: the night's line-up and page come from the night
   var ITEMS = LIST.map(function (r) {
-    var e = r.night ? byDate(r.night) : null, rows = [];
+    var e = r.night ? byDate(r.night) : null, own = !!r.image, rows = [], t = String(r.taken || '').split(' ');
     if (r.night && !e) return null;
-    if (e) {
-      if ((e.lineup || []).length) rows.push(['Line-up', e.lineup.join(', ')]);
-      rows.push(['Date', when(e.date)]);
-      if (e.designer) rows.push(['Poster', e.designer]);
-    }
+    if (e && own) rows.push(['Night', e.title + ', ' + when(e.date)]);
+    if (e && (e.lineup || []).length) rows.push(['Line-up', e.lineup.join(', ')]);
+    if (e && !own) { rows.push(['Date', when(e.date)]); if (e.designer) rows.push(['Poster', e.designer]); }
     (r.rows || []).forEach(function (x) { rows.push(x); });
-    if (!e && r.date) rows.push(['Date', when(r.date)]);
-    var title = e ? e.title : r.title || '', date = e ? e.date : r.date || '';
-    return { title: title, date: date, image: e ? thumb(e.poster) : r.image || '', full: e ? e.poster : r.full || r.image || '', kind: r.kind || '', who: r.who || '', sub: r.sub || '', say: r.say || '', rows: rows,
-      alt: e ? 'The poster for ' + title + ', ' + when(date) : r.alt || title, link: e ? '/events/' + e.date : r.link || '', linkLabel: e ? 'The night' : r.linkLabel || 'More', ig: r.ig || '' };
+    if (r.taken) rows.push(['Taken', when(t[0]) + (t[1] ? ', ' + t[1] : '')]);
+    else if (!e && r.date) rows.push(['Date', when(r.date)]);
+    var title = r.title || (e ? e.title : ''), date = e ? e.date : r.date || (r.taken ? t[0] : '');
+    return { title: title, date: date, at: r.taken ? t[1] || '' : '', image: own ? r.image : e ? thumb(e.poster) : '', full: own ? r.full || r.image : e ? e.poster : '',
+      kind: r.kind || (e && own ? e.title : ''), who: r.who || '', sub: r.sub || '', say: r.say || '', rows: rows,
+      alt: r.alt || (e ? 'The poster for ' + title + ', ' + when(date) : title), link: e ? '/events/' + e.date : r.link || '', linkLabel: e ? 'The night' : r.linkLabel || 'More', ig: r.ig || '' };
   }).filter(function (it) { return it && it.title && it.image; });
   ITEMS.forEach(function (it, i) { it.i = i; });
   var N = ITEMS.length;
 
-  // the small line under a name: what it was, with whom, when (the dots between are drawn, the brush font has none)
-  function tag(it) { return [it.kind, it.who, when(it.date)].filter(Boolean).map(function (s) { return '<span>' + esc(s) + '</span>'; }).join(''); }
+  // the small line under a name: what it was, with whom, the hour, the day (the dots between are drawn, the brush font has none)
+  function tag(it) { return [it.kind, it.who, it.at, when(it.date)].filter(Boolean).map(function (s) { return '<span>' + esc(s) + '</span>'; }).join(''); }
   function hrefOf(env, p) { return /^\//.test(p) && env && env.href ? env.href(p) : p; }
   function aTo(env, p, cls, inner) {
     if (/^\//.test(p)) return '<a class="' + cls + '" href="' + esc(hrefOf(env, p)) + '" data-link data-route="' + esc(p) + '">' + inner + '</a>';
@@ -72,23 +75,25 @@
     var stage = '<div class="rm__stage">' +
       '<canvas class="rm__cv" aria-hidden="true"></canvas>' +
       '<div class="rm__top"><a class="rm__brand" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/"><i class="rm__mark" aria-hidden="true"></i><span><b>Tehran Movement</b><small>The room / Keyv, live</small></span></a>' +
-        '<div class="rm__tools"><button class="rm__mode" type="button" aria-pressed="false" aria-label="Light room">' + I_MOON + I_SUN + '</button>' +
+        '<div class="rm__tools">' + (SND ? '<button class="rm__snd" type="button" aria-pressed="false" aria-label="Sound" title="' + esc('Sound: ' + SND.title + ', ' + SND.artist) + '"><i></i><i></i><i></i><i></i></button>' : '') +
+        '<button class="rm__mode" type="button" aria-pressed="false" aria-label="Light room">' + I_MOON + I_SUN + '</button>' +
         '<button class="rm__pill rm__ix" type="button" aria-expanded="false" aria-controls="rm-index">Index<sup>' + N + '</sup></button>' +
         '<a class="rm__pill" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/" data-room-exit>Exit</a></div></div>' +
       '<div class="rm__now"><p class="rm__no"><b>' + pad(1) + '</b> / ' + pad(N) + '</p><h2 class="rm__title">' + esc(first.title) + '</h2><p class="rm__tag"><i></i>' + (ITEMS[0] ? tag(first) : '') + '</p>' +
-        '<p class="rm__hint"><span class="rm__hint-p">Scroll to walk the room<span>Drag to look around</span><span>Click a set to open it</span></span><span class="rm__hint-t">Swipe up to walk, down to step back<span>Sideways to look around</span><span>Tap a set to open it</span></span></p></div>' +
-      '<div class="rm__end"><p class="rm__no">The end of the room</p><p class="rm__endh">' + esc(N + ' sets, ' + (ITEMS[N - 1] ? String(ITEMS[N - 1].date).slice(0, 4) : '') + ' to ' + (ITEMS[0] ? String(ITEMS[0].date).slice(0, 4) : '')) + '</p>' +
+        '<p class="rm__hint"><span class="rm__hint-p">Scroll to walk the room<span>Drag to look around</span><span>Click a photo to open it</span></span><span class="rm__hint-t">Swipe up to walk, down to step back<span>Sideways to look around</span><span>Tap a photo to open it</span></span></p></div>' +
+      '<div class="rm__end"><p class="rm__no">The end of the room</p><p class="rm__endh">' + esc(N + ' photos, ' + (ITEMS[N - 1] ? String(ITEMS[N - 1].date).slice(0, 4) : '') + ' to ' + (ITEMS[0] ? String(ITEMS[0].date).slice(0, 4) : '')) + '</p>' +
+        (SND ? '<p class="rm__endsnd">Sound: ' + esc(SND.title + ', ' + SND.artist) + '</p>' : '') +
         '<p class="rm__endgo"><button class="rm__pill rm__pill--solid" type="button" data-room-top>Back to the start</button><a class="rm__pill" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/" data-room-exit>Exit</a></p></div>' +
-      '<nav class="rm__rule" aria-label="The sets in the room">' + ITEMS.map(function (it) { return '<button class="rm__tick" type="button" data-i="' + it.i + '" aria-label="' + esc(pad(it.i + 1) + ', ' + it.title + ', ' + when(it.date)) + '"><span>' + esc(it.title) + '</span></button>'; }).join('') + '</nav>' +
+      '<nav class="rm__rule" aria-label="The photos in the room">' + ITEMS.map(function (it) { return '<button class="rm__tick" type="button" data-i="' + it.i + '" aria-label="' + esc(pad(it.i + 1) + ', ' + it.title + ', ' + when(it.date)) + '"><span>' + esc(it.title) + '</span></button>'; }).join('') + '</nav>' +
       '<p class="rm__tip" aria-hidden="true"><i></i><span>Open</span><b></b></p><i class="rm__dot" aria-hidden="true"></i>' +
       '<section class="rm__open" role="dialog" aria-modal="true" aria-labelledby="rm-open-h" hidden><button class="rm__x" type="button" aria-label="Close, back to the room">' + I_X + '</button>' +
         '<div class="rm__info"><p class="rm__kind"><i></i><span></span></p><h2 class="rm__h" id="rm-open-h"></h2><p class="rm__sub"></p><p class="rm__say"></p><dl class="rm__rows"></dl>' +
-        '<div class="rm__act"><p class="rm__links"></p><p class="rm__next"><span>Next set</span><button type="button"></button></p></div></div></section>' +
-      '<section class="rm__index" id="rm-index" aria-label="Every set in the room" hidden><div class="rm__ixin"><p class="rm__ixh">Index<sup>' + N + '</sup></p><ol>' + ITEMS.map(function (it) {
+        '<div class="rm__act"><p class="rm__links"></p><p class="rm__next"><span>Next photo</span><button type="button"></button></p></div></div></section>' +
+      '<section class="rm__index" id="rm-index" aria-label="Every photo in the room" hidden><div class="rm__ixin"><p class="rm__ixh">Index<sup>' + N + '</sup></p><ol>' + ITEMS.map(function (it) {
         return '<li><button type="button" data-i="' + it.i + '"><span class="rm__ixno">' + pad(it.i + 1) + '</span><span class="rm__ixt">' + esc(it.title) + '</span><span class="rm__ixtag">' + tag(it) + '</span></button></li>';
       }).join('') + '</ol></div></section>' +
       '</div>';
-    var flat = '<div class="rm__flat">' + (env.head ? env.head('r', 'The room', 'Keyv’s sets, from @keyvdj and the nights: the newest first.') : '<h1 class="g">The room</h1>') +
+    var flat = '<div class="rm__flat">' + (env.head ? env.head('r', 'The room', 'Keyv’s nights in black and white, the newest first.') : '<h1 class="g">The room</h1>') +
       '<ol class="rm__cards">' + ITEMS.map(function (it) {
         var links = [it.link ? aTo(env, it.link, '', esc(it.linkLabel)) : '', it.ig ? aTo(env, it.ig, '', 'On Instagram') : ''].join('');
         return '<li class="rmc"><figure class="rmc__img"><img src="' + esc(it.image) + '" loading="lazy" decoding="async" alt="' + esc(it.alt) + '"></figure>' +
@@ -97,7 +102,7 @@
           '<dl class="rmc__rows">' + it.rows.map(function (r) { return '<div><dt class="g">' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('') + '</dl>' +
           (links ? '<p class="links">' + links + '</p>' : '') + '</div></li>';
       }).join('') + '</ol>' + (env.foot ? env.foot() : '') + '</div>';
-    return '<section class="rm" data-scene="tunnel" aria-label="The room: Keyv’s sets">' + stage + flat + '</section>';
+    return '<section class="rm" data-scene="tunnel" aria-label="The room: Keyv’s nights in photographs">' + stage + flat + '</section>';
   }
 
   /* ─── small vector tools ───────────────────────────────────────────── */
@@ -194,6 +199,22 @@
     '  if (uMirror > 0.5) a *= uRefl * exp(-vUp * 0.5);\n' +
     '  gl_FragColor = vec4(mix(uBg, c, fog), a);\n' +
     '}';
+  // the soft yellow light round a picture, like a frame of light (the owner's wish, so that the black and white photographs stand out
+  // from the dark walls): strongest at the picture's edge and gone a little way out, on the picture's own surface and never past that
+  // surface's edges. In the dark room it is light added; in the light room a yellow tint. The floor mirrors it with the picture
+  var HALO_V = 'precision highp float;\nattribute vec2 aQ; uniform mat4 uPV; uniform vec3 uC, uU, uV; uniform vec2 uHalf; uniform float uM, uMirror, uFloorY; varying vec2 vS; varying vec3 vW, vP; varying float vUp;\n' +
+    'void main() { vS = aQ * 2.0 * (uHalf + uM); vec3 p = uC + uU * vS.x + uV * vS.y; vP = p; vUp = p.y - uFloorY; if (uMirror > 0.5) p.y = 2.0 * uFloorY - p.y; vW = p; gl_Position = uPV * vec4(p, 1.0); }';
+  var HALO_F = 'precision highp float;\n' +
+    'varying vec2 vS; varying vec3 vW, vP; varying float vUp; uniform vec2 uHalf, uBox; uniform vec3 uCam, uCol; uniform float uM, uA, uFog, uMode, uMirror, uRefl;\n' +
+    'void main() {\n' +
+    '  if (abs(vP.x) > uBox.x || abs(vP.y) > uBox.y) discard;\n' +
+    '  float d = length(max(abs(vS) - uHalf, 0.0));\n' +
+    '  float g = 1.0 - smoothstep(0.0, uM, d); g *= g * (0.4 + 0.6 * exp(-d * 7.0));\n' +
+    '  float a = uA * g * exp(-pow(distance(vW, uCam) / uFog, 1.4));\n' +
+    '  if (uMirror > 0.5) a *= uRefl * exp(-vUp * 0.5);\n' +
+    '  gl_FragColor = vec4(uCol * a, a * uMode);\n' +
+    '}';
+  var HALO_M = 0.6, HALO_A = [0.36, 0.5];      // how far out it reaches (units of the room), and how strong it is (dark room, light room)
   // dust in the air: fixed in the room (so it passes by as you walk), lit by the pictures near it, stirred a little by the walk
   var DUST_V = 'precision highp float;\nattribute vec4 aD; uniform mat4 uPV; uniform vec3 uCam; uniform float uT, uLen, uPx, uFog, uA, uMode; varying float vA; varying vec3 vC;\n' + LIGHT_GLSL +
     'void main() {\n' +
@@ -218,6 +239,135 @@
 
   /* ─── the room on the screen ───────────────────────────────────────── */
   var back = false;      // the visitor left by "Exit" or by going back: the home page opens where they went in
+  /* ─── the room's sound ─────────────────────────────────────────────── */
+  // One track (`roomSound` in data.js), looped on its own bars: each pass begins a whole number of bars after the one before, and
+  // that one's last sound rings on into it, so the seam is not heard. Web Audio, so that the loop is exact and the sound can fade in
+  // and out (a phone does not let a page fade an <audio>). A browser lets sound begin only from a visitor's hand: the click on
+  // "Enter the room" is that hand, or, in a room opened from a link, the first touch, click or key in it. The round button with the
+  // four bars (they move with the music) turns it off and on, and the choice is kept in the browser. It is quiet while the page is
+  // not on the screen, and it fades out when the visitor leaves the room.
+  var SND = D.roomSound || null;
+  var Sound = (function () {
+    var AC = window.AudioContext || window.webkitAudioContext, VOL = 0.6, KEY = 'tm:room-sound', BANDS = [[1, 4], [4, 16], [16, 60], [60, 220]];
+    var ctx = null, out = null, meter = null, bins = null, buf = null, asked = false, off = 0, L = 0;
+    var want = true, where = 'out', playing = false, next = 0, timer = 0, srcs = [], old = [], btn = null, bars = [], raf = 0, drawn = 0;      // where: out, coming (the door was pressed), in
+    try { want = localStorage.getItem(KEY) !== 'off'; } catch (e) { /* no storage: on */ }
+    function can() { return !!(SND && SND.src && AC); }
+    // made and woken inside the visitor's gesture, the only moment a phone allows it
+    function wake() {
+      if (!can()) return;
+      try {
+        if (navigator.audioSession) navigator.audioSession.type = 'playback';      // as a film is: a phone's silent switch does not hold it back
+        if (!ctx) {
+          ctx = new AC(); out = ctx.createGain(); out.gain.value = 0;
+          meter = ctx.createAnalyser(); meter.fftSize = 1024; meter.smoothingTimeConstant = 0.7; bins = new Uint8Array(meter.frequencyBinCount);
+          out.connect(meter); meter.connect(ctx.destination);
+        }
+        if (ctx.state !== 'running' && !document.hidden) ctx.resume();
+        if (where === 'out') where = 'coming';
+        var s = ctx.createBufferSource(); s.buffer = ctx.createBuffer(1, 1, 22050); s.connect(ctx.destination); s.start(0);      // an older iPhone wants a sound begun in the gesture itself
+      } catch (e) { return; }
+      load();
+    }
+    function load() {
+      if (!ctx || buf || asked) return;
+      asked = true;
+      fetch(SND.src).then(function (r) { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(function (ab) {
+        ctx.decodeAudioData(ab, function (b) { asked = false; if (where === 'out') return; buf = b; measure(b); go(); }, function () { asked = false; });
+      }).catch(function () { asked = false; });
+    }
+    // where the music begins in the file (an encoder puts a moment of silence before it), and how long a pass is: whole bars
+    function measure(b) {
+      var d = b.getChannelData(0), n = d.length, i = 0;
+      while (i < n && Math.abs(d[i]) < 0.02) i++;
+      off = Math.max(0, i / b.sampleRate - 0.01);
+      L = SND.bars && SND.bpm ? SND.bars * 240 / SND.bpm : 0;
+      if (!(L > 2) || off + L > b.duration) L = b.duration - off;
+    }
+    // it plays when all is there: the visitor's choice, the room on the screen, the music, a woken context
+    function go() {
+      if (!want || where !== 'in' || !buf || !ctx || playing) return;
+      playing = true; paint();
+      old.forEach(function (s) { try { s.stop(); } catch (e) { /* ended */ } }); old = [];      // a pass still fading from a moment ago
+      if (ctx.state !== 'running' && !document.hidden) ctx.resume();
+      next = ctx.currentTime + 0.06; queue(); fade(VOL, 2.6);
+      if (!raf) raf = requestAnimationFrame(draw);
+    }
+    function queue() {
+      clearTimeout(timer); if (!playing) return;
+      while (next < ctx.currentTime + 1.5) {
+        var s = ctx.createBufferSource(); s.buffer = buf; s.connect(out); s.start(next, off); srcs.push(s);
+        s.onended = (function (s) { return function () { var k = srcs.indexOf(s); if (k >= 0) srcs.splice(k, 1); }; })(s);
+        next += L;
+      }
+      timer = setTimeout(queue, 500);
+    }
+    function fade(to, sec) {
+      var g = out.gain, now = ctx.currentTime;
+      try { g.cancelScheduledValues(now); } catch (e) { /* nothing scheduled */ }
+      g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(to, now + sec);
+    }
+    // fades out; then the passes are stopped and the context sleeps
+    function stop(sec) {
+      if (!playing) return;
+      playing = false; paint(); clearTimeout(timer);
+      var mine = srcs; srcs = []; old = old.concat(mine);
+      fade(0, sec);
+      setTimeout(function () {
+        mine.forEach(function (s) { try { s.stop(); } catch (e) { /* ended */ } var k = old.indexOf(s); if (k >= 0) old.splice(k, 1); });
+        if (!playing && ctx && ctx.state === 'running') ctx.suspend();
+      }, sec * 1000 + 80);
+    }
+    // the four bars: low, low middle, high middle, high, as loud as the music is in each
+    function draw(t) {
+      raf = 0;
+      if (!playing || document.hidden || !bars.length) { bars.forEach(function (b) { b.style.transform = ''; }); return; }
+      raf = requestAnimationFrame(draw);
+      if (t - drawn < 33) return; drawn = t;
+      meter.getByteFrequencyData(bins);
+      for (var k = 0; k < 4; k++) {
+        var m = 0; for (var i = BANDS[k][0]; i < BANDS[k][1]; i++) if (bins[i] > m) m = bins[i];
+        bars[k].style.transform = 'scaleY(' + clamp((m - 70) / 160, 0.16, 1).toFixed(3) + ')';
+      }
+    }
+    function paint() {
+      if (!btn) return;
+      btn.setAttribute('aria-pressed', String(want)); btn.classList.toggle('is-off', !want); btn.classList.toggle('is-on', playing);
+    }
+    // the room is on the screen
+    function enter(el) {
+      where = 'in'; btn = $('.rm__snd', el); bars = btn ? $$('i', btn) : [];
+      if (btn && !can()) btn.hidden = true;
+      paint();
+      if (ctx && want) { wake(); go(); }
+    }
+    // the room is left: the music fades out, and what it took of the memory is let go (a next visit fetches it again, from the cache)
+    function leave() {
+      where = 'out'; stop(0.7); btn = null; bars = [];
+      setTimeout(function () { if (where === 'out' && !playing) buf = null; }, 1500);
+    }
+    // the round button
+    function press() {
+      if (want && !playing) { wake(); go(); paint(); return; }      // on, but not heard yet (no hand had come): now it is
+      want = !want;
+      try { localStorage.setItem(KEY, want ? 'on' : 'off'); } catch (e) { /* not kept */ }
+      if (want) { wake(); go(); } else stop(0.5);
+      paint();
+    }
+    // a touch, a click or a key in the room: music that should be on and is not heard yet begins now
+    function hand(e) {
+      if (!want || where !== 'in' || !can() || (playing && ctx && ctx.state === 'running')) return;
+      if (e && e.target && e.target.closest && e.target.closest('.rm__snd')) return;
+      wake(); go();
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (!ctx) return;
+      if (document.hidden) { if (ctx.state === 'running') ctx.suspend(); }
+      else if (playing && where === 'in') { ctx.resume(); if (!raf) raf = requestAnimationFrame(draw); }
+    });
+    return { wake: function () { if (want) wake(); }, enter: enter, leave: leave, press: press, hand: hand };
+  })();
+
   function mount(el) {
     if (el._room) return el._room;
     if (!N) return null;
@@ -226,7 +376,7 @@
     if (!gl || !gl.getExtension('OES_standard_derivatives')) return null;
     var aniso = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic'), maxAniso = aniso ? gl.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
     var maxTex = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE), 8192);
-    var G, P, U, Q;
+    var G, P, U, Q, H;
     function shader(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
     function program(vs, fs, attrs) {
       var p = gl.createProgram(); gl.attachShader(p, shader(gl.VERTEX_SHADER, vs)); gl.attachShader(p, shader(gl.FRAGMENT_SHADER, fs));
@@ -236,7 +386,7 @@
       for (var i = 0; i < n; i++) { var a = gl.getActiveUniform(p, i); u[a.name.replace(/\[0\]$/, '')] = gl.getUniformLocation(p, a.name); }
       return { p: p, u: u };
     }
-    try { G = program(GRID_V, GRID_F, ['aPos', 'aGrid', 'aN']); P = program(PANEL_V, PANEL_F, ['aQ']); U = program(DUST_V, DUST_F, ['aD']); Q = program(POST_V, POST_F, ['aP']); }
+    try { G = program(GRID_V, GRID_F, ['aPos', 'aGrid', 'aN']); P = program(PANEL_V, PANEL_F, ['aQ']); H = program(HALO_V, HALO_F, ['aQ']); U = program(DUST_V, DUST_F, ['aD']); Q = program(POST_V, POST_F, ['aP']); }
     catch (e) { return null; }
 
     // the corridor, in squares of half a unit (the light is worked out at their corners): the floor first (it is drawn on its own,
@@ -514,6 +664,19 @@
         gl.uniform1f(P.u.uMirror, mirror ? 1 : 0); gl.uniform1f(P.u.uRefl, refl || 0);
         gl.bindTexture(gl.TEXTURE_2D, tex); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
+      // the yellow light round the pictures (drawn before them, without the depth: it lies on their own surfaces, which nothing in the
+      // corridor hides); afterwards the pictures' program is the one in use again
+      var haloA = mix(HALO_A[0], HALO_A[1], c.mode);
+      function halos(list, mirror, refl) {
+        if (!list.length) return;
+        gl.useProgram(H.p); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.disable(gl.DEPTH_TEST); gl.depthMask(false);
+        gl.bindBuffer(gl.ARRAY_BUFFER, card); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
+        gl.uniformMatrix4fv(H.u.uPV, false, PV); gl.uniform3fv(H.u.uCam, eye); gl.uniform1f(H.u.uFog, fog); gl.uniform1f(H.u.uFloorY, -HH);
+        gl.uniform3fv(H.u.uCol, YELLOW); gl.uniform1f(H.u.uMode, c.mode); gl.uniform2f(H.u.uBox, HW + 0.002, HH + 0.002);
+        gl.uniform1f(H.u.uMirror, mirror ? 1 : 0); gl.uniform1f(H.u.uRefl, refl || 0);
+        list.forEach(function (o) { var g = o.g; gl.uniform3fv(H.u.uC, g.C); gl.uniform3fv(H.u.uU, g.U); gl.uniform3fv(H.u.uV, g.V); gl.uniform2f(H.u.uHalf, g.w / 2, g.h / 2); gl.uniform1f(H.u.uM, o.m || HALO_M); gl.uniform1f(H.u.uA, o.a); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); });
+        gl.useProgram(P.p); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      }
       // (the room can be looked at all the way round: the sets behind the camera are drawn as well)
       function visible(pn, i) { return pn.ready && !(i === oi && ot > 0) && Math.abs(pn.C[2] - eye[2]) < 75; }
       var mark = markTex ? { C: [0, 0.1, Z_WALL + EPS], U: [1, 0, 0], V: [0, 1, 0], w: 3.2 * markA, h: 3.2 } : null, doorInk = lerp3(YELLOW, [0.13, 0.13, 0.12], c.mode);
@@ -521,6 +684,7 @@
       // drawn over the floor alone (nothing else stands where it can be seen)
       gl.disable(gl.DEPTH_TEST); gl.depthMask(false);
       var shine = 0.26 * (1 - 0.55 * c.mode);
+      halos(panels.filter(function (pn, i) { return visible(pn, i) && !pn.floor && !pn.ceil; }).map(function (pn) { return { g: pn, a: haloA * pn.fade * panelsA * (1 - 0.75 * dim) }; }), true, shine);
       panels.forEach(function (pn, i) { if (visible(pn, i) && !pn.floor) one(pn, pn.big || pn.tex, pn.fade * panelsA, dim, 0, null, true, pn.ceil ? shine * 0.5 : shine); });
       if (mark) one(mark, markTex, panelsA, dim, 1, YELLOW, true, shine);
       if (doorTex) one(DOOR, doorTex, panelsA, dim, 1, doorInk, true, shine);
@@ -529,7 +693,9 @@
       // the rest of the corridor
       corridor(C.floor, C.all - C.floor);
 
-      // the sets in their places, and the logo on the wall at the end, in the paint's yellow
+      // the sets in their places, each in its yellow light, and the logo on the wall at the end, in the paint's yellow
+      halos(panels.filter(visible).map(function (pn) { return { g: pn, a: haloA * pn.fade * panelsA * (1 - 0.75 * dim) }; }), false);
+      gl.enable(gl.DEPTH_TEST); gl.depthMask(true);
       gl.useProgram(P.p); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       gl.bindBuffer(gl.ARRAY_BUFFER, card); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
       panels.forEach(function (pn, i) { if (visible(pn, i)) one(pn, pn.big || pn.tex, pn.fade * panelsA, dim, 0); });
@@ -546,7 +712,7 @@
       gl.depthMask(true);
 
       // the open set, in front of everything
-      if (oi >= 0 && ot > 0) { gl.useProgram(P.p); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.bindBuffer(gl.ARRAY_BUFFER, card); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0); gl.disable(gl.DEPTH_TEST); one(geo(panels[oi], oi), panels[oi].big || panels[oi].tex, panels[oi].fade, 0, 0); }
+      if (oi >= 0 && ot > 0) { gl.useProgram(P.p); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.bindBuffer(gl.ARRAY_BUFFER, card); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0); gl.disable(gl.DEPTH_TEST); var og = geo(panels[oi], oi), oe = inOut(clamp(ot, 0, 1)); halos([{ g: og, a: haloA * panels[oi].fade * mix(1, 0.7, oe), m: HALO_M * mix(1, 0.4, oe) }], false); gl.bindBuffer(gl.ARRAY_BUFFER, card); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0); one(og, panels[oi].big || panels[oi].tex, panels[oi].fade, 0, 0); }
 
       // the whole picture onto the screen, bent at its edges
       gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, cw, ch); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
@@ -574,7 +740,7 @@
       $('.rm__links', info).innerHTML = (it.link ? aTo(null, it.link, 'rm__go', esc(it.linkLabel) + I_ARROW) : '') + (it.ig ? aTo(null, it.ig, 'rm__go rm__go--line', 'On Instagram' + I_ARROW) : '');
       // a link to a page of the site is answered by the site's own router (app.js reads data-route); its address as the site writes it
       $$('a[data-route]', info).forEach(function (a) { var r = a.getAttribute('data-route'); a.setAttribute('href', root.getAttribute('data-router') === 'hash' || location.protocol === 'file:' ? hashOf(r) : r); });
-      var nb = $('.rm__next button', info); nb.textContent = nx.title; nb.setAttribute('data-i', String(nx.i)); nb.setAttribute('aria-label', 'Next set: ' + nx.title);
+      var nb = $('.rm__next button', info); nb.textContent = nx.title; nb.setAttribute('data-i', String(nx.i)); nb.setAttribute('aria-label', 'Next photo: ' + nx.title);
       $('.rm__next', info).hidden = N < 2;
     }
     function hashOf(p) { var s = p.split('/').filter(Boolean); return !s.length ? '#home' : '#' + (s.length > 1 ? s[0].replace(/e?s$/, '') + '-' + s[1] : s[0]); }
@@ -756,6 +922,7 @@
       if (e.key === 'Escape') { if (!ixEl.hidden) { e.preventDefault(); index(false); return; } if (state === 'open' || state === 'opening') { e.preventDefault(); close(); return; } }
       var tgt = e.target, typing = tgt && /INPUT|TEXTAREA|SELECT/.test(tgt.tagName);
       if (typing) return;
+      if (e.key !== 'Escape' && e.key !== 'Tab') Sound.hand(e);
       if (state === 'walk' && ixEl.hidden && e.key === 'Enter' && (tgt === document.body || tgt === main())) { e.preventDefault(); open(cur); return; }
       // the arrow keys to the sides turn the head; up and down (and the page keys) walk on and step back, toward where it faces
       if (state === 'walk' && ixEl.hidden && (tgt === document.body || tgt === main() || tgt === cv)) {
@@ -792,7 +959,9 @@
       if (t.closest('.rm__index') && !t.closest('button')) { index(false); return; }
       if (t.closest('.rm__x')) { close(); return; }
       var nb = t.closest('.rm__next button'); if (nb) { var n = +nb.getAttribute('data-i'); close(function () { goTo(n, true); }); return; }
-      if (t.closest('.rm__mode')) { setLight(!light); return; }
+      // (a button pressed with the mouse gives the focus back, so that the keys walk again)
+      if (t.closest('.rm__mode')) { setLight(!light); if (e.detail) t.closest('.rm__mode').blur(); return; }
+      if (t.closest('.rm__snd')) { Sound.press(); if (e.detail) t.closest('.rm__snd').blur(); return; }
       if (t.closest('[data-room-top]')) { faceOn(); vel = 0; tz = Z_START; kick(); return; }
       if (t.closest('[data-room-exit]')) { back = true; return; }
       // a click beside the open set's story, on the dimmed room, closes it (a click on the set itself does nothing)
@@ -801,6 +970,7 @@
 
     function destroy() {
       if (dead) return; dead = true;
+      Sound.leave();
       if (raf) cancelAnimationFrame(raf); raf = 0;
       window.removeEventListener('pointermove', onPointer); window.removeEventListener('wheel', onWheel); window.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize); window.removeEventListener('popstate', onPop);
       root.classList.remove('room-live', 'room-held');
@@ -810,12 +980,15 @@
     el._room = { update: function () { if (state === 'walk') kick(); }, measure: function () { size(); kick(); } };
     el.classList.add('is-live'); root.classList.add('room-live');
     live = { el: el, destroy: destroy };
+    ['pointerdown', 'pointerup', 'touchend', 'click'].forEach(function (k) { el.addEventListener(k, Sound.hand, true); });
+    Sound.enter(el);
     size(); fetchNext(); kick();
     return el._room;
   }
   var live = null, homeY = -1;
   // where the home page was when "Enter the room" was pressed: leaving the room goes back to that very place
-  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.room__enter')) homeY = window.scrollY; }, true);
+  // (and the click on it is the visitor's hand that lets the room's music begin)
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.room__enter')) { homeY = window.scrollY; Sound.wake(); } }, true);
 
   // a page has been put on the screen (app.js, show): a room that is no longer on it is let go at once (the top bar comes back);
   // coming back from the room to the home page, it opens where the visitor went in (or at the room's part of it)
