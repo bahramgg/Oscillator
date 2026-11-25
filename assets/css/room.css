@@ -29,6 +29,9 @@ html.room-held { overflow: hidden; }
 .rm__cv { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: pan-y; }
 .rm.is-live .rm__cv { cursor: none; }
 .rm.is-live.is-open .rm__cv { cursor: auto; }
+/* held down to look around: the dot grows, and nothing is offered meanwhile */
+.rm.is-dragging .rm__dot { scale: 1.9; }
+.rm.is-dragging .rm__tip { opacity: 0; }
 
 /* the brush's letters, small and spaced, as every label of the room is set */
 .rm__brand small, .rm__no, .rm__tag, .rm__hint, .rm__tick span, .rm__tip, .rm__kind, .rm__rows dt, .rm__next span, .rm__ixno, .rm__ixtag, .rm__ixh {

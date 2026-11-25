@@ -75,11 +75,11 @@
         '<button class="rm__pill rm__ix" type="button" aria-expanded="false" aria-controls="rm-index">Index<sup>' + N + '</sup></button>' +
         '<a class="rm__pill" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/" data-room-exit>Exit</a></div></div>' +
       '<div class="rm__now"><p class="rm__no"><b>' + pad(1) + '</b> / ' + pad(N) + '</p><h2 class="rm__title">' + esc(first.title) + '</h2><p class="rm__tag"><i></i>' + (ITEMS[0] ? tag(first) : '') + '</p>' +
-        '<p class="rm__hint"><span class="rm__hint-p">Scroll to walk the room<span>Click a set to open it</span></span><span class="rm__hint-t">Swipe to walk<span>Drag sideways to look</span><span>Tap a set to open it</span></span></p></div>' +
+        '<p class="rm__hint"><span class="rm__hint-p">Scroll to walk the room<span>Drag to look around</span><span>Click a set to open it</span></span><span class="rm__hint-t">Swipe to walk<span>Drag sideways to look around</span><span>Tap a set to open it</span></span></p></div>' +
       '<div class="rm__end"><p class="rm__no">The end of the room</p><p class="rm__endh">' + esc(N + ' sets, ' + (ITEMS[N - 1] ? String(ITEMS[N - 1].date).slice(0, 4) : '') + ' to ' + (ITEMS[0] ? String(ITEMS[0].date).slice(0, 4) : '')) + '</p>' +
         '<p class="rm__endgo"><button class="rm__pill rm__pill--solid" type="button" data-room-top>Back to the start</button><a class="rm__pill" href="' + esc(hrefOf(env, '/')) + '" data-link data-route="/" data-room-exit>Exit</a></p></div>' +
       '<nav class="rm__rule" aria-label="The sets in the room">' + ITEMS.map(function (it) { return '<button class="rm__tick" type="button" data-i="' + it.i + '" aria-label="' + esc(pad(it.i + 1) + ', ' + it.title + ', ' + when(it.date)) + '"><span>' + esc(it.title) + '</span></button>'; }).join('') + '</nav>' +
-      '<p class="rm__tip" aria-hidden="true"><i></i>Open<b></b></p><i class="rm__dot" aria-hidden="true"></i>' +
+      '<p class="rm__tip" aria-hidden="true"><i></i><span>Open</span><b></b></p><i class="rm__dot" aria-hidden="true"></i>' +
       '<section class="rm__open" role="dialog" aria-modal="true" aria-labelledby="rm-open-h" hidden><button class="rm__x" type="button" aria-label="Close, back to the room">' + I_X + '</button>' +
         '<div class="rm__info"><p class="rm__kind"><i></i><span></span></p><h2 class="rm__h" id="rm-open-h"></h2><p class="rm__sub"></p><p class="rm__say"></p><dl class="rm__rows"></dl>' +
         '<div class="rm__act"><p class="rm__links"></p><p class="rm__next"><span>Next set</span><button type="button"></button></p></div></div></section>' +
@@ -130,14 +130,16 @@
 
   /* ─── the corridor's measures (one unit is one square of the grid) ──── */
   // K: how much the picture bends at its edges (it is drawn K larger than the screen, so that its middle is never stretched)
-  var HW = 4, HH = 3, GAP = 6.4, Z0 = -6, AHEAD = 4.6, EPS = 0.02, K = 0.34, SS = 1 + K, NL = 6, DUST = 700, AIR = 34;
+  var HW = 4, HH = 3, GAP = 6.4, Z0 = -6, AHEAD = 4.6, EPS = 0.02, K = 0.34, SS = 1 + K, NL = 6, DUST = 800, AIR = 40;
   // where each set is: on which surface, and how far off the middle of it (the order of the old corridor: right, left, above, below)
   var SURF = ['right', 'left', 'ceil', 'floor', 'right', 'left', 'floor', 'ceil', 'left', 'right', 'floor', 'right', 'ceil', 'left'];
   var OFF = [0.15, -0.35, 0.55, -0.45, -0.2, 0.3, 0.5, -0.6, 0.05, 0.45, -0.3, -0.55, 0.2, 0.35];
   function zOf(i) { return Z0 - i * GAP; }
   function station(i) { return zOf(i) + AHEAD; }      // where the camera stands when a set is the one named
-  // the walk begins where the first set is named and ends a little past the last one, before the wall at the end
-  var Z_START = station(0), Z_LAST = station(Math.max(0, N - 1)), Z_END = Z_LAST - 6, Z_WALL = zOf(Math.max(0, N - 1)) - 11, Z_BACK = 46;
+  // the walk begins well before the first set (far enough for a phone's narrow view to have it in sight) and ends a little past
+  // the last one, before the wall at the end. Behind the start the room is closed by the wall it is entered through, with its door
+  var Z_START = zOf(0) + 11, Z_LAST = station(Math.max(0, N - 1)), Z_END = Z_LAST - 6, Z_WALL = zOf(Math.max(0, N - 1)) - 11, Z_BACK = Z_START + 9;
+  var DOOR = { C: [0, -HH + 2.6, Z_BACK - EPS], U: [-1, 0, 0], V: [0, 1, 0], N: [0, 0, -1], w: 2.6, h: 5.2 };
   var DARK = { bg: [0, 0, 0], ink: [0.7, 0.7, 0.68], fog: 30, vig: 0.58, dimTo: [0, 0, 0] }, LIGHT = { bg: [0.957, 0.953, 0.937], ink: [0.62, 0.614, 0.59], fog: 34, vig: 0.2, dimTo: [0.975, 0.972, 0.96] };
   var YELLOW = [1, 0.996, 0.149];
 
@@ -194,9 +196,9 @@
   // dust in the air: fixed in the room (so it passes by as you walk), lit by the pictures near it, stirred a little by the walk
   var DUST_V = 'precision highp float;\nattribute vec4 aD; uniform mat4 uPV; uniform vec3 uCam; uniform float uT, uLen, uPx, uFog, uA, uMode; varying float vA; varying vec3 vC;\n' + LIGHT_GLSL +
     'void main() {\n' +
-    '  float w = uCam.z + 3.0 - mod(uCam.z + 3.0 - aD.z * uLen, uLen);\n' +
+    '  float w = uCam.z + 12.0 - mod(uCam.z + 12.0 - aD.z * uLen, uLen);\n' +
     '  vec3 p = vec3(aD.x * 3.8 + sin(uT + aD.w * 6.283) * 0.22, aD.y * 2.8 + sin(uT * 0.8 + aD.w * 11.0) * 0.16, w);\n' +
-    '  float dist = distance(p, uCam), back = uCam.z + 3.0 - w;\n' +
+    '  float dist = distance(p, uCam), back = uCam.z + 12.0 - w;\n' +
     '  vA = uA * (0.22 + 0.4 * fract(aD.w * 7.31)) * exp(-pow(dist / uFog, 1.4)) * smoothstep(0.5, 1.8, dist) * smoothstep(0.0, 3.0, back) * smoothstep(uLen, uLen - 6.0, back);\n' +
     '  vec3 lit = lightAt(p, vec3(0.0, 1.0, 0.0), 1.25);\n' +
     '  vC = mix(vec3(0.86, 0.85, 0.8) + lit * 1.7, vec3(0.2, 0.2, 0.19) + lit * 0.3, uMode);\n' +
@@ -237,8 +239,8 @@
     catch (e) { return null; }
 
     // the corridor, in squares of half a unit (the light is worked out at their corners): the floor first (it is drawn on its own,
-    // under the reflections), then the ceiling, the two walls and the wall at the end. Each surface has its own two measures for
-    // the grid, and the way it faces
+    // under the reflections), then the ceiling, the two walls, the wall at the end and the wall behind the start. Each surface has
+    // its own two measures for the grid, and the way it faces
     var C = (function () {
       var V = [], I = [];
       function surface(o, a, la, b, lb, n, grid) {
@@ -256,6 +258,7 @@
       surface([-HW, -HH, Z_BACK], [0, 1, 0], 2 * HH, [0, 0, -1], L, [1, 0, 0], yz);
       surface([HW, -HH, Z_BACK], [0, 1, 0], 2 * HH, [0, 0, -1], L, [-1, 0, 0], yz);
       surface([-HW, -HH, Z_WALL], [1, 0, 0], 2 * HW, [0, 1, 0], 2 * HH, [0, 0, 1], function (p) { return [p[0], p[1]]; });
+      surface([HW, -HH, Z_BACK], [-1, 0, 0], 2 * HW, [0, 1, 0], 2 * HH, [0, 0, -1], function (p) { return [p[0], p[1]]; });
       var vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(V), gl.STATIC_DRAW);
       var ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(I), gl.STATIC_DRAW);
       return { vb: vb, ib: ib, floor: floor, all: I.length };
@@ -268,7 +271,7 @@
     var fbo = { fb: gl.createFramebuffer(), tex: gl.createTexture(), depth: gl.createRenderbuffer() };
 
     var stage = $('.rm__stage', el), track = $('.rm__track', el), now = $('.rm__now', el), noEl = $('.rm__no b', now), titleEl = $('.rm__title', now), tagEl = $('.rm__tag', now);
-    var ticks = $$('.rm__tick', el), tip = $('.rm__tip', el), tipB = $('b', tip), dotEl = $('.rm__dot', el), dlg = $('.rm__open', el), info = $('.rm__info', dlg), ixBtn = $('.rm__ix', el), ixEl = $('.rm__index', el), modeBtn = $('.rm__mode', el);
+    var ticks = $$('.rm__tick', el), tip = $('.rm__tip', el), tipB = $('b', tip), tipWord = $('span', tip), tipDot = $('i', tip), dotEl = $('.rm__dot', el), dlg = $('.rm__open', el), info = $('.rm__info', dlg), ixBtn = $('.rm__ix', el), ixEl = $('.rm__index', el), modeBtn = $('.rm__mode', el);
     var coarse = !!(window.matchMedia && matchMedia('(hover: none) and (pointer: coarse)').matches), lowMem = (navigator.deviceMemory || 4) <= 2;
 
     // each set as a picture in the corridor: placed when its picture has come (its shape decides its size)
@@ -276,7 +279,7 @@
     var markTex = null, markA = 0, bigs = [], bigV = 0;
     function pot(n, cap) { var p = 1; while (p < n && p < cap) p *= 2; return p; }
     function texture(im, alpha, cap) {
-      var w = pot(im.naturalWidth, cap), h = pot(im.naturalHeight, cap), c = document.createElement('canvas'); c.width = w; c.height = h;
+      var w = pot(im.naturalWidth || im.width, cap), h = pot(im.naturalHeight || im.height, cap), c = document.createElement('canvas'); c.width = w; c.height = h;
       var g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, w, h);
       var t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
@@ -353,11 +356,27 @@
       im.onload = function () { if (dead) return; markTex = texture(im, true, 512); markA = im.naturalWidth / im.naturalHeight || 1; kick(); };
       im.src = (root.getAttribute('data-assets') || 'assets/') + 'brush/mark-320.webp';
     })();
+    // the door in the wall behind the start, the way the visitor came in (and the way out: pressed, it leaves the room): its frame
+    // standing on the floor, and EXIT over it in the brush, painted once on a sheet
+    var doorTex = null;
+    (function () {
+      function paint() {
+        if (dead || doorTex) return;
+        var c = document.createElement('canvas'); c.width = 512; c.height = 1024; var g = c.getContext('2d');
+        g.strokeStyle = g.fillStyle = '#fff'; g.lineJoin = 'miter';
+        g.lineWidth = 10; g.beginPath(); g.moveTo(70, 1024); g.lineTo(70, 214); g.lineTo(442, 214); g.lineTo(442, 1024); g.stroke();
+        g.lineWidth = 3; g.beginPath(); g.moveTo(98, 1024); g.lineTo(98, 242); g.lineTo(414, 242); g.lineTo(414, 1024); g.stroke();
+        g.font = '132px "TM Brush", "League Gothic", "Arial Narrow", sans-serif'; g.textAlign = 'center'; g.fillText('EXIT', 256, 168);
+        doorTex = texture(c, true, 1024); kick();
+      }
+      if (document.fonts && document.fonts.load) document.fonts.load('132px "TM Brush"').then(paint, paint); else paint();
+      setTimeout(paint, 2500);
+    })();
 
     /* the state of the walk */
     var dead = false, raf = 0, last = 0, t0 = 0, vw = 1, vh = 1, aspect = 1, dpr = 1, rs = 1, rsMax = Infinity, cw = 0, ch = 0, fw = 0, fh = 0, stepPx = 600, maxScroll = 1, trackW = 0, trackH = 0, slow = 0;
     var camZ = Z_START, tz = Z_START, mx = 0, my = 0, tmx = 0, tmy = 0, px = -1, py = -1, pointing = false, speed = 0, fovNow = 1.2, air = 0;
-    var dragY = 0, dragId = -1, dragX0 = 0, dragY0 = 0, dragFrom = 0, dragging = false, dragged = false;
+    var dragY = 0, dragP = 0, yawT = 0, pitchT = 0, dragId = -1, dragX0 = 0, dragY0 = 0, dragFrom = 0, pitchFrom = 0, dragging = false, dragged = false, dragMouse = false, doorLit = false;
     var eye = [0, 0, Z_START], R = { r: [1, 0, 0], u: [0, 1, 0], b: [0, 0, 1] }, PV = new Float32Array(16), LP = new Float32Array(NL * 3), LN = new Float32Array(NL * 3), LC = new Float32Array(NL * 4);
     var cur = 0, shownCur = -1, atEnd = false, hover = -1, tipW = 0, state = 'walk', oi = -1, ot = 0, after = null, pending = -1, savedY = 0, lastFocus = null;
     var light = false, lt = 0, sig = '', lastSig = '', walked = false, ready = false;
@@ -400,9 +419,9 @@
 
     // the camera: where it stands, where it looks, and the picture of the room it takes. It turns only when the visitor turns it:
     // the far end of the corridor goes a little toward the pointer (the camera turns the other way), as in the walk this room is
-    // made after, and a finger dragged sideways turns the head (drag). Nothing turns it by itself
+    // made after, and a drag turns the head all the way round (dragY, dragP). Nothing turns it by itself
     function camera(introZ, fovExtra) {
-      var yaw = mx * 0.075 - dragY, pitch = -my * 0.05, roll = -mx * 0.012 + dragY * 0.03;
+      var yaw = mx * 0.075 - dragY, pitch = clamp(-my * 0.05 + dragP, -1.2, 1.2), roll = -mx * 0.012;
       var cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch), cr = Math.cos(roll), sr = Math.sin(roll);
       // R = turn about y, then about x, then about z; its columns are the camera's right, up and back
       var ry = [[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]], rx = [[1, 0, 0], [0, cp, -sp], [0, sp, cp]], rz = [[cr, -sr, 0], [sr, cr, 0], [0, 0, 1]];
@@ -457,6 +476,7 @@
       LP.fill(0); LN.fill(0); LC.fill(0);
       function set(p, nn, col, s, r) { if (n >= NL || s <= 0) return; LP.set(p, n * 3); LN.set(nn, n * 3); LC.set([col[0] * s, col[1] * s, col[2] * s, r], n * 4); n++; }
       if (markTex && Math.abs(Z_WALL - eye[2]) < 42) set([0, 0.1, Z_WALL + 0.8], [0, 0, 1], [1, 0.93, 0.12], 0.8 * panelsA, 5.2);
+      if (doorTex && Math.abs(Z_BACK - eye[2]) < 42) set([0, -0.6, Z_BACK - 0.8], [0, 0, -1], [1, 0.93, 0.12], (doorLit ? 0.85 : 0.5) * panelsA, 4.4);
       panels.forEach(function (pn, i) { if (pn.ready) { var dz = Math.abs(pn.C[2] - eye[2]); if (dz < 40) near.push({ pn: pn, i: i, dz: dz }); } });
       near.sort(function (a, b) { return a.dz - b.dz; });
       near.forEach(function (o) { var pn = o.pn; set(add(pn.C, scl(pn.N, 0.3)), pn.N, pn.glow, 0.92 * pn.fade * panelsA * (o.i === oi ? 1 - dim : 1), 0.62 * (pn.w + pn.h)); });
@@ -496,14 +516,16 @@
         gl.uniform1f(P.u.uMirror, mirror ? 1 : 0); gl.uniform1f(P.u.uRefl, refl || 0);
         gl.bindTexture(gl.TEXTURE_2D, tex); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
-      function visible(pn, i) { return pn.ready && !(i === oi && ot > 0) && pn.C[2] < eye[2] + 8 && pn.C[2] > eye[2] - 75; }
-      var mark = markTex ? { C: [0, 0.1, Z_WALL + EPS], U: [1, 0, 0], V: [0, 1, 0], w: 3.2 * markA, h: 3.2 } : null;
+      // (the room can be looked at all the way round: the sets behind the camera are drawn as well)
+      function visible(pn, i) { return pn.ready && !(i === oi && ot > 0) && Math.abs(pn.C[2] - eye[2]) < 75; }
+      var mark = markTex ? { C: [0, 0.1, Z_WALL + EPS], U: [1, 0, 0], V: [0, 1, 0], w: 3.2 * markA, h: 3.2 } : null, doorInk = lerp3(YELLOW, [0.13, 0.13, 0.12], c.mode);
       // the polished floor holds the sets on the walls and the ceiling, and the logo. A reflection lies beyond the floor, so it is
       // drawn over the floor alone (nothing else stands where it can be seen)
       gl.disable(gl.DEPTH_TEST); gl.depthMask(false);
       var shine = 0.26 * (1 - 0.55 * c.mode);
       panels.forEach(function (pn, i) { if (visible(pn, i) && !pn.floor) one(pn, pn.big || pn.tex, pn.fade * panelsA, dim, 0, null, true, pn.ceil ? shine * 0.5 : shine); });
       if (mark) one(mark, markTex, panelsA, dim, 1, YELLOW, true, shine);
+      if (doorTex) one(DOOR, doorTex, panelsA, dim, 1, doorInk, true, shine);
       gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.disable(gl.BLEND);
 
       // the rest of the corridor
@@ -514,6 +536,7 @@
       gl.bindBuffer(gl.ARRAY_BUFFER, card); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
       panels.forEach(function (pn, i) { if (visible(pn, i)) one(pn, pn.big || pn.tex, pn.fade * panelsA, dim, 0); });
       if (mark) one(mark, markTex, panelsA, dim, 1, YELLOW);
+      if (doorTex) one(DOOR, doorTex, panelsA * (doorLit ? 1 : 0.85), dim, 1, doorInk);
 
       // the dust: in front of the walls, behind the sets, never hiding anything
       gl.useProgram(U.p); gl.depthMask(false); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -609,6 +632,8 @@
       var before = camZ; camZ += (tz - camZ) * (1 - Math.pow(0.9, dt * 60)); if (Math.abs(tz - camZ) < 0.0004) camZ = tz;
       speed = (camZ - before) / Math.max(dt, 0.001); air += Math.abs(camZ - before) * 0.3;
       var km = 1 - Math.pow(0.94, dt * 60); mx += (tmx - mx) * km; my += (tmy - my) * km;
+      // a turn asked for with the arrow keys is made smoothly (a drag turns the head at once, and where it is left it stays)
+      if (!dragging) { var kt = 1 - Math.pow(0.86, dt * 60); dragY += (yawT - dragY) * kt; dragP += (pitchT - dragP) * kt; if (Math.abs(yawT - dragY) < 0.0005) dragY = yawT; if (Math.abs(pitchT - dragP) < 0.0005) dragP = pitchT; }
       lt += ((light ? 1 : 0) - lt) * (1 - Math.pow(0.88, dt * 60)); if (Math.abs((light ? 1 : 0) - lt) < 0.002) lt = light ? 1 : 0;
       panels.forEach(function (pn) { if (pn.ready && pn.fade < 1) pn.fade = Math.min(1, pn.fade + dt * 2.5); });
       if (state === 'opening') { ot = Math.min(1, ot + dt / 0.85); if (ot >= 1) state = 'open'; }
@@ -626,15 +651,21 @@
       if (pending >= 0 && Math.abs(camZ - tz) < 0.25) { var p = pending; pending = -1; open(p); }
 
       // the pointer: what is under it, and the word that goes with it
-      if (pointing && state === 'walk' && ready) {
-        var h = pick(px, py);
-        if (h !== hover) { hover = h; tip.classList.toggle('is-on', h >= 0); el.classList.toggle('is-over', h >= 0); if (h >= 0) { tipB.textContent = ITEMS[h].title; $('i', tip).style.background = panels[h].color || ''; tipW = tip.offsetWidth; wantBig(panels[h]); } }
-      } else if (hover >= 0 && state !== 'walk') { hover = -1; tip.classList.remove('is-on'); el.classList.remove('is-over'); }
+      // (-2: the door in the wall behind the start)
+      if (pointing && state === 'walk' && ready && !dragging) {
+        var h = pick(px, py); if (h < 0 && onDoor(px, py)) h = -2;
+        if (h !== hover) {
+          hover = h; doorLit = h === -2; tip.classList.toggle('is-on', h !== -1); el.classList.toggle('is-over', h !== -1);
+          if (h >= 0) { tipWord.textContent = 'Open'; tipB.textContent = ITEMS[h].title; tipDot.style.background = panels[h].color || ''; wantBig(panels[h]); }
+          else if (h === -2) { tipWord.textContent = 'Exit'; tipB.textContent = 'the room'; tipDot.style.background = ''; }
+          tipW = tip.offsetWidth;
+        }
+      } else if (hover !== -1 && (state !== 'walk' || dragging)) { hover = -1; doorLit = false; tip.classList.remove('is-on'); el.classList.remove('is-over'); }
       // the word stands at the pointer's right, or at its left near the right edge
       if (pointing) { var tx = px + 18 + tipW > vw - 12 ? px - 18 - tipW : px + 18; tip.style.transform = 'translate3d(' + Math.round(tx) + 'px,' + Math.round(py - 14) + 'px,0)'; dotEl.style.transform = 'translate3d(' + Math.round(px) + 'px,' + Math.round(py) + 'px,0)'; }
 
       lights(panelsA, dim);
-      var s = [camZ.toFixed(4), mx.toFixed(4), my.toFixed(4), dragY.toFixed(4), ot.toFixed(4), lt.toFixed(3), show.toFixed(3), reach.toFixed(3), panelsA.toFixed(3), cw, ch, fw, fh, bigV, panels.reduce(function (a, pn) { return a + pn.fade; }, 0).toFixed(3), markTex ? 1 : 0].join();
+      var s = [camZ.toFixed(4), mx.toFixed(4), my.toFixed(4), dragY.toFixed(4), dragP.toFixed(4), doorLit ? 1 : 0, doorTex ? 1 : 0, ot.toFixed(4), lt.toFixed(3), show.toFixed(3), reach.toFixed(3), panelsA.toFixed(3), cw, ch, fw, fh, bigV, panels.reduce(function (a, pn) { return a + pn.fade; }, 0).toFixed(3), markTex ? 1 : 0].join();
       if (s !== sig) { sig = s; draw(show, panelsA, dim, reach); }
       // keep going while anything still moves; otherwise wait for the next scroll, pointer, finger or picture
       var still = s === lastSig && ti >= 1 && state !== 'opening' && state !== 'closing' && pending < 0; lastSig = s;
@@ -656,20 +687,38 @@
       if (over !== pointing) { pointing = over; el.classList.toggle('is-pointing', over); if (!over) onLeave(); }
       kick();
     }
-    function onLeave() { pointing = false; el.classList.remove('is-pointing', 'is-over'); tip.classList.remove('is-on'); hover = -1; }
-    // a finger dragged sideways over the room turns the head (up and down it walks, as the page scrolls). Let go, the head stays
-    // the way it was turned: the room moves only by hand (the owner's wish, 2026-11-25)
-    function onDown(e) { if (e.pointerType !== 'touch' || state !== 'walk') return; dragId = e.pointerId; dragX0 = e.clientX; dragY0 = e.clientY; dragFrom = dragY; dragging = false; dragged = false; }
+    function onLeave() { pointing = false; doorLit = false; el.classList.remove('is-pointing', 'is-over'); tip.classList.remove('is-on'); hover = -1; kick(); }
+    // a drag over the room turns the head, all the way round: a finger sideways on a phone (up and down it walks, as the page
+    // scrolls), or the mouse held down, which tilts it up and down as well. Let go, the head stays the way it was turned: the room
+    // moves only by hand (the owner's wish, 2026-11-25), and can be looked at behind as much as ahead
+    function onDown(e) {
+      if (state !== 'walk' || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      dragId = e.pointerId; dragX0 = e.clientX; dragY0 = e.clientY; dragFrom = dragY; pitchFrom = dragP; dragging = false; dragged = false; dragMouse = e.pointerType !== 'touch';
+      if (dragMouse) { try { cv.setPointerCapture(e.pointerId); } catch (err) { /* the drag still works over the room */ } }
+    }
     function onDrag(e) {
       if (e.pointerId !== dragId) return;
       var dx = e.clientX - dragX0, dy = e.clientY - dragY0;
-      if (!dragging && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) dragging = true;
-      if (dragging) { dragged = true; dragY = clamp(dragFrom - dx / vw * 1.6, -1.1, 1.1); kick(); }
+      if (!dragging && (dragMouse ? Math.abs(dx) + Math.abs(dy) > 6 : Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2)) { dragging = true; el.classList.add('is-dragging'); }
+      if (!dragging) return;
+      dragged = true;
+      dragY = yawT = dragFrom - dx / vw * Math.PI * (dragMouse ? 1 : 1.3);
+      if (dragMouse) dragP = pitchT = clamp(pitchFrom + dy / vh * 1.6, -0.75, 0.75);
+      kick();
     }
-    function onUp(e) { if (e.pointerId !== dragId) return; dragId = -1; dragging = false; kick(); }
+    function onUp(e) { if (e.pointerId !== dragId) return; dragId = -1; dragging = false; el.classList.remove('is-dragging'); kick(); }
+    // the door in the wall behind the start, under a point of the screen
+    function onDoor(x, y) {
+      if (!doorTex) return false;
+      var d = ray(x, y), den = dot(d, DOOR.N); if (Math.abs(den) < 1e-6) return false;
+      var t = dot(sub(DOOR.C, eye), DOOR.N) / den; if (t <= 0.05 || t > 40) return false;
+      var hit = sub(add(eye, scl(d, t)), DOOR.C), a = dot(hit, DOOR.U) / DOOR.w, b = dot(hit, DOOR.V) / DOOR.h;
+      return Math.abs(a) <= 0.37 && b >= -0.5 && b <= 0.3;
+    }
     function onClick(e) {
       if (dragged) { dragged = false; return; }
       if (state !== 'walk' || !ready) return;
+      if (pick(e.clientX, e.clientY) < 0 && onDoor(e.clientX, e.clientY)) { var ex = $('.rm__tools [data-room-exit]', el); if (ex) ex.click(); return; }
       var h = pick(e.clientX, e.clientY); if (h >= 0) open(h);
     }
     function onKey(e) {
@@ -678,6 +727,8 @@
       var tgt = e.target, typing = tgt && /INPUT|TEXTAREA|SELECT/.test(tgt.tagName);
       if (typing) return;
       if (state === 'walk' && ixEl.hidden && e.key === 'Enter' && (tgt === document.body || tgt === main())) { e.preventDefault(); open(cur); return; }
+      // the arrow keys to the sides turn the head (up and down they walk, as the page scrolls)
+      if (state === 'walk' && ixEl.hidden && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && (tgt === document.body || tgt === main() || tgt === cv)) { e.preventDefault(); yawT += e.key === 'ArrowLeft' ? -0.4 : 0.4; kick(); return; }
       // the dialog keeps the focus within itself
       if (e.key === 'Tab' && (state === 'open' || state === 'opening')) {
         var f = $$('button, a[href]', dlg).filter(function (x) { return x.offsetParent !== null && !x.closest('[hidden]'); }); if (!f.length) return;
