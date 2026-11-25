@@ -64,16 +64,20 @@ img { display: block; max-width: 100%; height: auto; }
 .menu-open { overflow: hidden; }
 .menu__fx { position: absolute; inset: 0; width: 100%; height: 100%; }
 .menu__close { position: absolute; z-index: 2; right: max(calc(var(--edge) - 9px), env(safe-area-inset-right, 0px)); top: calc(env(safe-area-inset-top, 0px) + (var(--top) - 44px) / 2); min-height: 44px; padding: 0 9px; background: none; border: 0; cursor: pointer; font: 400 17.5px/1 'TM Brush', 'League Gothic', 'Arial Narrow', sans-serif; text-transform: uppercase; letter-spacing: .08em; }
-.menu__home { position: absolute; left: 4.1cqw; top: 2.2cqh; height: min(9cqh, 62px); }
+/* at the head of the menu the logo itself (the owner's wish, 2026-11-25: the logo, not the name) */
+.menu__home { position: absolute; left: 4.1cqw; top: 2.2cqh; height: min(8cqh, 54px); }
 .menu__home .ink { height: 100%; }
+.ink--mark { aspect-ratio: 1490 / 1499; -webkit-mask-image: url('../brush/mark.webp'); mask-image: url('../brush/mark.webp'); }
 .menu__a { position: absolute; font-size: min(13.26cqw, 6.79cqh); text-decoration: none; white-space: nowrap; }
 .menu__a b { font-weight: 400; color: var(--y); }
 .menu__a:hover { color: var(--y); }
-.menu__a--1 { left: 10.3cqw; top: 30.5cqh; }
-.menu__a--2 { right: 10.3cqw; top: 46.8cqh; }
-.menu__a--3 { left: 10.3cqw; top: 63.4cqh; }
-.menu__a--4 { right: 10.3cqw; top: 79.2cqh; font-size: min(11.23cqw, 5.77cqh); }
-.menu__a--5 { left: 4.1cqw; bottom: 3cqh; font-size: min(5.48cqw, 3.08cqh); letter-spacing: .08em; color: var(--dim); }
+/* each page's word in a fold of the line, from the first fold at the top (above the first stroke, at the right) to the last: so the
+   label has a fold of its own, as large as the others, and none is left in a corner (2026-11-25) */
+.menu__a--1 { right: 10.3cqw; top: 15.7cqh; }
+.menu__a--2 { left: 10.3cqw; top: 30.5cqh; }
+.menu__a--3 { right: 10.3cqw; top: 46.8cqh; }
+.menu__a--4 { left: 10.3cqw; top: 63.4cqh; font-size: min(11.23cqw, 5.77cqh); }
+.menu__a--5 { right: 10.3cqw; top: 79.2cqh; }
 
 /* ─── home: the logo moving, and the light it leaves (84) ────────────── */
 main { position: relative; display: block; outline: 0; min-height: 100vh; }
@@ -656,11 +660,11 @@ body { font-size: 15px; }
 .menu { animation: arrive .16s backwards; }
 .menu.is-out { animation: leave .17s forwards; }
 .menu__home, .menu__close, .menu__a { animation: arrive .3s backwards; }
-.menu__a--1 { animation-delay: .17s; }
-.menu__a--2 { animation-delay: .34s; }
-.menu__a--3 { animation-delay: .5s; }
-.menu__a--4 { animation-delay: .67s; }
-.menu__a--5 { animation-delay: .78s; }
+.menu__a--1 { animation-delay: .06s; }
+.menu__a--2 { animation-delay: .17s; }
+.menu__a--3 { animation-delay: .34s; }
+.menu__a--4 { animation-delay: .5s; }
+.menu__a--5 { animation-delay: .67s; }
 .player { animation: rise .3s cubic-bezier(.2, .7, .1, 1); }
 /* what answers a hand */
 .pl, .player__toggle { transition: transform .16s; }

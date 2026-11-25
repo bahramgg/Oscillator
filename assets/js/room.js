@@ -377,6 +377,8 @@
     var dead = false, raf = 0, last = 0, t0 = 0, vw = 1, vh = 1, aspect = 1, dpr = 1, rs = 1, rsMax = Infinity, cw = 0, ch = 0, fw = 0, fh = 0, stepPx = 600, maxScroll = 1, trackW = 0, trackH = 0, slow = 0;
     var camZ = Z_START, tz = Z_START, mx = 0, my = 0, tmx = 0, tmy = 0, px = -1, py = -1, pointing = false, speed = 0, fovNow = 1.2, air = 0;
     var dragY = 0, dragP = 0, yawT = 0, pitchT = 0, dragId = -1, dragX0 = 0, dragY0 = 0, dragFrom = 0, pitchFrom = 0, dragging = false, dragged = false, dragMouse = false, doorLit = false;
+    // the way the visitor walks: 0 on into the room, 1 back toward the door (they turn round to face it); a jump is not a walk
+    var heading = 0, walkAcc = 0, lastTz = Z_START, jumping = false, turning = false;
     var eye = [0, 0, Z_START], R = { r: [1, 0, 0], u: [0, 1, 0], b: [0, 0, 1] }, PV = new Float32Array(16), LP = new Float32Array(NL * 3), LN = new Float32Array(NL * 3), LC = new Float32Array(NL * 4);
     var cur = 0, shownCur = -1, atEnd = false, hover = -1, tipW = 0, state = 'walk', oi = -1, ot = 0, after = null, pending = -1, savedY = 0, lastFocus = null;
     var light = false, lt = 0, sig = '', lastSig = '', walked = false, ready = false;
@@ -409,7 +411,7 @@
         stepPx = Math.round(ih * (vw < 760 ? 0.72 : 0.85));
         track.style.height = Math.round(ih + (Z_START - Z_END) / GAP * stepPx) + 'px';
         maxScroll = Math.max(1, track.offsetHeight - ih);
-        if (keep && state === 'walk') window.scrollTo(0, Math.round(keep * maxScroll));
+        if (keep && state === 'walk') { jumping = true; window.scrollTo(0, Math.round(keep * maxScroll)); }
       }
       sig = '';
     }
@@ -599,10 +601,19 @@
       if (lastFocus && lastFocus.focus && document.contains(lastFocus) && lastFocus !== document.body) lastFocus.focus({ preventScroll: true });
       var f = after; after = null; if (f) f();
     }
-    // to a set: the page scrolls to where it is named, and the camera follows; with open, it opens when the camera is there
+    // the visitor turns round to face one way, by the shorter side, and level: 0 on into the room, 1 back toward the door
+    function face(h) {
+      heading = h; walkAcc = 0;
+      var d = (h ? Math.PI : 0) - yawT; d -= 2 * Math.PI * Math.round(d / (2 * Math.PI));
+      if (Math.abs(d) < 0.0001 && Math.abs(pitchT) < 0.0001) return;
+      yawT += d; pitchT = 0; turning = true; kick();
+    }
+    // to a set: the page scrolls to where it is named, and the camera follows, facing it; with open, it opens when the camera is
+    // there. A jump, not a walk: nobody turns round on the way
     function goTo(i, andOpen) {
       i = clamp(i, 0, N - 1); var y = yAt(station(i));
       if (state !== 'walk') { close(function () { goTo(i, andOpen); }); return; }
+      jumping = true; face(0);
       window.scrollTo(0, y); tz = zAt(y); pending = andOpen ? i : -1; kick();
     }
     function index(on) {
@@ -632,19 +643,32 @@
       var before = camZ; camZ += (tz - camZ) * (1 - Math.pow(0.9, dt * 60)); if (Math.abs(tz - camZ) < 0.0004) camZ = tz;
       speed = (camZ - before) / Math.max(dt, 0.001); air += Math.abs(camZ - before) * 0.3;
       var km = 1 - Math.pow(0.94, dt * 60); mx += (tmx - mx) * km; my += (tmy - my) * km;
-      // a turn asked for with the arrow keys is made smoothly (a drag turns the head at once, and where it is left it stays)
-      if (!dragging) { var kt = 1 - Math.pow(0.86, dt * 60); dragY += (yawT - dragY) * kt; dragP += (pitchT - dragP) * kt; if (Math.abs(yawT - dragY) < 0.0005) dragY = yawT; if (Math.abs(pitchT - dragP) < 0.0005) dragP = pitchT; }
+      // walking back toward the door turns the visitor round to face the way they walk, and walking on turns them round again, as a
+      // person would; it takes a little walk that way first (a scroll that only shudders does not turn anyone), and not while they
+      // hold the room to look round. A jump to a set, or back to the start, is not a walk
+      if (state === 'walk' && !el.classList.contains('is-index') && !jumping && !dragging) {
+        var moved = tz - lastTz;
+        if (moved) { if ((moved > 0) === (heading === 0)) walkAcc += Math.abs(moved); else walkAcc = 0; if (walkAcc > 1) face(1 - heading); }
+      }
+      lastTz = tz;
+      if (jumping && Math.abs(camZ - tz) < 0.3) jumping = false;
+      // a turn (round, or asked for with the arrow keys) is made smoothly; a drag turns the head at once, and where it is left it stays
+      if (!dragging) {
+        var kt = 1 - Math.pow(turning ? 0.93 : 0.86, dt * 60); dragY += (yawT - dragY) * kt; dragP += (pitchT - dragP) * kt;
+        if (Math.abs(yawT - dragY) < 0.0005) { dragY = yawT; turning = false; } if (Math.abs(pitchT - dragP) < 0.0005) dragP = pitchT;
+      }
       lt += ((light ? 1 : 0) - lt) * (1 - Math.pow(0.88, dt * 60)); if (Math.abs((light ? 1 : 0) - lt) < 0.002) lt = light ? 1 : 0;
       panels.forEach(function (pn) { if (pn.ready && pn.fade < 1) pn.fade = Math.min(1, pn.fade + dt * 2.5); });
       if (state === 'opening') { ot = Math.min(1, ot + dt / 0.85); if (ot >= 1) state = 'open'; }
       if (state === 'closing') { ot = Math.max(0, ot - dt / 0.65); if (ot <= 0) closed(); }
       var dim = inOut(clamp(ot, 0, 1));
 
-      // which set is named: the one whose place the camera is nearest to; past the last one, the end
-      var best = 0, bd = 1e9; for (var i = 0; i < N; i++) { var dd = Math.abs(camZ - station(i)); if (dd < bd) { bd = dd; best = i; } }
+      // which set is named: the one the visitor is coming up to, the way they face (its place is a little before it); past the last
+      // one, walking on, the end
+      var best = 0, bd = 1e9; for (var i = 0; i < N; i++) { var dd = Math.abs(camZ - (heading ? zOf(i) - AHEAD : station(i))); if (dd < bd) { bd = dd; best = i; } }
       if (state === 'walk' || state === 'closing') cur = best;
       camera(introZ, fovExtra);
-      var end = camZ < Z_LAST - 2.2; if (end !== atEnd) { atEnd = end; el.classList.toggle('is-end', end); }
+      var end = heading === 0 && camZ < Z_LAST - 2.2; if (end !== atEnd) { atEnd = end; el.classList.toggle('is-end', end); }
       if (ready) paintNow(false);
       fetchNext();
       if (!walked && Math.abs(camZ - Z_START) > 1.2) { walked = true; el.classList.add('is-walked'); }
@@ -757,7 +781,7 @@
       if (t.closest('.rm__x')) { close(); return; }
       var nb = t.closest('.rm__next button'); if (nb) { var n = +nb.getAttribute('data-i'); close(function () { goTo(n, true); }); return; }
       if (t.closest('.rm__mode')) { setLight(!light); return; }
-      if (t.closest('[data-room-top]')) { window.scrollTo(0, 0); return; }
+      if (t.closest('[data-room-top]')) { jumping = true; face(0); window.scrollTo(0, 0); return; }
       if (t.closest('[data-room-exit]')) { back = true; return; }
       // a click beside the open set's story, on the dimmed room, closes it (a click on the set itself does nothing)
       if (t === dlg && pick(e.clientX, e.clientY) !== oi) { close(); return; }

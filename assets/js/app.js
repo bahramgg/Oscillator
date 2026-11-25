@@ -630,7 +630,7 @@
     el: $('#menu'), btn: $('.top__menu'),
     // the words on the menu's sheet (the sections' names, from N)
     fill: function () {
-      $('.menu__nav', this.el).innerHTML = link('/', 'menu__home', '<i class="ink ink--name" aria-hidden="true"></i><span class="vh">Home</span>') +
+      $('.menu__nav', this.el).innerHTML = link('/', 'menu__home', '<i class="ink ink--mark" aria-hidden="true"></i><span class="vh">Home</span>') +
         link('/mixes', 'menu__a menu__a--1 g', esc(N.mixes)) + link('/artists', 'menu__a menu__a--2 g', esc(N.artists)) +
         link('/events', 'menu__a menu__a--3 g', esc(N.events)) + link('/contact', 'menu__a menu__a--4 g', esc(N.write)) + link('/label', 'menu__a menu__a--5 g', esc(N.label));
     },
