@@ -46,6 +46,8 @@
   function mixByNo(no) { return mixById('osc-' + no); }
   function artistBySlug(slug) { for (var i = 0; i < ARTISTS.length; i++) if (ARTISTS[i].slug === slug) return ARTISTS[i]; return null; }
   function mixWho(t) { var a = artistBySlug(t.artist); return a ? a.name : (t.artist || t.title || ''); }
+  // a day in words, for a night's name in the tab and in search (several nights share a name): 17 Aug 2023
+  function dayWords(d) { var p = String(d).split('-'); return p.length === 3 ? (+p[2]) + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][+p[1] - 1] + ' ' + p[0] : String(d); }
   function mixLabel(t) { return (mixNo(t) ? mixNo(t) + ' ' : '') + mixWho(t); }
   function mixesOf(a) { return SERIES.filter(function (t) { return t.artist === a.slug; }); }
   function plain(s) { return String(s).toLowerCase().replace(/\s*\(.*?\)/g, '').trim(); }
@@ -262,7 +264,7 @@
     var s = r.split('/').filter(Boolean);
     if (!s.length) return { html: VIEWS.home(), title: (L.name || 'Tehran Movement') + ' | Techno label and artist collective', nav: '/' };
     var one = { mixes: 'mix', artists: 'artist', events: 'event' }[s[0]];
-    if (s.length > 1 && one) { var x = one === 'mix' ? mixByNo(s[1]) : one === 'artist' ? artistBySlug(s[1]) : eventByDate(s[1]); return { html: VIEWS[one](s[1]), title: (x ? (one === 'mix' ? mixLabel(x) : one === 'artist' ? x.name : x.title) : 'Not here') + ' | ' + L.name, nav: '/' + s[0] }; }
+    if (s.length > 1 && one) { var x = one === 'mix' ? mixByNo(s[1]) : one === 'artist' ? artistBySlug(s[1]) : eventByDate(s[1]); return { html: VIEWS[one](s[1]), title: (x ? (one === 'mix' ? mixLabel(x) : one === 'artist' ? x.name : x.title + ', ' + dayWords(x.date)) : 'Not here') + ' | ' + L.name, nav: '/' + s[0] }; }
     if (s.length === 1 && VIEWS[s[0]] && s[0] !== 'home' && s[0] !== 'lost' && !/^(mix|artist|event)$/.test(s[0])) return { html: VIEWS[s[0]](), title: { mixes: N.mixes, artists: N.artists, events: N.events, label: N.label, contact: N.contact, room: 'The room' }[s[0]] + ' | ' + L.name, nav: '/' + s[0] };
     return { html: VIEWS.lost(), title: 'Not here | ' + L.name, nav: '' };
   }
