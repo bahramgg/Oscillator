@@ -1,1 +1,20 @@
+# The earlier addresses, moved for good (301) to the ones that count (app.js MOVED; 2026-11-27). Cloudflare Pages reads this
+# file and follows a rule before it looks for a file, so the copies push-pages.js still makes for /sound, /about and the rest
+# (each naming the new address as its own) are only a fallback. The exact rules first, then those with a placeholder.
+/sound     /mixes/     301
+/sound/    /mixes/     301
+/people    /artists/   301
+/people/   /artists/   301
+/nights    /events/    301
+/nights/   /events/    301
+/write     /contact/   301
+/write/    /contact/   301
+/about     /label/     301
+/about/    /label/     301
+/sound/:id     /mixes/:id/     301
+/sound/:id/    /mixes/:id/     301
+/people/:id    /artists/:id/   301
+/people/:id/   /artists/:id/   301
+/nights/:id    /events/:id/    301
+/nights/:id/   /events/:id/    301
 /*  /index.html  200

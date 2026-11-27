@@ -67,12 +67,15 @@
   function names() { $$('.top__nav a').forEach(function (a) { var k = { '/mixes': 'mixes', '/artists': 'artists', '/events': 'events', '/label': 'nav', '/contact': 'contact' }[a.getAttribute('data-route')]; if (k) a.textContent = N[k]; }); }
   // the picture of a mix: its artist's poster where there is one (the same picture, larger), its cover otherwise
   function bigArt(t) { var a = artistBySlug(t.artist); return a ? a.poster : t.cover; }
+  // who an artist is, a line at the head of their page: the same words their page gives a search engine (dev/seo.js), 2026-11-27
+  function whoLine(a) { return a.name + ' is a techno DJ' + (a.city ? ' from ' + a.city : '') + (a.role ? ', ' + (/^[aeiou]/i.test(a.role) ? 'an ' : 'a ') + a.role.toLowerCase() : '') + ' in the ' + (L.name || 'Tehran Movement') + ' crew, the label and artist collective' + (a.city === 'Tehran' ? '' : ' from Tehran') + '.'; }
 
   /* ─── where a page lives ────────────────────────────────────────────── */
   var MOVED = { sound: 'mixes', people: 'artists', nights: 'events', write: 'contact', about: 'label' };      // earlier addresses
   // '/mixes/031' as an address, or as '#mix-031' where the page has no addresses of its own
+  // (an address ends in a slash: the one the host answers and a search engine is told counts, so no link goes round it, 2026-11-27)
   function href(p) {
-    if (!HASH) return p;
+    if (!HASH) return p.replace(/\/?$/, '/');
     var s = p.split('/').filter(Boolean);
     if (!s.length) return '#home';
     return '#' + (s.length > 1 ? s[0].replace(/e?s$/, '') + '-' + s[1] : s[0]);
@@ -205,7 +208,7 @@
       var ms = mixesOf(a), es = eventsOf(a), i = PEOPLE.indexOf(a), prev = PEOPLE[i - 1], next = PEOPLE[i + 1];
       return '<article class="detail detail--artist">' + fx('slash', 'detail__slash', ' data-part=".5" data-dir="1" data-seed="' + (60 + i) + '"') + link('/artists', 'back g', esc(N.artists)) +
         '<div class="detail__grid"><a class="detail__art" href="' + esc(PREVIEW ? thumb(a.poster) : a.poster) + '" target="_blank" rel="noopener" aria-label="' + esc(a.name) + ': the poster, whole">' + img(thumb(a.poster), 640, 640, 'Poster for ' + a.name) + '</a>' +
-        '<div class="detail__txt"><h1 class="detail__h g">' + esc(a.name) + '</h1>' + ((a.bio || []).length ? '<div class="bio">' + a.bio.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') + '</div>' : '') +
+        '<div class="detail__txt"><h1 class="detail__h g">' + esc(a.name) + '</h1>' + '<div class="bio">' + [whoLine(a)].concat(a.bio || []).map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') + '</div>' +
         (ms.length ? '<section class="sub"><h2 class="g">' + (ms.length > 1 ? 'Sessions' : 'Session') + '</h2><ul class="rows">' + ms.map(mixRow).join('') + '</ul></section>' : '') +
         (es.length ? '<section class="sub"><h2 class="g">Played at</h2><ul class="plain">' + es.map(function (e) { return '<li>' + link('/events/' + e.date, '', '<span class="g">' + date(e.date) + '</span> ' + esc(e.title)) + '</li>'; }).join('') + '</ul></section>' : '') +
         linkList(a.links || {}, Object.keys(LINKS)) + link('/contact', 'btn btn--line', 'Booking and contact') + '</div></div>' +
@@ -293,7 +296,7 @@
   function go(r) {
     if (r === route) { Menu.close(); window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }); return; }
     if (r === where()) return;      // already on the way there
-    if (HASH) location.hash = href(r).slice(1); else { history.pushState(null, '', r); render(); }
+    if (HASH) location.hash = href(r).slice(1); else { history.pushState(null, '', href(r)); render(); }
   }
 
   /* ─── the pass of the brush between two pages ───────────────────────────
@@ -348,7 +351,7 @@
       $$('.mod__h, .sec__h, .foot__name', main).forEach(function (el) { el.classList.add('rv'); io.observe(el); });
     }
   };
-  $$('a[data-link]').forEach(function (a) { var r = a.getAttribute('href'); a.setAttribute('data-route', r); a.setAttribute('href', href(r)); });
+  $$('a[data-link]').forEach(function (a) { var r = a.getAttribute('data-route') || a.getAttribute('href').replace(/(.)\/$/, '$1'); a.setAttribute('data-route', r); a.setAttribute('href', href(r)); });
   document.addEventListener('click', function (e) {
     if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     var a = e.target.closest('a[data-link]'); if (!a) return;

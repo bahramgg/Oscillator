@@ -741,7 +741,7 @@
       $('.rm__rows', info).innerHTML = it.rows.map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('');
       $('.rm__links', info).innerHTML = (it.link ? aTo(null, it.link, 'rm__go', esc(it.linkLabel) + I_ARROW) : '') + (it.ig ? aTo(null, it.ig, 'rm__go rm__go--line', 'On Instagram' + I_ARROW) : '');
       // a link to a page of the site is answered by the site's own router (app.js reads data-route); its address as the site writes it
-      $$('a[data-route]', info).forEach(function (a) { var r = a.getAttribute('data-route'); a.setAttribute('href', root.getAttribute('data-router') === 'hash' || location.protocol === 'file:' ? hashOf(r) : r); });
+      $$('a[data-route]', info).forEach(function (a) { var r = a.getAttribute('data-route'); a.setAttribute('href', root.getAttribute('data-router') === 'hash' || location.protocol === 'file:' ? hashOf(r) : r.replace(/\/?$/, '/')); });
       var nb = $('.rm__next button', info); nb.textContent = nx.title; nb.setAttribute('data-i', String(nx.i)); nb.setAttribute('aria-label', 'Next photo: ' + nx.title);
       $('.rm__next', info).hidden = N < 2;
     }
