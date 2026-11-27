@@ -862,7 +862,7 @@
         if (!v) { status.textContent = 'Write an email or an Instagram name.'; $('input[name=contact]', F).focus(); return; }
         if ($('.form__hp', F).value) return;
         var payload = { _subject: (L.name || 'Tehran Movement') + ', night letter', _template: 'table', _captcha: 'false', Contact: v, Message: 'Add me to the night letter.' };
-        if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) payload._replyto = v;
+        if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) payload.email = v; // FormSubmit makes a field named "email" the Reply-To; "_replyto" did not
         send(payload, status, $('button', F), 'You are on the letter. Thank you.', F);
       });
     });
@@ -881,7 +881,7 @@
       if ($('.form__hp', F).value) return;
       var about = ($('input[name=about]:checked', F) || {}).value || 'Other';
       var payload = { _subject: (L.name || 'Tehran Movement') + ', ' + about.toLowerCase() + ' from ' + fd.name, _template: 'table', _captcha: 'false', About: about, Name: fd.name, Contact: fd.contact, Message: fd.message };
-      if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(fd.contact)) payload._replyto = fd.contact;
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(fd.contact)) payload.email = fd.contact; // the Reply-To (see the night letter above)
       send(payload, status, $('.btn', F), 'Sent. Thank you.', F);
     });
   }
