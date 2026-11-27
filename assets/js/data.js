@@ -20,7 +20,7 @@ window.TM = {
     soundcloud: 'https://on.soundcloud.com/1oNQcz1onDKpvNzims',
     youtube: 'https://www.youtube.com/@oscillator2510',
     // the contact form posts here (FormSubmit relays each message to the label's inbox by email)
-    form: 'https://formsubmit.co/ajax/monadicart@gmail.com',
+    form: 'https://formsubmit.co/ajax/info@tehranmovement.com',
     since: 2020,
 
     // the two lines under the name on the first screen
