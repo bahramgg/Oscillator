@@ -68,7 +68,10 @@
   // the picture of a mix: its artist's poster where there is one (the same picture, larger), its cover otherwise
   function bigArt(t) { var a = artistBySlug(t.artist); return a ? a.poster : t.cover; }
   // who an artist is, a line at the head of their page: the same words their page gives a search engine (dev/seo.js), 2026-11-27
-  function whoLine(a) { return a.name + ' is a techno DJ' + (a.city ? ' from ' + a.city : '') + (a.role ? ', ' + (/^[aeiou]/i.test(a.role) ? 'an ' : 'a ') + a.role.toLowerCase() : '') + ' in the ' + (L.name || 'Tehran Movement') + ' crew, the label and artist collective' + (a.city === 'Tehran' ? '' : ' from Tehran') + '.'; }
+  // (with city and country from data.js: "an Iranian techno DJ from Tehran"; a guest: "a techno DJ from Berlin, Germany")
+  function whoLine(a) { var ir = /^iran$/i.test(a.country || ''), far = a.country && !ir ? a.country : ''; return a.name + ' is ' + (ir ? 'an Iranian' : 'a') + ' techno DJ' + (a.city ? ' from ' + a.city + (far ? ', ' + far : '') : far ? ' from ' + far : '') + (a.role ? ', ' + (/^[aeiou]/i.test(a.role) ? 'an ' : 'a ') + a.role.toLowerCase() : '') + ' in the ' + (L.name || 'Tehran Movement') + ' crew, the label and artist collective' + (a.city === 'Tehran' ? '' : ' from Tehran, Iran') + '.'; }
+  // what a session is, a line on its page: the first sentence of what the page tells a search engine (dev/seo.js), 2026-11-28
+  function mixLine(t) { return 'Session ' + mixNo(t) + ' of ' + (L.name || 'Tehran Movement') + ', the techno label and artist collective from Tehran, Iran, mixed by ' + mixWho(t) + '.'; }
 
   /* ─── where a page lives ────────────────────────────────────────────── */
   var MOVED = { sound: 'mixes', people: 'artists', nights: 'events', write: 'contact', about: 'label' };      // earlier addresses
@@ -197,6 +200,7 @@
         '<div class="detail__txt"><p class="detail__no g">' + mixNo(t) + '</p><h1 class="detail__h g">' + esc(mixWho(t)) + '</h1><p class="detail__meta g">' + date(t.date) + '<span>' + clock(t.duration) + '</span></p>' +
         '<div class="detail__play">' + playBtn(t, 'pl--big') + bars(t) + '</div>' +
         '<p class="links">' + (t.soundcloud ? '<a href="' + esc(t.soundcloud) + '" target="_blank" rel="noopener">SoundCloud</a>' : '') + '<button class="copy" type="button" data-copy>Copy the link</button></p>' +
+        (mixNo(t) ? '<div class="bio"><p>' + esc(mixLine(t)) + '</p></div>' : '') +
         (a ? '<div class="who">' + link('/artists/' + a.slug, 'who__img', img(thumb(a.poster), 640, 640, 'Poster for ' + a.name)) + '<p class="g"><span>The artist</span>' + link('/artists/' + a.slug, '', esc(a.name)) + '</p></div>' : '') + '</div></div>' +
         (list && list.length ? '<section class="tl"><h2 class="g">Tracklist</h2><ol>' + list.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol></section>' : '') +
         '<nav class="pn" aria-label="Other sessions">' + (newer ? link('/mixes/' + mixNo(newer), 'pn__a', '<span class="g">Newer</span><b class="g">' + mixNo(newer) + ' ' + esc(mixWho(newer)) + '</b>') : '<span></span>') + (older ? link('/mixes/' + mixNo(older), 'pn__a pn__a--r', '<span class="g">Older</span><b class="g">' + mixNo(older) + ' ' + esc(mixWho(older)) + '</b>') : '<span></span>') + '</nav>' +
@@ -235,8 +239,8 @@
     label: function () {
       var my = years(SERIES), ey = years(EVENTS), all = {}; my.forEach(function (y) { all[y.y] = { m: y.n, e: 0 }; }); ey.forEach(function (y) { (all[y.y] = all[y.y] || { m: 0, e: 0 }).e = y.n; });
       var longest = SERIES.slice().sort(function (a, b) { return b.duration - a.duration; })[0], first = SERIES[SERIES.length - 1];
-      return '<section class="lhero">' + fx('gesture', 'lhero__fx') + '<div class="plate"><h1 class="vh">' + esc(N.label) + '</h1><i class="ink ink--name" aria-hidden="true"></i><p class="plate__say">' + esc(L.name || 'Tehran Movement') + ' is a techno label and artist collective from Tehran.</p></div></section>' +
-        '<section class="sec sec--facts"><p class="lead">' + esc(L.mixes || '') + '</p>' +
+      return '<section class="lhero">' + fx('gesture', 'lhero__fx') + '<div class="plate"><h1 class="vh">' + esc(N.label) + '</h1><i class="ink ink--name" aria-hidden="true"></i><p class="plate__say">' + esc(L.name || 'Tehran Movement') + ' is a techno label and artist collective from Tehran, Iran.</p></div></section>' +
+        '<section class="sec sec--facts">' + (L.about ? '<p class="lead">' + esc(L.about) + '</p>' : '') + '<p class="lead">' + esc(L.mixes || '') + '</p>' +
         '<dl class="facts"><div><dt class="g">Since</dt><dd>' + (L.since || '') + '</dd></div>' +
         (first ? '<div><dt class="g">First session</dt><dd>' + link('/mixes/' + mixNo(first), '', mixNo(first) + ' ' + esc(mixWho(first))) + ', ' + date(first.date) + '</dd></div>' : '') +
         (longest ? '<div><dt class="g">Longest session</dt><dd>' + link('/mixes/' + mixNo(longest), '', mixNo(longest) + ' ' + esc(mixWho(longest))) + ', ' + clock(longest.duration) + '</dd></div>' : '') +
@@ -265,10 +269,10 @@
   };
   function page(r) {
     var s = r.split('/').filter(Boolean);
-    if (!s.length) return { html: VIEWS.home(), title: (L.name || 'Tehran Movement') + ' | Techno label and artist collective', nav: '/' };
+    if (!s.length) return { html: VIEWS.home(), title: (L.name || 'Tehran Movement') + ' | Iranian techno label and artist collective', nav: '/' };
     var one = { mixes: 'mix', artists: 'artist', events: 'event' }[s[0]];
-    if (s.length > 1 && one) { var x = one === 'mix' ? mixByNo(s[1]) : one === 'artist' ? artistBySlug(s[1]) : eventByDate(s[1]); return { html: VIEWS[one](s[1]), title: (x ? (one === 'mix' ? mixLabel(x) : one === 'artist' ? x.name : x.title + ', ' + dayWords(x.date)) : 'Not here') + ' | ' + L.name, nav: '/' + s[0] }; }
-    if (s.length === 1 && VIEWS[s[0]] && s[0] !== 'home' && s[0] !== 'lost' && !/^(mix|artist|event)$/.test(s[0])) return { html: VIEWS[s[0]](), title: { mixes: N.mixes, artists: N.artists, events: N.events, label: N.label, contact: N.contact, room: 'The room' }[s[0]] + ' | ' + L.name, nav: '/' + s[0] };
+    if (s.length > 1 && one) { var x = one === 'mix' ? mixByNo(s[1]) : one === 'artist' ? artistBySlug(s[1]) : eventByDate(s[1]); return { html: VIEWS[one](s[1]), title: (x ? (one === 'mix' ? (mixNo(x) ? mixWho(x) + ' techno mix, session ' + mixNo(x) : mixLabel(x)) : one === 'artist' ? x.name + ', ' + (/^iran$/i.test(x.country || '') ? 'Iranian ' : '') + 'techno DJ' : x.title + ', ' + dayWords(x.date)) : 'Not here') + ' | ' + L.name, nav: '/' + s[0] }; }
+    if (s.length === 1 && VIEWS[s[0]] && s[0] !== 'home' && s[0] !== 'lost' && !/^(mix|artist|event)$/.test(s[0])) return { html: VIEWS[s[0]](), title: { mixes: 'Techno mixes from Tehran: the ' + N.mixes, artists: 'Iranian and guest techno DJs: the ' + N.artists, events: 'Techno nights: posters and line-ups', label: 'Techno label from Tehran, Iran', contact: 'Contact: demos and bookings', room: 'The room: photographs of the nights' }[s[0]] + ' | ' + L.name, nav: '/' + s[0] };      // what the page is first, the name last (2026-11-28; dev/seo.js gives the same)
     return { html: VIEWS.lost(), title: 'Not here | ' + L.name, nav: '' };
   }
 

@@ -28,6 +28,8 @@ window.TM = {
     line: 'A label and artist collective.',
     // the line that goes with the name wherever the name stands alone (the foot of every page)
     tag: 'Techno label and artist collective. Tehran.',
+    // the label in a few words: on The label page, under its first sentence (and in what that page tells a search engine)
+    about: 'A home for Iranian techno DJs, and for the underground techno of Tehran.',
     // the lines beside the section words
     mixes: 'One DJ each. The series began in 2020 as the Oscillator Series, and the numbers carry on.',
     artists: 'Each poster comes from that artist\'s mix in the series.',
@@ -42,6 +44,10 @@ window.TM = {
                   optional: taken from their series mix (osc-031 → 031) when left out
      poster       the artist's series poster, shown as it is on the artist's card and page
      photo        a portrait, used only when there is no poster
+     city         where the artist lives, e.g. 'Tehran'; country: 'Iran', or a guest's own country. Both go into the
+                  line under the artist's name ("Kenzo is an Iranian techno DJ from Tehran, …"); left out, it says less
+     role         e.g. 'Resident artist' (optional), in the same line
+     bio          paragraphs shown under that line (optional)
           transmissions the ids of the artist's mixes, from the series further down
      videos       { youtube: 'VIDEO_ID', caption: '' }, shown as links to YouTube
      links        instagram / soundcloud / residentadvisor / bandcamp /
